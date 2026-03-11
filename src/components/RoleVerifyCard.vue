@@ -7,8 +7,11 @@
       </h2>
       <div class="space-x-3">
         <el-button plain @click="clearList" :disabled="dialogueCards.length === 0">清空列表</el-button>
-        <el-button type="success" :loading="isGeneratingAudio" @click="handleGenerateAudio" :disabled="dialogueCards.length === 0">
-          <el-icon><VideoPlay class="mr-1" /></el-icon> 一键生成合并音频
+        <el-button type="primary" :loading="isGeneratingAll" @click="handleGenerateAll" :disabled="dialogueCards.length === 0 || isGeneratingAll || isMergingAll">
+          <el-icon><Microphone class="mr-1" /></el-icon> 一键生成音频
+        </el-button>
+        <el-button type="success" :loading="isMergingAll" @click="handleMergeAll" :disabled="!canMergeAll || isGeneratingAll || isMergingAll">
+          <el-icon><VideoPlay class="mr-1" /></el-icon> 音频合并
         </el-button>
       </div>
     </div>
@@ -40,14 +43,23 @@
           </div>
 
           <!-- 右侧：文本内容 -->
-          <div class="flex-1 pt-1">
+          <div class="flex-1 pt-1 flex flex-col">
             <div class="flex items-center justify-between mb-2">
               <span class="text-xs font-semibold px-2 py-1 rounded-full text-white" :class="card.type === 'narration' ? 'bg-gray-400' : 'bg-blue-400'">
                 {{ card.type === "narration" ? "旁白引导" : "台词片段" }}
               </span>
-              <el-button link type="danger" size="small" @click="removeCard(index)">
-                <el-icon><Delete /></el-icon>
-              </el-button>
+              <div class="flex items-center gap-2">
+                <!-- 试听与单次生成控制 -->
+                <audio v-if="card.audioUrl" :src="'http://localhost:3000' + card.audioUrl" controls class="h-8 max-w-[200px]" preload="none"></audio>
+                
+                <el-button size="small" type="primary" plain :loading="card.isGenerating" @click="handleGenerateSingle(index)">
+                  {{ card.audioUrl ? '重新生成' : '单独生成' }}
+                </el-button>
+
+                <el-button link type="danger" size="small" @click="removeCard(index)">
+                  <el-icon><Delete /></el-icon>
+                </el-button>
+              </div>
             </div>
 
             <el-input v-model="card.text" type="textarea" :autosize="{ minRows: 2, maxRows: 6 }" class="text-gray-800 font-medium tracking-wide mt-2 w-full custom-text" resize="none" />
@@ -83,10 +95,10 @@
 </template>
 
 <script setup>
-import { ref, watch } from "vue";
+import { ref, computed, watch } from "vue";
 import axios from "axios";
 import { ElMessage } from "element-plus";
-import { MagicStick, VideoPlay, Delete, Box, CircleCheckFilled } from "@element-plus/icons-vue";
+import { MagicStick, VideoPlay, Microphone, Delete, Box, CircleCheckFilled } from "@element-plus/icons-vue";
 
 const props = defineProps({
   projectName: {
@@ -104,8 +116,13 @@ const props = defineProps({
 });
 
 const dialogueCards = ref([]);
-const isGeneratingAudio = ref(false);
+const isGeneratingAll = ref(false);
+const isMergingAll = ref(false);
 const downloadReadyUrl = ref(null);
+
+const canMergeAll = computed(() => {
+  return dialogueCards.value.length > 0 && dialogueCards.value.every(c => c.fileName);
+});
 
 // 注入外部数据
 watch(
@@ -142,26 +159,76 @@ const clearList = () => {
   downloadReadyUrl.value = null;
 };
 
-const handleGenerateAudio = async () => {
-  if (dialogueCards.value.length === 0) return;
-
-  isGeneratingAudio.value = true;
+const handleGenerateSingle = async (index) => {
+  const card = dialogueCards.value[index];
+  if (!card) return;
+  
+  card.isGenerating = true;
   downloadReadyUrl.value = null;
-  ElMessage.info("音频生成中，可能需要几分钟，请耐心等待...");
-
+  
   try {
-    const res = await axios.post("http://localhost:3000/api/tts/generate", {
-      dialogues: dialogueCards.value,
+    const res = await axios.post("http://localhost:3000/api/tts/generate-single", {
+      dialogue: card,
       projectName: props.projectName,
     });
     if (res.data.success) {
-      ElMessage.success("配音组装成功！");
+      card.fileName = res.data.fileName;
+      // 附加时间戳避免游览器缓存相同路径的临时音频
+      card.audioUrl = res.data.audioUrl + "?t=" + Date.now();
+      ElMessage.success(`第 ${index + 1} 段音频生成成功`);
+    }
+  } catch (error) {
+    ElMessage.error(error.response?.data?.error || `第 ${index + 1} 段音频生成失败`);
+  } finally {
+    card.isGenerating = false;
+  }
+};
+
+const handleGenerateAll = async () => {
+  if (dialogueCards.value.length === 0) return;
+
+  isGeneratingAll.value = true;
+  downloadReadyUrl.value = null;
+  ElMessage.info("批量生成中，请耐心等待所有片段完成...");
+
+  try {
+    // 采用串行执行，避免瞬间高并发请求压垮下层 TTS，同时提供清晰进度感
+    for (let i = 0; i < dialogueCards.value.length; i++) {
+        const card = dialogueCards.value[i];
+        if (!card.fileName) {
+            await handleGenerateSingle(i);
+        }
+    }
+    ElMessage.success("所有未处理片段均已成功生成！您可以开始试听或修改。");
+  } catch (error) {
+    ElMessage.error("批量请求中断或部分发生异常。");
+  } finally {
+    isGeneratingAll.value = false;
+  }
+};
+
+const handleMergeAll = async () => {
+  if (!canMergeAll.value) return;
+
+  isMergingAll.value = true;
+  downloadReadyUrl.value = null;
+  ElMessage.info("正在将生成的音频合成为最终文件，请稍候...");
+
+  try {
+    const fileArg = dialogueCards.value.map(c => c.fileName);
+    const res = await axios.post("http://localhost:3000/api/tts/merge", {
+      fileNames: fileArg,
+      projectName: props.projectName,
+    });
+    
+    if (res.data.success) {
+      ElMessage.success("整本配音组装成功！");
       downloadReadyUrl.value = res.data.downloadUrl;
     }
   } catch (error) {
-    ElMessage.error(error.response?.data?.error || "TTS 请求失败或拼接异常");
+    ElMessage.error(error.response?.data?.error || "合并请求异常");
   } finally {
-    isGeneratingAudio.value = false;
+    isMergingAll.value = false;
   }
 };
 </script>

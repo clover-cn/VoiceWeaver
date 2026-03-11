@@ -8,6 +8,7 @@
     0% {
       background-position: 0% 50%;
     }
+
     100% {
       background-position: 200% 50%;
     }
@@ -19,6 +20,9 @@
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
+    /* 左往右 */
     animation: gradient-animate 3s linear infinite reverse;
+    /* 右往左 */
+    /* animation: gradient-animate 3s linear infinite ; */
   }
 }
