@@ -4,11 +4,11 @@
     "name": "朱高炽"
   },
   "张安世": {
-    "voice": "default_voice",
+    "voice": "fnlp/MOSS-TTSD-v0.5:david",
     "name": "张安世"
   },
   "宦官": {
-    "voice": "default_voice",
+    "voice": "fnlp/MOSS-TTSD-v0.5:alex",
     "name": "宦官"
   }
 }

@@ -20,25 +20,14 @@ function getCharacters(projectName) {
   return {};
 }
 
-const ttsEndpoint = process.env.TTS_ENDPOINT || "http://localhost:5000/tts";
 
-function emotionMapper(emotion) {
-  const mapping = {
-    sad: "sad",
-    angry: "angry",
-    anxious: "anxious",
-    cheerful: "cheerful",
-    neutral: "neutral",
-  };
-  return mapping[emotion] || "neutral";
-}
 
 // 1. 生成单条音频
 router.post("/generate-single", async (req, res) => {
   try {
     const { dialogue, projectName } = req.body;
     if (!dialogue || !projectName) {
-      return res.status(400).json({ error: "Missing dialogue or projectName in request" });
+      return res.status(400).json({ error: "请求中缺少对话内容或项目名称。" });
     }
 
     const safeProjectName = projectName.trim().replace(/[\\/:*?"<>|]/g, "");
@@ -50,29 +39,51 @@ router.post("/generate-single", async (req, res) => {
       fs.mkdirSync(tempDir, { recursive: true });
     }
 
-    let targetVoice = "default_narration_voice";
+    let targetVoice = "fnlp/MOSS-TTSD-v0.5:alex";
     if (dialogue.type === "dialogue" && dialogue.role) {
       const matchedChar = localChars[dialogue.role];
-      if (matchedChar && matchedChar.voice) {
+      // 请求角色的配置音色是 "default_voice" 或为空时，降级强制为它使用默认的有效发声模型 "fnlp/MOSS-TTSD-v0.5:alex"
+      if (matchedChar && matchedChar.voice && matchedChar.voice !== "default_voice") {
         targetVoice = matchedChar.voice;
       }
     }
-
-    const mappedEmotion = emotionMapper(dialogue.emotion);
-
-    const payload = {
-      text: dialogue.text,
-      voice: targetVoice,
-      emotion: mappedEmotion,
-    };
-
-    const fileName = `${uuidv4()}.wav`;
+    console.log('当前使用的音频模型为：', targetVoice);
+    const fileName = `${uuidv4()}.mp3`;
     const tempFilename = path.join(tempDir, fileName);
 
-    // --- 真实情况应当是向真正的 TTS 发起调用 ---
-    // const response = await axios.post(ttsEndpoint, payload, { responseType: 'arraybuffer' });
-    // fs.writeFileSync(tempFilename, response.data);
-    fs.writeFileSync(tempFilename, "dummy audio block");
+    // 调用 SiliconFlow API
+    const API_KEY = process.env.SILICONFLOW_API_KEY;
+    const TTS_URL = process.env.TTS_ENDPOINT || "https://api.siliconflow.cn/v1/audio/speech";
+
+    try {
+      const response = await axios({
+        method: "POST",
+        url: TTS_URL,
+        headers: {
+          "Authorization": `Bearer ${API_KEY}`,
+          "Content-Type": "application/json"
+        },
+        data: {
+          model: "IndexTeam/IndexTTS-2",
+          input: dialogue.text,
+          voice: targetVoice,
+          response_format: "mp3",
+          stream: true
+        },
+        responseType: "stream"
+      });
+
+      const writer = fs.createWriteStream(tempFilename);
+      response.data.pipe(writer);
+
+      await new Promise((resolve, reject) => {
+        writer.on("finish", resolve);
+        writer.on("error", reject);
+      });
+    } catch (apiError) {
+      console.error("API Error:", apiError.message);
+      return res.status(500).json({ error: "API 请求失败" });
+    }
 
     res.json({
       success: true,
@@ -81,8 +92,8 @@ router.post("/generate-single", async (req, res) => {
       audioUrl: `/api/tts/preview/${safeProjectName}/${fileName}`,
     });
   } catch (error) {
-    console.error("TTS Generate Single Error:", error);
-    res.status(500).json({ error: error.message || "Error occurred during generation" });
+    console.error("TTS 生成单个错误:", error);
+    res.status(500).json({ error: error.message || "生成过程中出现错误" });
   }
 });
 
@@ -91,10 +102,10 @@ router.post("/merge", async (req, res) => {
   try {
     const { fileNames, projectName } = req.body;
     if (!fileNames || !Array.isArray(fileNames) || fileNames.length === 0) {
-      return res.status(400).json({ error: "Valid fileNames array required" });
+      return res.status(400).json({ error: "需要有效的文件名数组" });
     }
     if (!projectName) {
-      return res.status(400).json({ error: "Missing projectName in request" });
+      return res.status(400).json({ error: "请求中缺少项目名称" });
     }
 
     const safeProjectName = projectName.trim().replace(/[\\/:*?"<>|]/g, "");
@@ -112,31 +123,29 @@ router.post("/merge", async (req, res) => {
     // 检查文件是否存在
     for (const file of inputFiles) {
       if (!fs.existsSync(file)) {
-        return res.status(404).json({ error: `File not found: ${path.basename(file)}` });
+        return res.status(404).json({ error: `文件未找到: ${path.basename(file)}` });
       }
     }
 
-    const finalFileName = `novel_dubbing_${Date.now()}.wav`;
+    const finalFileName = `novel_dubbing_${Date.now()}.mp3`;
     const finalFilePath = path.join(finalOutputDir, finalFileName);
 
-    // try {
-    //   await mergeAudioFiles(inputFiles, finalFilePath);
-    //   cleanUpTempFiles(inputFiles);
-    // } catch (e) {
-    //   console.error("FFmpeg merge failed:", e);
-    // }
-    
-    // 模拟成功合并：
-    fs.writeFileSync(finalFilePath, "dummy merged audio");
+    try {
+      await mergeAudioFiles(inputFiles, finalFilePath);
+      // cleanUpTempFiles(inputFiles);
+    } catch (e) {
+      console.error("FFmpeg 合并失败:", e);
+      return res.status(500).json({ error: "FFmpeg 合并失败，请确保已安装 ffmpeg" });
+    }
 
     res.json({
       success: true,
-      message: "Audio compiled successfully",
+      message: "音频编译成功",
       downloadUrl: `/api/tts/download/${safeProjectName}/${finalFileName}`,
     });
   } catch (error) {
-    console.error("TTS Merge Error:", error);
-    res.status(500).json({ error: error.message || "Error occurred during merge" });
+    console.error("TTS 合并错误:", error);
+    res.status(500).json({ error: error.message || "合并过程中出现错误" });
   }
 });
 
@@ -146,7 +155,7 @@ router.get("/download/:projectName/:filename", (req, res) => {
   const safeProjectName = projectName.trim().replace(/[\\/:*?"<>|]/g, "");
   const file = path.join(projectsDir, safeProjectName, "output", filename);
   if (!fs.existsSync(file)) {
-    return res.status(404).json({ error: "Final audio file not found" });
+    return res.status(404).json({ error: "最终音频文件未找到" });
   }
   res.download(file);
 });
@@ -157,7 +166,7 @@ router.get("/preview/:projectName/:filename", (req, res) => {
   const safeProjectName = projectName.trim().replace(/[\\/:*?"<>|]/g, "");
   const file = path.join(projectsDir, safeProjectName, "temp", filename);
   if (!fs.existsSync(file)) {
-    return res.status(404).json({ error: "Preview audio file not found" });
+    return res.status(404).json({ error: "预览音频文件未找到" });
   }
   // 使用 res.sendFile 以便于 H5 标签直接播放
   res.sendFile(file);
