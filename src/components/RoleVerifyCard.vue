@@ -6,6 +6,8 @@
         <el-icon><MagicStick /></el-icon> AI 解析与调度台
       </h2>
       <div class="space-x-3">
+        <el-button @click="openAudioLibrary" plain type="info"><el-icon class="mr-1"><Service /></el-icon>参考音频库</el-button>
+        <el-button @click="openRoleSetup" plain type="warning" :disabled="dialogueCards.length === 0"><el-icon class="mr-1"><Setting /></el-icon>统一音频配置</el-button>
         <el-button plain @click="clearList" :disabled="dialogueCards.length === 0">清空列表</el-button>
         <el-button type="primary" :loading="isGeneratingAll" @click="handleGenerateAll" :disabled="dialogueCards.length === 0 || isGeneratingAll || isMergingAll">
           <el-icon><Microphone class="mr-1" /></el-icon> 一键生成音频
@@ -28,7 +30,7 @@
 
         <div class="flex items-start pl-3 gap-4">
           <!-- 左侧：角色卡片 -->
-          <div class="w-32 shrink-0 flex flex-col items-center p-2 rounded-lg" :class="card.type === 'narration' ? 'bg-gray-50' : 'bg-blue-50'">
+          <div class="w-32 shrink-0 flex flex-col items-center p-2 rounded-lg relative" :class="card.type === 'narration' ? 'bg-gray-50' : 'bg-blue-50'">
             <div class="font-bold text-gray-700 text-sm mb-1">🎭 角色纠错</div>
             <el-input v-model="card.role" size="small" class="mb-2" :readonly="card.type === 'narration'"></el-input>
 
@@ -40,6 +42,11 @@
               <el-option label="焦急" value="anxious"></el-option>
               <el-option label="开心" value="cheerful"></el-option>
             </el-select>
+
+            <!-- 绑定参考音频的标识提示 -->
+            <div v-if="card.referenceAudio" class="mt-2 text-[10px] text-green-600 font-bold bg-green-100 px-1 py-0.5 rounded w-full text-center flex items-center justify-center gap-1 shadow-sm border border-green-200">
+              <el-icon><Check /></el-icon>带参考音
+            </div>
           </div>
 
           <!-- 右侧：文本内容 -->
@@ -91,6 +98,10 @@
         <el-button color="#fff" class="text-green-600 font-bold" round> 立即下载收听 </el-button>
       </a>
     </div>
+
+    <!-- 弹窗组件挂载区 -->
+    <AudioLibraryDialog ref="audioLibraryDialogRef" />
+    <RoleAudioSetupDialog ref="roleAudioSetupDialogRef" @saved="handleAudioSetupSaved" />
   </div>
 </template>
 
@@ -98,7 +109,9 @@
 import { ref, computed, watch } from "vue";
 import axios from "axios";
 import { ElMessage } from "element-plus";
-import { MagicStick, VideoPlay, Microphone, Delete, Box, CircleCheckFilled } from "@element-plus/icons-vue";
+import { MagicStick, VideoPlay, Microphone, Delete, Box, CircleCheckFilled, Check, Service, Setting } from "@element-plus/icons-vue";
+import AudioLibraryDialog from "./AudioLibraryDialog.vue";
+import RoleAudioSetupDialog from "./RoleAudioSetupDialog.vue";
 
 const props = defineProps({
   projectName: {
@@ -120,19 +133,73 @@ const isGeneratingAll = ref(false);
 const isMergingAll = ref(false);
 const downloadReadyUrl = ref(null);
 
+const audioLibraryDialogRef = ref(null);
+const roleAudioSetupDialogRef = ref(null);
+
 const canMergeAll = computed(() => {
   return dialogueCards.value.length > 0 && dialogueCards.value.every(c => c.fileName);
 });
 
+const openAudioLibrary = () => {
+  if (audioLibraryDialogRef.value) audioLibraryDialogRef.value.openDialog();
+};
+
+const openRoleSetup = () => {
+  // 提取唯一的角色（仅针对台词类）
+  const roles = [...new Set(dialogueCards.value.filter(c => c.type === 'dialogue' && c.role).map(c => c.role))];
+  if (roleAudioSetupDialogRef.value) {
+    roleAudioSetupDialogRef.value.openDialog(roles);
+  }
+};
+
+const handleAudioSetupSaved = (bindings) => {
+  // 实时把最新的绑定直接应用到现有的卡片里
+  dialogueCards.value.forEach(card => {
+    if (card.type === 'dialogue' && card.role && bindings.hasOwnProperty(card.role)) {
+       if (bindings[card.role]) {
+           card.referenceAudio = bindings[card.role];
+       } else {
+           delete card.referenceAudio; // 取消绑定时，删除该属性
+       }
+    }
+  });
+};
+
 // 注入外部数据
 watch(
   () => props.initialCards,
-  (newVal) => {
+  async (newVal) => {
     const newCardsStr = JSON.stringify(newVal || []);
     const oldCardsStr = JSON.stringify(dialogueCards.value || []);
 
     if (newCardsStr !== oldCardsStr) {
-      dialogueCards.value = JSON.parse(newCardsStr);
+      let parsed = JSON.parse(newCardsStr);
+      
+      // -- 自动注入全局参考音频逻辑 --
+      if (parsed.length > 0) {
+        try {
+          const globalRes = await axios.get('http://localhost:3000/api/audio/global-roles');
+          if (globalRes.data.success) {
+             const bindingsMap = globalRes.data.roles;
+             parsed.forEach(card => {
+                 // 如果是台词
+                 if (card.type === 'dialogue' && card.role) {
+                     // 在全局库里查到了它的参考音频，则赋上去
+                     if (bindingsMap[card.role]) {
+                        card.referenceAudio = bindingsMap[card.role].id;
+                     } else {
+                        // 【FIX】如果没有或已取消绑定，则强制从草稿残留中删除该属性
+                        delete card.referenceAudio;
+                     }
+                 }
+             });
+          }
+        } catch (e) {
+          console.error("尝试拉取并注入全局参考音频失败", e);
+        }
+      }
+
+      dialogueCards.value = parsed;
       downloadReadyUrl.value = null;
     }
   },
