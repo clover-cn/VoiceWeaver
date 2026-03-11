@@ -1,0 +1,24 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 文字从左往右颜色渐变 */
+@layer utilities {
+  @keyframes gradient-animate {
+    0% {
+      background-position: 0% 50%;
+    }
+    100% {
+      background-position: 200% 50%;
+    }
+  }
+
+  .text-gradient-animate {
+    background: linear-gradient(90deg, #06b6d4, #8b5cf6, #ec4899, #06b6d4);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: gradient-animate 3s linear infinite reverse;
+  }
+}
