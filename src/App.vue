@@ -6,9 +6,9 @@
         <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-white font-bold text-xl shadow-md">Ai</div>
         <h1 class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-gray-800 to-gray-500 tracking-tight">
           织音<span class="text-sm ml-2 font-normal text-gradient-animate">多角色有声小说自动配音系统</span>
-          <span v-if="currentProject" class="text-sm text-indigo-500 ml-2 bg-indigo-50 px-2 py-1 rounded">当前项目: {{ currentProject }}</span>
         </h1>
       </div>
+      <span v-if="currentProject" class="text-sm text-indigo-500 ml-2 bg-indigo-50 px-2 py-1 rounded">当前项目: {{ currentProject }}</span>
       <div class="flex items-center gap-4 text-sm text-gray-500 font-medium">
         <el-button v-if="currentProject" size="small" @click="currentProject = null" type="info" plain class="mr-2">切换项目</el-button>
         <div class="flex items-center gap-1">
