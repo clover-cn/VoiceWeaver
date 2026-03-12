@@ -34,13 +34,16 @@
             <div class="font-bold text-gray-700 text-sm mb-1">🎭 角色纠错</div>
             <el-input v-model="card.role" size="small" class="mb-2" :readonly="card.type === 'narration'"></el-input>
 
-            <div class="font-bold text-gray-700 text-sm mb-1 mt-1">🎙️ 音色分配</div>
+            <div class="font-bold text-gray-700 text-sm mb-1 mt-1">🎙️ 情感选择</div>
             <el-select v-model="card.emotion" size="small" placeholder="情绪选择" class="w-full">
-              <el-option label="平静" value="neutral"></el-option>
-              <el-option label="伤心" value="sad"></el-option>
-              <el-option label="愤怒" value="angry"></el-option>
-              <el-option label="焦急" value="anxious"></el-option>
-              <el-option label="开心" value="cheerful"></el-option>
+              <el-option label="😄 高兴" value="happy"></el-option>
+              <el-option label="😠 愤怒" value="angry"></el-option>
+              <el-option label="😢 悲伤" value="sad"></el-option>
+              <el-option label="😨 害怕" value="fearful"></el-option>
+              <el-option label="🤢 厌恶" value="disgusted"></el-option>
+              <el-option label="😔 忧郁" value="melancholy"></el-option>
+              <el-option label="😮 惊讶" value="surprised"></el-option>
+              <el-option label="😌 平静" value="neutral"></el-option>
             </el-select>
 
             <!-- 绑定参考音频的标识提示 -->
@@ -153,14 +156,17 @@ const openRoleSetup = () => {
 };
 
 const handleAudioSetupSaved = (bindings) => {
-  // 实时把最新的绑定直接应用到现有的卡片里
+  // bindings 格式: { "张三": { "happy": "audioId1", "neutral": null }, ... }
   dialogueCards.value.forEach(card => {
     if (card.type === 'dialogue' && card.role && bindings.hasOwnProperty(card.role)) {
-       if (bindings[card.role]) {
-           card.referenceAudio = bindings[card.role];
-       } else {
-           delete card.referenceAudio; // 取消绑定时，删除该属性
-       }
+      const emotionMap = bindings[card.role];
+      const currentEmotion = card.emotion || 'neutral';
+      const newAudioId = emotionMap ? emotionMap[currentEmotion] : null;
+      if (newAudioId) {
+        card.referenceAudio = newAudioId;
+      } else {
+        delete card.referenceAudio;
+      }
     }
   });
 };
@@ -175,27 +181,27 @@ watch(
     if (newCardsStr !== oldCardsStr) {
       let parsed = JSON.parse(newCardsStr);
       
-      // -- 自动注入全局参考音频逻辑 --
+      // -- 自动注入全局参考音频逻辑（匹配 角色名 + 当前情感 维度）--
       if (parsed.length > 0) {
         try {
           const globalRes = await axios.get('http://localhost:3000/api/audio/global-roles');
           if (globalRes.data.success) {
-             const bindingsMap = globalRes.data.roles;
-             parsed.forEach(card => {
-                 // 如果是台词
-                 if (card.type === 'dialogue' && card.role) {
-                     // 在全局库里查到了它的参考音频，则赋上去
-                     if (bindingsMap[card.role]) {
-                        card.referenceAudio = bindingsMap[card.role].id;
-                     } else {
-                        // 【FIX】如果没有或已取消绑定，则强制从草稿残留中删除该属性
-                        delete card.referenceAudio;
-                     }
-                 }
-             });
+            const bindingsMap = globalRes.data.roles;
+            // 格式: { "张三": { "happy": { id, url, name }, "neutral": {...} }, ... }
+            parsed.forEach(card => {
+              if (card.type === 'dialogue' && card.role) {
+                const roleData = bindingsMap[card.role];
+                const currentEmotion = card.emotion || 'neutral';
+                if (roleData && roleData[currentEmotion]) {
+                  card.referenceAudio = roleData[currentEmotion].id;
+                } else {
+                  delete card.referenceAudio;
+                }
+              }
+            });
           }
         } catch (e) {
-          console.error("尝试拉取并注入全局参考音频失败", e);
+          console.error('尝试拉取并注入全局参考音频失败', e);
         }
       }
 

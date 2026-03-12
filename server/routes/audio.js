@@ -45,8 +45,14 @@ function saveAudioRecords(records) {
   fs.writeFileSync(audioRecordsPath, JSON.stringify(records, null, 2), "utf8");
 }
 function getGlobalRoles() {
-  const data = fs.readFileSync(globalRolesPath, "utf8");
-  return JSON.parse(data);
+  try {
+    const raw = fs.readFileSync(globalRolesPath, "utf8").trim();
+    if (!raw) return {};
+    return JSON.parse(raw);
+  } catch (e) {
+    console.warn("global_roles.json 读取或解析失败，已自动回退为空对象:", e.message);
+    return {};
+  }
 }
 function saveGlobalRoles(roles) {
   fs.writeFileSync(globalRolesPath, JSON.stringify(roles, null, 2), "utf8");
@@ -120,13 +126,22 @@ router.delete("/:id", (req, res) => {
     records.splice(recordIndex, 1);
     saveAudioRecords(records);
 
-    // 同步清理全局角色中绑定的该音频
+    // 同步清理全局角色中绑定的该音频（嵌套情感结构）
     const globalRoles = getGlobalRoles();
     let rolesModified = false;
-    for (const [roleName, audioId] of Object.entries(globalRoles)) {
-      if (audioId === id) {
-        delete globalRoles[roleName];
-        rolesModified = true;
+    for (const roleName in globalRoles) {
+      const emotionMap = globalRoles[roleName];
+      if (typeof emotionMap === 'object' && emotionMap !== null) {
+        for (const emotion in emotionMap) {
+          if (emotionMap[emotion] === id) {
+            delete emotionMap[emotion];
+            rolesModified = true;
+          }
+        }
+        // 如果该角色的所有情感维度绑定均已清空，就删除整个角色条目
+        if (Object.keys(emotionMap).length === 0) {
+          delete globalRoles[roleName];
+        }
       }
     }
     if (rolesModified) {
@@ -148,15 +163,19 @@ router.get("/global-roles", (req, res) => {
     const roles = getGlobalRoles();
     const records = getAudioRecords();
 
-    // 组装格式，将对应的音频详情加上去，方便前端显示
+    // 组装格式，将对应的音频详情加上去，新结构: { "角色A": { "happy": { id, url, name }, "sad": {...} } }
     const result = {};
-    for (const [roleName, audioId] of Object.entries(roles)) {
-      const audio = records.find(r => r.id === audioId);
-      if (audio) {
-        result[roleName] = audio;
-      } else {
-        // 如果文件已经被意外删除但绑定还在，则清理
-        delete roles[roleName];
+    for (const roleName in roles) {
+      const emotionMap = roles[roleName];
+      if (typeof emotionMap !== 'object' || emotionMap === null) continue;
+      result[roleName] = {};
+      for (const emotion in emotionMap) {
+        const audioId = emotionMap[emotion];
+        const audio = records.find(r => r.id === audioId);
+        if (audio) {
+          result[roleName][emotion] = audio;
+        }
+        // 音频已删除则忽略，不清空存储中的记录
       }
     }
 
@@ -170,7 +189,7 @@ router.get("/global-roles", (req, res) => {
 // 5. 更新（完全覆盖）全局角色的音频绑定
 router.post("/global-roles", (req, res) => {
   try {
-    // 期望结构 { "角色A": "音频IDA", "角色B": "音频IDB" }
+    // 期望新结构: { "角色A": { "happy": "音频IDA", "neutral": null }, "角色B": { "sad": "音频IDB" } }
     const { bindings } = req.body;
 
     if (!bindings || typeof bindings !== 'object') {
@@ -178,13 +197,32 @@ router.post("/global-roles", (req, res) => {
     }
 
     const roles = getGlobalRoles();
-    // 合并覆盖
-    for (const [roleName, audioId] of Object.entries(bindings)) {
-      // 如果前端发来空字符、null 或 undefined，表示要取消该角色的绑定
-      if (!audioId) {
+
+    for (const roleName in bindings) {
+      const emotionMap = bindings[roleName];
+      if (!emotionMap || typeof emotionMap !== 'object') {
+        // 如果传了 null/空就删除整个角色
         delete roles[roleName];
-      } else if (audioId) {
-        roles[roleName] = audioId;
+        continue;
+      }
+
+      if (!roles[roleName] || typeof roles[roleName] !== 'object') {
+        roles[roleName] = {};
+      }
+
+      for (const emotion in emotionMap) {
+        const audioId = emotionMap[emotion];
+        if (!audioId) {
+          // 空则删除该情感维度
+          delete roles[roleName][emotion];
+        } else {
+          roles[roleName][emotion] = audioId;
+        }
+      }
+
+      // 如果该角色的情感维度均已清空，就删除该角色
+      if (Object.keys(roles[roleName]).length === 0) {
+        delete roles[roleName];
       }
     }
 

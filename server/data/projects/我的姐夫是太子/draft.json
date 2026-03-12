@@ -10,19 +10,7 @@
     {
       "type": "narration",
       "role": "旁白",
-      "text": "张安世不怕朱高炽，不过现在姐夫勃然大怒，他还是老老实实地跪坐在一侧，摆出一副乖巧的样子。",
-      "emotion": "neutral"
-    },
-    {
-      "type": "narration",
-      "role": "旁白",
-      "text": "来到这个世界已有半年了，起初的时候，张安世震惊、惶恐、不安，可慢慢的……他开始融入这个时代，当然最重要的是……在这个世上，他有眼前这个太子姐夫和太子妃姐姐的关爱。",
-      "emotion": "neutral"
-    },
-    {
-      "type": "narration",
-      "role": "旁白",
-      "text": "此时，朱高炽瞥了一眼，见他突然安份老实了，嘘了口气，开口问道：",
+      "text": "张安世不怕朱高炽，不过现在姐夫勃然大怒，他还是老老实实地跪坐在一侧，摆出一副乖巧的样子。来到这个世界已有半年了，起初的时候，张安世震惊、惶恐、不安，可慢慢的……他开始融入这个时代，当然最重要的是……在这个世上，他有眼前这个太子姐夫和太子妃姐姐的关爱。此时，朱高炽瞥了一眼，见他突然安份老实了，嘘了口气，开口问道：",
       "emotion": "neutral"
     },
     {
@@ -62,27 +50,21 @@
       "emotion": "common"
     },
     {
-      "type": "dialogue",
-      "role": "朱高炽",
-      "text": "……",
-      "emotion": "common"
-    },
-    {
       "type": "narration",
       "role": "旁白",
-      "text": "朱高炽脸抽了抽，最后板着脸道：",
+      "text": "朱高炽听罢一阵无语，脸抽了抽，最后板着脸道：",
       "emotion": "neutral"
     },
     {
       "type": "dialogue",
       "role": "朱高炽",
       "text": "君子和气，小人斗气。世上有再不平的事，也不可……",
-      "emotion": "angry"
+      "emotion": "common"
     },
     {
       "type": "narration",
       "role": "旁白",
-      "text": "张安世立即开口道：",
+      "text": "张安世立即打断道：",
       "emotion": "neutral"
     },
     {
@@ -92,10 +74,22 @@
       "emotion": "common"
     },
     {
+      "type": "narration",
+      "role": "旁白",
+      "text": "朱高炽有些不悦地呵斥道：",
+      "emotion": "neutral"
+    },
+    {
       "type": "dialogue",
       "role": "朱高炽",
       "text": "我还没说完，你别打岔。",
       "emotion": "angry"
+    },
+    {
+      "type": "narration",
+      "role": "旁白",
+      "text": "张安世缩了缩脖子应道：",
+      "emotion": "neutral"
     },
     {
       "type": "dialogue",
@@ -106,7 +100,7 @@
     {
       "type": "narration",
       "role": "旁白",
-      "text": "朱高炽张口说道：",
+      "text": "朱高炽张口教训道：",
       "emotion": "neutral"
     },
     {
