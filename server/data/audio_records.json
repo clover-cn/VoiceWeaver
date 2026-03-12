@@ -1,11 +1,12 @@
 [
   {
-    "id": "0c8220dc-7c46-4f4c-9d3b-e50629a11d7a",
+    "id": "8d7db530-f2e3-4652-96e2-5adeac4c941a",
     "name": "keqing",
-    "fileName": "5b4c1b2e-ddac-4dbf-aaac-6488ae24c705.wav",
+    "fileName": "396dbbba-7450-4bac-b9fc-3327a5387ad1.wav",
     "originalName": "keqing.wav",
-    "size": 934734,
-    "createTime": "2026-03-11T09:16:24.596Z",
-    "url": "/uploads/reference_audios/5b4c1b2e-ddac-4dbf-aaac-6488ae24c705.wav"
+    "size": 1791202,
+    "createTime": "2026-03-12T08:45:43.280Z",
+    "url": "/uploads/reference_audios/396dbbba-7450-4bac-b9fc-3327a5387ad1.wav",
+    "siliconUri": "speech:voice_8d7db530_f2e3_4652_96e2_5adeac4c941a:cm0l76q8q00vgihkaez0a28rw:lilsxjbzqmncrhmrgobp"
   }
 ]

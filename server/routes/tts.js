@@ -3,10 +3,14 @@ const router = express.Router();
 const path = require("path");
 const fs = require("fs");
 const axios = require("axios");
+const FormData = require("form-data");
 const { mergeAudioFiles, cleanUpTempFiles } = require("../utils/ffmpeg-merge");
 const { v4: uuidv4 } = require("uuid");
 
+const { generateAudio } = require("../services/tts/ttsFactory");
 const projectsDir = path.join(__dirname, "../data/projects");
+
+
 
 // 辅助函数
 function getCharacters(projectName) {
@@ -26,6 +30,7 @@ function getCharacters(projectName) {
 router.post("/generate-single", async (req, res) => {
   try {
     const { dialogue, projectName } = req.body;
+    const ttsProvider = process.env.TTS_DEFAULT_PROVIDER || "siliconflow";
     if (!dialogue || !projectName) {
       return res.status(400).json({ error: "请求中缺少对话内容或项目名称。" });
     }
@@ -39,51 +44,16 @@ router.post("/generate-single", async (req, res) => {
       fs.mkdirSync(tempDir, { recursive: true });
     }
 
-    let targetVoice = "fnlp/MOSS-TTSD-v0.5:alex";
-    if (dialogue.type === "dialogue" && dialogue.role) {
-      const matchedChar = localChars[dialogue.role];
-      // 请求角色的配置音色是 "default_voice" 或为空时，降级强制为它使用默认的有效发声模型 "fnlp/MOSS-TTSD-v0.5:alex"
-      if (matchedChar && matchedChar.voice && matchedChar.voice !== "default_voice") {
-        targetVoice = matchedChar.voice;
-      }
-    }
-    console.log('当前使用的音频模型为：', targetVoice);
     const fileName = `${uuidv4()}.mp3`;
     const tempFilename = path.join(tempDir, fileName);
 
-    // 调用 SiliconFlow API
-    const API_KEY = process.env.SILICONFLOW_API_KEY;
-    const TTS_URL = process.env.TTS_ENDPOINT || "https://api.siliconflow.cn/v1/audio/speech";
-
-    try {
-      const response = await axios({
-        method: "POST",
-        url: TTS_URL,
-        headers: {
-          "Authorization": `Bearer ${API_KEY}`,
-          "Content-Type": "application/json"
-        },
-        data: {
-          model: "IndexTeam/IndexTTS-2",
-          input: dialogue.text,
-          voice: targetVoice,
-          response_format: "mp3",
-          stream: true
-        },
-        responseType: "stream"
-      });
-
-      const writer = fs.createWriteStream(tempFilename);
-      response.data.pipe(writer);
-
-      await new Promise((resolve, reject) => {
-        writer.on("finish", resolve);
-        writer.on("error", reject);
-      });
-    } catch (apiError) {
-      console.error("API Error:", apiError.message);
-      return res.status(500).json({ error: "API 请求失败" });
-    }
+    // 将请求转发至 TTS 调度工厂
+    await generateAudio(ttsProvider, {
+      dialogue,
+      projectName,
+      tempFilename,
+      localChars
+    });
 
     res.json({
       success: true,
