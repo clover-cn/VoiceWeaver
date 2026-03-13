@@ -28,7 +28,7 @@
             <div v-for="dim in EMOTION_DIMS" :key="dim.value" class="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors">
               <!-- 情感标签 -->
               <div class="flex items-center gap-1.5 w-20 shrink-0">
-                <span class="text-lg leading-none">{{ dim.emoji }}</span>
+                <!-- <span class="text-lg leading-none">{{ dim.emoji }}</span> -->
                 <span class="text-sm font-semibold" :style="{ color: dim.color }">{{ dim.label }}</span>
               </div>
 

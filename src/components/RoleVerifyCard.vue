@@ -40,14 +40,14 @@
 
             <div class="font-bold text-gray-700 text-sm mb-1 mt-1">🎙️ 情感选择</div>
             <el-select v-model="card.emotion" size="small" placeholder="情绪选择" class="w-full">
-              <el-option label="😄 高兴" value="happy"></el-option>
-              <el-option label="😠 愤怒" value="angry"></el-option>
-              <el-option label="😢 悲伤" value="sad"></el-option>
-              <el-option label="😨 害怕" value="fearful"></el-option>
-              <el-option label="🤢 厌恶" value="disgusted"></el-option>
-              <el-option label="😔 忧郁" value="melancholy"></el-option>
-              <el-option label="😮 惊讶" value="surprised"></el-option>
-              <el-option label="😌 平静" value="neutral"></el-option>
+              <el-option label="高兴" value="happy"></el-option>
+              <el-option label="愤怒" value="angry"></el-option>
+              <el-option label="悲伤" value="sad"></el-option>
+              <el-option label="害怕" value="fearful"></el-option>
+              <el-option label="厌恶" value="disgusted"></el-option>
+              <el-option label="忧郁" value="melancholy"></el-option>
+              <el-option label="惊讶" value="surprised"></el-option>
+              <el-option label="平静" value="neutral"></el-option>
             </el-select>
 
             <!-- 绑定参考音频的标识提示 -->
