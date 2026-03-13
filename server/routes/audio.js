@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const multer = require("multer");
+const axios = require("axios");
 const path = require("path");
 const fs = require("fs");
 const { v4: uuidv4 } = require("uuid");
@@ -108,17 +109,44 @@ router.get("/list", (req, res) => {
 });
 
 // 3. 删除参考音频
-router.delete("/:id", (req, res) => {
+router.delete("/:id", async (req, res) => {
   try {
     const { id } = req.params;
     let records = getAudioRecords();
     const recordIndex = records.findIndex((r) => r.id === id);
-
     if (recordIndex === -1) {
       return res.status(404).json({ error: "未找到该音频记录" });
     }
-
     const record = records[recordIndex];
+    console.log("准备删除：", record);
+    console.log("delete id:", id);
+    // 先删除 SiliconFlow 上的语音(若存在)，成功后再删本地
+    if (record.siliconUri) {
+      const apiKey = process.env.SILICONFLOW_API_KEY;
+      if (!apiKey) {
+        return res.status(500).json({ error: "缺少 SILICONFLOW_API_KEY，已中止本地删除" });
+      }
+      try {
+        const delRes = await axios.post(
+          "https://api.siliconflow.cn/v1/audio/voice/deletions",
+          { uri: record.siliconUri },
+          {
+            headers: {
+              Authorization: `Bearer ${apiKey}`,
+              "Content-Type": "application/json",
+            },
+          },
+        );
+        console.log("删除结果：", delRes.data);
+
+        if (delRes.status < 200 || delRes.status >= 300) {
+          return res.status(502).json({ error: "线上语音删除失败，已中止本地删除" });
+        }
+      } catch (err) {
+        console.error("删除 SiliconFlow 语音失败:", err.response ? JSON.stringify(err.response.data) : err.message);
+        return res.status(502).json({ error: "线上语音删除失败，已中止本地删除" });
+      }
+    }
     // 删除物理文件
     const filePath = path.join(uploadDir, record.fileName);
     if (fs.existsSync(filePath)) {
@@ -282,10 +310,7 @@ router.patch("/:id/sample-text", (req, res) => {
 
     record.sampleText = sampleText;
 
-    // 参考文本变更后清除缓存的 siliconUri，下次生成时会用新文本重新上传
-    if (record.siliconUri) {
-      delete record.siliconUri;
-    }
+    // 保留 siliconUri，避免参考文本编辑后丢失线上克隆语音
 
     saveAudioRecords(records);
     res.json({ success: true, message: "参考文本更新成功" });

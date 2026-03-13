@@ -1,50 +1,46 @@
 [
   {
-    "id": "563168b3-b99a-4e84-8b32-1f118d396cee",
-    "name": "刻晴-平静",
-    "fileName": "8c87c89f-213a-4728-814e-94b9e5302a75.wav",
-    "originalName": "刻晴-平静.wav",
-    "size": 1791202,
-    "createTime": "2026-03-13T01:27:46.201Z",
-    "url": "/uploads/reference_audios/8c87c89f-213a-4728-814e-94b9e5302a75.wav",
-    "remark": "",
-    "sampleText": "我是刻晴，璃月七星中的「玉衡」。变革的时机已经到来，维持了千年的秩序即将被改写。这历史性的时刻，你愿意和我一起见证吗?",
-    "siliconUri": "speech:voice_563168b3_b99a_4e84_8b32_1f118d396cee:cm0l76q8q00vgihkaez0a28rw:ktuvtfcbuffwkmrydhzd"
-  },
-  {
-    "id": "19338a12-94ef-4376-9f46-6728356d32b3",
-    "name": "刻晴-生气",
-    "fileName": "4b23faa1-d5fc-4111-86e8-ddf8282c993e.wav",
-    "originalName": "刻晴-生气.wav",
-    "size": 1800366,
-    "createTime": "2026-03-13T01:27:49.029Z",
-    "url": "/uploads/reference_audios/4b23faa1-d5fc-4111-86e8-ddf8282c993e.wav",
-    "remark": "",
-    "sampleText": "话虽这么说！明星斋的「琉璃新月」，我提前三个月就预定了！结果去取货的时候才知道，凝光她用两倍的价钱，把这几个月里所有的「琉璃新月」都买走了！果然我还是受不了她！",
-    "siliconUri": "speech:voice_19338a12_94ef_4376_9f46_6728356d32b3:cm0l76q8q00vgihkaez0a28rw:ddngozzsfxtelvmavnam"
-  },
-  {
-    "id": "bb88e38c-e478-4db3-b33c-45bbefd85377",
+    "id": "d79641f4-0d6c-4152-8083-bf4f90b9c24a",
     "name": "钟离-平静",
-    "fileName": "f5f688fe-9008-421f-934d-8901e8dd48a1.wav",
+    "fileName": "9839fb17-99b0-4e99-a397-6b31cfd794f1.wav",
     "originalName": "钟离-平静.wav",
     "size": 2652450,
-    "createTime": "2026-03-13T01:27:51.794Z",
-    "url": "/uploads/reference_audios/f5f688fe-9008-421f-934d-8901e8dd48a1.wav",
+    "createTime": "2026-03-13T05:37:41.982Z",
+    "url": "/uploads/reference_audios/9839fb17-99b0-4e99-a397-6b31cfd794f1.wav",
     "remark": "",
-    "sampleText": "一份新的「契约」？好吧…虽然我还在度假，但也可以陪你走一趟。契约书上，该签什么名字呢？我有许多名字，度假期间的话，我会自称「钟离」。你呢，旅行者？你会签下什么名字？",
-    "siliconUri": "speech:voice_bb88e38c_e478_4db3_b33c_45bbefd85377:cm0l76q8q00vgihkaez0a28rw:cdswqhwcpfadahlscuba"
+    "sampleText": "一份新的「契约」？好吧…虽然我还在度假，但也可以陪你走一趟。契约书上，该签什么名字呢？我有许多名字，度假期间的话，我会自称「钟离」。你呢，旅行者？你会签下什么名字？"
   },
   {
-    "id": "71677246-76ad-449f-94a4-b38bdc188323",
+    "id": "683558c6-2931-4293-ba66-0eff21175603",
+    "name": "刻晴-生气",
+    "fileName": "021b3461-9737-449d-bad8-75ee504e38f4.wav",
+    "originalName": "刻晴-生气.wav",
+    "size": 1800366,
+    "createTime": "2026-03-13T05:37:53.533Z",
+    "url": "/uploads/reference_audios/021b3461-9737-449d-bad8-75ee504e38f4.wav",
+    "remark": "",
+    "sampleText": "话虽这么说！明星斋的「琉璃新月」，我提前三个月就预定了！结果去取货的时候才知道，凝光她用两倍的价钱，把这几个月里所有的「琉璃新月」都买走了！果然我还是受不了她！"
+  },
+  {
+    "id": "12443f9a-6f51-482b-88f4-1fa9c3cd70ae",
+    "name": "刻晴-平静",
+    "fileName": "c14fdb4a-824c-44ac-94f8-17955951af85.wav",
+    "originalName": "刻晴-平静.wav",
+    "size": 1791202,
+    "createTime": "2026-03-13T05:38:01.608Z",
+    "url": "/uploads/reference_audios/c14fdb4a-824c-44ac-94f8-17955951af85.wav",
+    "remark": "",
+    "sampleText": "我是刻晴，璃月七星中的「玉衡」。变革的时机已经到来，维持了千年的秩序即将被改写。这历史性的时刻，你愿意和我一起见证吗?"
+  },
+  {
+    "id": "901fe9ac-58b8-4c4a-801d-715cced981d4",
     "name": "那维莱特-平静",
-    "fileName": "f201fb05-cec6-4ee8-9387-a8203f0000fc.mp3",
+    "fileName": "4a23c9ba-edca-4a7c-9ce8-575f8494e05b.mp3",
     "originalName": "那维莱特-平静.mp3",
     "size": 96329,
-    "createTime": "2026-03-13T01:27:54.358Z",
-    "url": "/uploads/reference_audios/f201fb05-cec6-4ee8-9387-a8203f0000fc.mp3",
+    "createTime": "2026-03-13T06:05:42.789Z",
+    "url": "/uploads/reference_audios/4a23c9ba-edca-4a7c-9ce8-575f8494e05b.mp3",
     "remark": "",
-    "sampleText": "我既认可我自身工作的价值，也认同枫丹大众所作所为的意义。我想，我还是会以我的责任为荣的。",
-    "siliconUri": "speech:voice_71677246_76ad_449f_94a4_b38bdc188323:cm0l76q8q00vgihkaez0a28rw:zvlzebkugneynkadramb"
+    "sampleText": "我既认可我自身工作的价值，也认同枫丹大众所作所为的意义。我想，我还是会以我的责任为荣的。"
   }
 ]
