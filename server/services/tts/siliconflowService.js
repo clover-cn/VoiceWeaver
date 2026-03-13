@@ -23,7 +23,8 @@ async function generate({ dialogue, projectName, tempFilename, localChars }) {
   const API_KEY = process.env.SILICONFLOW_API_KEY;
 
   // --- 参考音频克隆优先 ---
-  if (dialogue.type === "dialogue" && dialogue.referenceAudio) {
+  // 旁白也允许使用参考音频
+  if (dialogue.referenceAudio) {
     const audioId = dialogue.referenceAudio;
     const records = getAudioRecords();
     const record = records.find((r) => r.id === audioId);
