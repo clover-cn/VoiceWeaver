@@ -58,7 +58,7 @@ router.post("/parse", async (req, res) => {
          "type": "narration" | "dialogue",
          "role": "标准角色名（旁白请填 '旁白'，角色无论原文称谓怎么变，请统一为一个名字，如：张三）",
          "text": "提取的文本内容（旁白如果以动作描写结尾且直接引出后续对话，请在语境末尾自动补全发音引导词，比如'，开口问道：'，以此实现听觉平滑）",
-         "emotion": "该句话的情绪（旁白可填 'neutral'；如果是对话，请归纳为 common, sad, angry, anxious, cheerful 等英文发音情绪标识之一）"
+         "emotion": "该句话的情绪（旁白可填 'neutral'；如果是对话，请归纳为 common(未知), happy, angry, sad, fearful, disgusted, melancholy, surprised, neutral(平静) 等英文发音情绪标识之一）"
       }
     `;
 
