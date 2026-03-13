@@ -10,8 +10,6 @@ const { v4: uuidv4 } = require("uuid");
 const { generateAudio } = require("../services/tts/ttsFactory");
 const projectsDir = path.join(__dirname, "../data/projects");
 
-
-
 // 辅助函数
 function getCharacters(projectName) {
   if (!projectName) return {};
@@ -23,8 +21,6 @@ function getCharacters(projectName) {
   }
   return {};
 }
-
-
 
 // 1. 生成单条音频
 router.post("/generate-single", async (req, res) => {
@@ -52,7 +48,7 @@ router.post("/generate-single", async (req, res) => {
       dialogue,
       projectName,
       tempFilename,
-      localChars
+      localChars,
     });
 
     res.json({
@@ -88,7 +84,7 @@ router.post("/merge", async (req, res) => {
     }
 
     // 映射出真实的绝对路径
-    const inputFiles = fileNames.map(name => path.join(tempDir, name));
+    const inputFiles = fileNames.map((name) => path.join(tempDir, name));
 
     // 检查文件是否存在
     for (const file of inputFiles) {

@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const fs = require("fs");
 const path = require("path");
-
+const fsPromises = require("fs").promises;
 const projectsDir = path.join(__dirname, "../data/projects");
 
 // 确保 projects 目录存在
@@ -52,20 +52,30 @@ router.post("/", (req, res) => {
 });
 
 // 删除项目
-router.delete("/:projectName", (req, res) => {
+router.delete("/:projectName", async (req, res) => {
   try {
     const { projectName } = req.params;
+    // 安全校验：防止路径穿越 (例如传入 "..", "/", "\")
+    if (!projectName || projectName.includes("/") || projectName.includes("\\") || projectName.includes("..")) {
+      return res.status(400).json({ error: "非法的项目名称" });
+    }
     const projectPath = path.join(projectsDir, projectName);
-
+    console.log("删除的项目名：", projectName);
+    console.log("删除的路径：", projectPath);
     if (!fs.existsSync(projectPath)) {
       return res.status(404).json({ error: "项目不存在" });
     }
-
-    fs.rmSync(projectPath, { recursive: true, force: true });
+    // 使用异步方法删除，防止阻塞主线程，并增加 Windows 下的重试机制
+    await fsPromises.rm(projectPath, {
+      recursive: true,
+      force: true,
+      maxRetries: 3, // 遇到文件占用时重试 3 次 (特别适合 Windows)
+      retryDelay: 100, // 每次重试间隔 100ms
+    });
     res.json({ success: true, message: "项目删除成功" });
   } catch (error) {
     console.error("删除项目失败:", error);
-    res.status(500).json({ error: "删除项目失败" });
+    res.status(500).json({ error: error.message || "删除项目失败" });
   }
 });
 

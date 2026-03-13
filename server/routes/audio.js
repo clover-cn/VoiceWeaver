@@ -68,7 +68,7 @@ router.post("/upload", upload.single("file"), (req, res) => {
     }
 
     // 修复 multer 中文文件名乱码：Latin-1 → UTF-8
-    const decodedOriginalName = Buffer.from(req.file.originalname, 'latin1').toString('utf8');
+    const decodedOriginalName = Buffer.from(req.file.originalname, "latin1").toString("utf8");
     // 自定义音频名称（默认为文件名去掉扩展名）
     const customName = req.body.name || decodedOriginalName.replace(path.extname(decodedOriginalName), "");
 
@@ -80,7 +80,7 @@ router.post("/upload", upload.single("file"), (req, res) => {
       size: req.file.size,
       createTime: new Date().toISOString(),
       url: `/uploads/reference_audios/${req.file.filename}`,
-      remark: ''
+      remark: "",
     };
 
     const records = getAudioRecords();
@@ -112,7 +112,7 @@ router.delete("/:id", (req, res) => {
   try {
     const { id } = req.params;
     let records = getAudioRecords();
-    const recordIndex = records.findIndex(r => r.id === id);
+    const recordIndex = records.findIndex((r) => r.id === id);
 
     if (recordIndex === -1) {
       return res.status(404).json({ error: "未找到该音频记录" });
@@ -134,7 +134,7 @@ router.delete("/:id", (req, res) => {
     let rolesModified = false;
     for (const roleName in globalRoles) {
       const emotionMap = globalRoles[roleName];
-      if (typeof emotionMap === 'object' && emotionMap !== null) {
+      if (typeof emotionMap === "object" && emotionMap !== null) {
         for (const emotion in emotionMap) {
           if (emotionMap[emotion] === id) {
             delete emotionMap[emotion];
@@ -170,11 +170,11 @@ router.get("/global-roles", (req, res) => {
     const result = {};
     for (const roleName in roles) {
       const emotionMap = roles[roleName];
-      if (typeof emotionMap !== 'object' || emotionMap === null) continue;
+      if (typeof emotionMap !== "object" || emotionMap === null) continue;
       result[roleName] = {};
       for (const emotion in emotionMap) {
         const audioId = emotionMap[emotion];
-        const audio = records.find(r => r.id === audioId);
+        const audio = records.find((r) => r.id === audioId);
         if (audio) {
           result[roleName][emotion] = audio;
         }
@@ -195,7 +195,7 @@ router.post("/global-roles", (req, res) => {
     // 期望新结构: { "角色A": { "happy": "音频IDA", "neutral": null }, "角色B": { "sad": "音频IDB" } }
     const { bindings } = req.body;
 
-    if (!bindings || typeof bindings !== 'object') {
+    if (!bindings || typeof bindings !== "object") {
       return res.status(400).json({ error: "参数格式不正确" });
     }
 
@@ -203,13 +203,13 @@ router.post("/global-roles", (req, res) => {
 
     for (const roleName in bindings) {
       const emotionMap = bindings[roleName];
-      if (!emotionMap || typeof emotionMap !== 'object') {
+      if (!emotionMap || typeof emotionMap !== "object") {
         // 如果传了 null/空就删除整个角色
         delete roles[roleName];
         continue;
       }
 
-      if (!roles[roleName] || typeof roles[roleName] !== 'object') {
+      if (!roles[roleName] || typeof roles[roleName] !== "object") {
         roles[roleName] = {};
       }
 
@@ -248,7 +248,7 @@ router.patch("/:id/remark", (req, res) => {
     }
 
     const records = getAudioRecords();
-    const record = records.find(r => r.id === id);
+    const record = records.find((r) => r.id === id);
 
     if (!record) {
       return res.status(404).json({ error: "未找到该音频记录" });
@@ -274,7 +274,7 @@ router.patch("/:id/sample-text", (req, res) => {
     }
 
     const records = getAudioRecords();
-    const record = records.find(r => r.id === id);
+    const record = records.find((r) => r.id === id);
 
     if (!record) {
       return res.status(404).json({ error: "未找到该音频记录" });

@@ -8,7 +8,11 @@ const uploadsDir = path.join(__dirname, "../../uploads/reference_audios");
 
 function getAudioRecords() {
   if (!fs.existsSync(audioRecordsPath)) return [];
-  try { return JSON.parse(fs.readFileSync(audioRecordsPath, "utf8")); } catch (e) { return []; }
+  try {
+    return JSON.parse(fs.readFileSync(audioRecordsPath, "utf8"));
+  } catch (e) {
+    return [];
+  }
 }
 function saveAudioRecords(records) {
   fs.writeFileSync(audioRecordsPath, JSON.stringify(records, null, 2), "utf8");
@@ -22,7 +26,7 @@ async function generate({ dialogue, projectName, tempFilename, localChars }) {
   if (dialogue.type === "dialogue" && dialogue.referenceAudio) {
     const audioId = dialogue.referenceAudio;
     const records = getAudioRecords();
-    const record = records.find(r => r.id === audioId);
+    const record = records.find((r) => r.id === audioId);
 
     if (record) {
       if (record.siliconUri) {
@@ -44,15 +48,15 @@ async function generate({ dialogue, projectName, tempFilename, localChars }) {
             // 从音频记录中读取用户配置的参考文本
             const sampleText = record.sampleText || "";
             if (sampleText) {
-              console.log('参考音频文本：', sampleText);
+              console.log("参考音频文本：", sampleText);
               formData.append("text", sampleText);
             }
 
             const uploadRes = await axios.post(UPLOAD_URL, formData, {
               headers: {
                 ...formData.getHeaders(),
-                "Authorization": `Bearer ${API_KEY}`
-              }
+                Authorization: `Bearer ${API_KEY}`,
+              },
             });
 
             if (uploadRes.data && uploadRes.data.uri) {
@@ -80,7 +84,7 @@ async function generate({ dialogue, projectName, tempFilename, localChars }) {
     }
   }
 
-  console.log('当前使用的音频模型为：', targetVoice);
+  console.log("当前使用的音频模型为：", targetVoice);
 
   // 调用 SiliconFlow API 单句生成
   const TTS_URL = process.env.TTS_ENDPOINT || "https://api.siliconflow.cn/v1/audio/speech";
@@ -89,17 +93,17 @@ async function generate({ dialogue, projectName, tempFilename, localChars }) {
     method: "POST",
     url: TTS_URL,
     headers: {
-      "Authorization": `Bearer ${API_KEY}`,
-      "Content-Type": "application/json"
+      Authorization: `Bearer ${API_KEY}`,
+      "Content-Type": "application/json",
     },
     data: {
       model: "IndexTeam/IndexTTS-2",
       input: dialogue.text,
       voice: targetVoice,
       response_format: "mp3",
-      stream: true
+      stream: true,
     },
-    responseType: "stream"
+    responseType: "stream",
   });
 
   const writer = fs.createWriteStream(tempFilename);
@@ -112,5 +116,5 @@ async function generate({ dialogue, projectName, tempFilename, localChars }) {
 }
 
 module.exports = {
-  generate
+  generate,
 };

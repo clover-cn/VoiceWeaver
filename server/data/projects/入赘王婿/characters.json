@@ -1,0 +1,26 @@
+{
+  "医生": {
+    "voice": "default_voice",
+    "name": "医生"
+  },
+  "叶飞": {
+    "voice": "default_voice",
+    "name": "叶飞"
+  },
+  "伯母": {
+    "voice": "default_voice",
+    "name": "伯母"
+  },
+  "杨芊芊": {
+    "voice": "default_voice",
+    "name": "杨芊芊"
+  },
+  "黄东强": {
+    "voice": "default_voice",
+    "name": "黄东强"
+  },
+  "袁静": {
+    "voice": "default_voice",
+    "name": "袁静"
+  }
+}

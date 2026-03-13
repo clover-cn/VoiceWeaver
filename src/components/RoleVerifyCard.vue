@@ -6,8 +6,12 @@
         <el-icon><MagicStick /></el-icon> AI 解析与调度台
       </h2>
       <div class="space-x-3">
-        <el-button @click="openAudioLibrary" plain type="info"><el-icon class="mr-1"><Service /></el-icon>参考音频库</el-button>
-        <el-button @click="openRoleSetup" plain type="warning" :disabled="dialogueCards.length === 0"><el-icon class="mr-1"><Setting /></el-icon>统一音频配置</el-button>
+        <el-button @click="openAudioLibrary" plain type="info"
+          ><el-icon class="mr-1"><Service /></el-icon>参考音频库</el-button
+        >
+        <el-button @click="openRoleSetup" plain type="warning" :disabled="dialogueCards.length === 0"
+          ><el-icon class="mr-1"><Setting /></el-icon>统一音频配置</el-button
+        >
         <el-button plain @click="clearList" :disabled="dialogueCards.length === 0">清空列表</el-button>
         <el-button type="primary" :loading="isGeneratingAll" @click="handleGenerateAll" :disabled="dialogueCards.length === 0 || isGeneratingAll || isMergingAll">
           <el-icon><Microphone class="mr-1" /></el-icon> 一键生成音频
@@ -47,7 +51,10 @@
             </el-select>
 
             <!-- 绑定参考音频的标识提示 -->
-            <div v-if="card.referenceAudio" class="mt-2 text-[10px] text-green-600 font-bold bg-green-100 px-1 py-0.5 rounded w-full text-center flex items-center justify-center gap-1 shadow-sm border border-green-200">
+            <div
+              v-if="card.referenceAudio"
+              class="mt-2 text-[10px] text-green-600 font-bold bg-green-100 px-1 py-0.5 rounded w-full text-center flex items-center justify-center gap-1 shadow-sm border border-green-200"
+            >
               <el-icon><Check /></el-icon>带参考音
             </div>
           </div>
@@ -61,9 +68,9 @@
               <div class="flex items-center gap-2">
                 <!-- 试听与单次生成控制 -->
                 <audio v-if="card.audioUrl" :src="'http://localhost:3000' + card.audioUrl" controls class="h-8 max-w-[200px]" preload="none"></audio>
-                
+
                 <el-button size="small" type="primary" plain :loading="card.isGenerating" @click="handleGenerateSingle(index)">
-                  {{ card.audioUrl ? '重新生成' : '单独生成' }}
+                  {{ card.audioUrl ? "重新生成" : "单独生成" }}
                 </el-button>
 
                 <el-button link type="danger" size="small" @click="removeCard(index)">
@@ -140,7 +147,7 @@ const audioLibraryDialogRef = ref(null);
 const roleAudioSetupDialogRef = ref(null);
 
 const canMergeAll = computed(() => {
-  return dialogueCards.value.length > 0 && dialogueCards.value.every(c => c.fileName);
+  return dialogueCards.value.length > 0 && dialogueCards.value.every((c) => c.fileName);
 });
 
 const openAudioLibrary = () => {
@@ -149,7 +156,7 @@ const openAudioLibrary = () => {
 
 const openRoleSetup = () => {
   // 提取唯一的角色（包含旁白）
-  const roles = [...new Set(dialogueCards.value.filter(c => c.role).map(c => c.role))];
+  const roles = [...new Set(dialogueCards.value.filter((c) => c.role).map((c) => c.role))];
   if (roleAudioSetupDialogRef.value) {
     roleAudioSetupDialogRef.value.openDialog(roles);
   }
@@ -157,10 +164,10 @@ const openRoleSetup = () => {
 
 const handleAudioSetupSaved = (bindings) => {
   // bindings 格式: { "张三": { "happy": "audioId1", "neutral": null }, ... }
-  dialogueCards.value.forEach(card => {
+  dialogueCards.value.forEach((card) => {
     if (card.role && bindings.hasOwnProperty(card.role)) {
       const emotionMap = bindings[card.role];
-      const currentEmotion = card.emotion || 'neutral';
+      const currentEmotion = card.emotion || "neutral";
       const newAudioId = emotionMap ? emotionMap[currentEmotion] : null;
       if (newAudioId) {
         card.referenceAudio = newAudioId;
@@ -180,18 +187,18 @@ watch(
 
     if (newCardsStr !== oldCardsStr) {
       let parsed = JSON.parse(newCardsStr);
-      
+
       // -- 自动注入全局参考音频逻辑（匹配 角色名 + 当前情感 维度）--
       if (parsed.length > 0) {
         try {
-          const globalRes = await axios.get('http://localhost:3000/api/audio/global-roles');
+          const globalRes = await axios.get("http://localhost:3000/api/audio/global-roles");
           if (globalRes.data.success) {
             const bindingsMap = globalRes.data.roles;
             // 格式: { "张三": { "happy": { id, url, name }, "neutral": {...} }, ... }
-            parsed.forEach(card => {
+            parsed.forEach((card) => {
               if (card.role) {
                 const roleData = bindingsMap[card.role];
-                const currentEmotion = card.emotion || 'neutral';
+                const currentEmotion = card.emotion || "neutral";
                 if (roleData && roleData[currentEmotion]) {
                   card.referenceAudio = roleData[currentEmotion].id;
                 } else {
@@ -201,7 +208,7 @@ watch(
             });
           }
         } catch (e) {
-          console.error('尝试拉取并注入全局参考音频失败', e);
+          console.error("尝试拉取并注入全局参考音频失败", e);
         }
       }
 
@@ -235,10 +242,10 @@ const clearList = () => {
 const handleGenerateSingle = async (index) => {
   const card = dialogueCards.value[index];
   if (!card) return;
-  
+
   card.isGenerating = true;
   downloadReadyUrl.value = null;
-  
+
   try {
     const res = await axios.post("http://localhost:3000/api/tts/generate-single", {
       dialogue: card,
@@ -267,10 +274,10 @@ const handleGenerateAll = async () => {
   try {
     // 采用串行执行，避免瞬间高并发请求压垮下层 TTS，同时提供清晰进度感
     for (let i = 0; i < dialogueCards.value.length; i++) {
-        const card = dialogueCards.value[i];
-        if (!card.fileName) {
-            await handleGenerateSingle(i);
-        }
+      const card = dialogueCards.value[i];
+      if (!card.fileName) {
+        await handleGenerateSingle(i);
+      }
     }
     ElMessage.success("所有未处理片段均已成功生成！您可以开始试听或修改。");
   } catch (error) {
@@ -288,12 +295,12 @@ const handleMergeAll = async () => {
   ElMessage.info("正在将生成的音频合成为最终文件，请稍候...");
 
   try {
-    const fileArg = dialogueCards.value.map(c => c.fileName);
+    const fileArg = dialogueCards.value.map((c) => c.fileName);
     const res = await axios.post("http://localhost:3000/api/tts/merge", {
       fileNames: fileArg,
       projectName: props.projectName,
     });
-    
+
     if (res.data.success) {
       ElMessage.success("整本配音组装成功！");
       downloadReadyUrl.value = res.data.downloadUrl;

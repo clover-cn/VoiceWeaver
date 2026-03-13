@@ -13,20 +13,15 @@
           :before-upload="beforeUpload"
           accept="audio/*"
         >
-          <el-button type="primary"><el-icon class="mr-1"><UploadFilled /></el-icon>点击上传音频</el-button>
+          <el-button type="primary"
+            ><el-icon class="mr-1"><UploadFilled /></el-icon>点击上传音频</el-button
+          >
         </el-upload>
       </div>
 
       <!-- 列表区域 -->
       <div class="flex-1 overflow-y-auto w-full relative">
-        <el-table
-          v-loading="loading"
-          :data="audioList"
-          style="width: 100%"
-          :border="true"
-          stripe
-          height="100%"
-        >
+        <el-table v-loading="loading" :data="audioList" style="width: 100%" :border="true" stripe height="100%">
           <el-table-column prop="name" label="音频名称" min-width="150" show-overflow-tooltip>
             <template #default="scope">
               <span class="font-medium text-gray-800">{{ scope.row.name }}</span>
@@ -91,16 +86,16 @@
 </template>
 
 <script setup>
-import { ref, defineExpose } from 'vue';
-import { UploadFilled, Box } from '@element-plus/icons-vue';
-import { ElMessage } from 'element-plus';
-import axios from 'axios';
+import { ref, defineExpose } from "vue";
+import { UploadFilled, Box } from "@element-plus/icons-vue";
+import { ElMessage } from "element-plus";
+import axios from "axios";
 
 const dialogVisible = ref(false);
 const loading = ref(false);
 const audioList = ref([]);
 // 当前 TTS 提供商，默认 siliconflow
-const ttsProvider = ref('siliconflow');
+const ttsProvider = ref("siliconflow");
 const isSiliconflow = ref(true);
 
 // 供父组件调用的方法打开弹窗
@@ -113,30 +108,30 @@ const openDialog = async () => {
 // 获取当前 TTS 提供商
 const fetchProvider = async () => {
   try {
-    const res = await axios.get('http://localhost:3000/api/tts/provider');
+    const res = await axios.get("http://localhost:3000/api/tts/provider");
     if (res.data.success) {
       ttsProvider.value = res.data.provider;
-      isSiliconflow.value = res.data.provider === 'siliconflow';
+      isSiliconflow.value = res.data.provider === "siliconflow";
     }
   } catch (error) {
-    console.warn('获取 TTS 提供商失败，默认使用 siliconflow 模式');
+    console.warn("获取 TTS 提供商失败，默认使用 siliconflow 模式");
   }
 };
 
 const fetchAudioList = async () => {
   loading.value = true;
   try {
-    const res = await axios.get('http://localhost:3000/api/audio/list');
+    const res = await axios.get("http://localhost:3000/api/audio/list");
     if (res.data.success) {
       // 确保每条记录都有 sampleText 和 remark 字段（兼容旧数据）
-      audioList.value = (res.data.list || []).map(item => ({
+      audioList.value = (res.data.list || []).map((item) => ({
         ...item,
-        sampleText: item.sampleText || '',
-        remark: item.remark || ''
+        sampleText: item.sampleText || "",
+        remark: item.remark || "",
       }));
     }
   } catch (error) {
-    ElMessage.error('获取音频库失败');
+    ElMessage.error("获取音频库失败");
   } finally {
     loading.value = false;
   }
@@ -146,13 +141,13 @@ const fetchAudioList = async () => {
 const handleSampleTextSave = async (row) => {
   try {
     const res = await axios.patch(`http://localhost:3000/api/audio/${row.id}/sample-text`, {
-      sampleText: row.sampleText || ''
+      sampleText: row.sampleText || "",
     });
     if (res.data.success) {
-      ElMessage.success('参考文本已保存');
+      ElMessage.success("参考文本已保存");
     }
   } catch (error) {
-    ElMessage.error('保存参考文本失败');
+    ElMessage.error("保存参考文本失败");
   }
 };
 
@@ -160,25 +155,25 @@ const handleSampleTextSave = async (row) => {
 const handleRemarkSave = async (row) => {
   try {
     const res = await axios.patch(`http://localhost:3000/api/audio/${row.id}/remark`, {
-      remark: row.remark || ''
+      remark: row.remark || "",
     });
     if (res.data.success) {
-      ElMessage.success('备注已保存');
+      ElMessage.success("备注已保存");
     }
   } catch (error) {
-    ElMessage.error('保存备注失败');
+    ElMessage.error("保存备注失败");
   }
 };
 
 const beforeUpload = (file) => {
   // 简单的校验
-  if (!file.type.startsWith('audio/')) {
-    ElMessage.error('只能上传音频文件！');
+  if (!file.type.startsWith("audio/")) {
+    ElMessage.error("只能上传音频文件！");
     return false;
   }
   const isLt50M = file.size / 1024 / 1024 < 50;
   if (!isLt50M) {
-    ElMessage.error('上传音频大小不能超过 50MB!');
+    ElMessage.error("上传音频大小不能超过 50MB!");
     return false;
   }
   return true;
@@ -186,37 +181,39 @@ const beforeUpload = (file) => {
 
 const handleUploadSuccess = (res) => {
   if (res.success) {
-    ElMessage.success('上传成功');
+    ElMessage.success("上传成功");
     fetchAudioList(); // 重新加载列表
   } else {
-    ElMessage.error(res.error || '上传失败');
+    ElMessage.error(res.error || "上传失败");
   }
 };
 
 const handleUploadError = () => {
-  ElMessage.error('文件上传失败，请检查网络或服务端状态');
+  ElMessage.error("文件上传失败，请检查网络或服务端状态");
 };
 
 const handleDelete = async (id) => {
   try {
     const res = await axios.delete(`http://localhost:3000/api/audio/${id}`);
     if (res.data.success) {
-      ElMessage.success('删除成功');
+      ElMessage.success("删除成功");
       fetchAudioList();
     }
   } catch (error) {
-    ElMessage.error('删除失败');
+    ElMessage.error("删除失败");
   }
 };
 
 const formatDate = (isoStr) => {
-  if (!isoStr) return '';
+  if (!isoStr) return "";
   const date = new Date(isoStr);
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")} ${String(date.getHours()).padStart(2, "0")}:${String(
+    date.getMinutes(),
+  ).padStart(2, "0")}`;
 };
 
 defineExpose({
-  openDialog
+  openDialog,
 });
 </script>
 
