@@ -148,8 +148,8 @@ const openAudioLibrary = () => {
 };
 
 const openRoleSetup = () => {
-  // 提取唯一的角色（仅针对台词类）
-  const roles = [...new Set(dialogueCards.value.filter(c => c.type === 'dialogue' && c.role).map(c => c.role))];
+  // 提取唯一的角色（包含旁白）
+  const roles = [...new Set(dialogueCards.value.filter(c => c.role).map(c => c.role))];
   if (roleAudioSetupDialogRef.value) {
     roleAudioSetupDialogRef.value.openDialog(roles);
   }
@@ -158,7 +158,7 @@ const openRoleSetup = () => {
 const handleAudioSetupSaved = (bindings) => {
   // bindings 格式: { "张三": { "happy": "audioId1", "neutral": null }, ... }
   dialogueCards.value.forEach(card => {
-    if (card.type === 'dialogue' && card.role && bindings.hasOwnProperty(card.role)) {
+    if (card.role && bindings.hasOwnProperty(card.role)) {
       const emotionMap = bindings[card.role];
       const currentEmotion = card.emotion || 'neutral';
       const newAudioId = emotionMap ? emotionMap[currentEmotion] : null;
@@ -189,7 +189,7 @@ watch(
             const bindingsMap = globalRes.data.roles;
             // 格式: { "张三": { "happy": { id, url, name }, "neutral": {...} }, ... }
             parsed.forEach(card => {
-              if (card.type === 'dialogue' && card.role) {
+              if (card.role) {
                 const roleData = bindingsMap[card.role];
                 const currentEmotion = card.emotion || 'neutral';
                 if (roleData && roleData[currentEmotion]) {

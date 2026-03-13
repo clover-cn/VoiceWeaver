@@ -37,6 +37,35 @@
               <audio :src="'http://localhost:3000' + scope.row.url" controls class="h-8 w-full outline-none"></audio>
             </template>
           </el-table-column>
+
+          <!-- 参考文本列：仅 siliconflow 模式下显示 -->
+          <el-table-column v-if="isSiliconflow" label="参考文本" min-width="220">
+            <template #default="scope">
+              <el-input
+                v-model="scope.row.sampleText"
+                type="textarea"
+                :autosize="{ minRows: 1, maxRows: 3 }"
+                placeholder="输入该音频对应的参考文本"
+                @blur="handleSampleTextSave(scope.row)"
+                @keydown.enter.ctrl="handleSampleTextSave(scope.row)"
+              />
+            </template>
+          </el-table-column>
+
+          <!-- 备注列 -->
+          <el-table-column label="备注" min-width="180">
+            <template #default="scope">
+              <el-input
+                v-model="scope.row.remark"
+                type="textarea"
+                :autosize="{ minRows: 1, maxRows: 3 }"
+                placeholder="添加备注"
+                @blur="handleRemarkSave(scope.row)"
+                @keydown.enter.ctrl="handleRemarkSave(scope.row)"
+              />
+            </template>
+          </el-table-column>
+
           <el-table-column prop="createTime" label="上传时间" width="180">
             <template #default="scope">
               {{ formatDate(scope.row.createTime) }}
@@ -70,11 +99,28 @@ import axios from 'axios';
 const dialogVisible = ref(false);
 const loading = ref(false);
 const audioList = ref([]);
+// 当前 TTS 提供商，默认 siliconflow
+const ttsProvider = ref('siliconflow');
+const isSiliconflow = ref(true);
 
 // 供父组件调用的方法打开弹窗
-const openDialog = () => {
+const openDialog = async () => {
   dialogVisible.value = true;
-  fetchAudioList();
+  await fetchProvider();
+  await fetchAudioList();
+};
+
+// 获取当前 TTS 提供商
+const fetchProvider = async () => {
+  try {
+    const res = await axios.get('http://localhost:3000/api/tts/provider');
+    if (res.data.success) {
+      ttsProvider.value = res.data.provider;
+      isSiliconflow.value = res.data.provider === 'siliconflow';
+    }
+  } catch (error) {
+    console.warn('获取 TTS 提供商失败，默认使用 siliconflow 模式');
+  }
 };
 
 const fetchAudioList = async () => {
@@ -82,12 +128,45 @@ const fetchAudioList = async () => {
   try {
     const res = await axios.get('http://localhost:3000/api/audio/list');
     if (res.data.success) {
-      audioList.value = res.data.list || [];
+      // 确保每条记录都有 sampleText 和 remark 字段（兼容旧数据）
+      audioList.value = (res.data.list || []).map(item => ({
+        ...item,
+        sampleText: item.sampleText || '',
+        remark: item.remark || ''
+      }));
     }
   } catch (error) {
     ElMessage.error('获取音频库失败');
   } finally {
     loading.value = false;
+  }
+};
+
+// 保存参考文本（失焦或 Ctrl+Enter 触发）
+const handleSampleTextSave = async (row) => {
+  try {
+    const res = await axios.patch(`http://localhost:3000/api/audio/${row.id}/sample-text`, {
+      sampleText: row.sampleText || ''
+    });
+    if (res.data.success) {
+      ElMessage.success('参考文本已保存');
+    }
+  } catch (error) {
+    ElMessage.error('保存参考文本失败');
+  }
+};
+
+// 保存备注（失焦或 Ctrl+Enter 触发）
+const handleRemarkSave = async (row) => {
+  try {
+    const res = await axios.patch(`http://localhost:3000/api/audio/${row.id}/remark`, {
+      remark: row.remark || ''
+    });
+    if (res.data.success) {
+      ElMessage.success('备注已保存');
+    }
+  } catch (error) {
+    ElMessage.error('保存备注失败');
   }
 };
 

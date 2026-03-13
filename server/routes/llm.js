@@ -114,7 +114,12 @@ router.post("/parse", async (req, res) => {
     });
   } catch (error) {
     console.error("大语言模型解析错误:", error.message);
-    res.status(500).json({ error: error.message || "内部服务器错误" });
+    if (error.response) {
+      console.error("  → 响应状态码:", error.response.status);
+      console.error("  → 响应数据:", JSON.stringify(error.response.data));
+    }
+    console.error("  → 请求地址:", process.env.LLM_ENDPOINT || "https://api.deepseek.com/v1/chat/completions");
+    res.status(500).json({ error: `大语言模型解析错误: ${error.message}` });
   }
 });
 

@@ -142,4 +142,10 @@ router.get("/preview/:projectName/:filename", (req, res) => {
   res.sendFile(file);
 });
 
+// 获取当前 TTS 提供商
+router.get("/provider", (req, res) => {
+  const provider = process.env.TTS_DEFAULT_PROVIDER || "siliconflow";
+  res.json({ success: true, provider });
+});
+
 module.exports = router;

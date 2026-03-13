@@ -115,7 +115,14 @@ const previewPlayer = ref(null);
 const isPlaying = ref(false);
 
 const openDialog = async (roles) => {
-  uniqueRoles.value = roles || [];
+  // 旁白始终排在第一位
+  const sorted = [...(roles || [])];
+  const idx = sorted.indexOf('旁白');
+  if (idx > 0) {
+    sorted.splice(idx, 1);
+    sorted.unshift('旁白');
+  }
+  uniqueRoles.value = sorted;
 
   // 提前初始化 localBindings 骨架，避免模板在加载前访问 undefined
   const skeleton = {};

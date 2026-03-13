@@ -41,11 +41,12 @@ async function generate({ dialogue, projectName, tempFilename, localChars }) {
 
             const safeVoiceName = "voice_" + audioId.replace(/-/g, "_");
             formData.append("customName", safeVoiceName);
-            // 如果传了 text 有助于模型提取特征，取前30字
-            const sampleText = "我是刻晴，璃月七星中的「玉衡」。变革的时机已经到来，维持了千年的秩序即将被改写。这历史性的时刻，你愿意和我一起见证吗?";
-            console.log('参考音频文本：', sampleText);
-
-            formData.append("text", sampleText);
+            // 从音频记录中读取用户配置的参考文本
+            const sampleText = record.sampleText || "";
+            if (sampleText) {
+              console.log('参考音频文本：', sampleText);
+              formData.append("text", sampleText);
+            }
 
             const uploadRes = await axios.post(UPLOAD_URL, formData, {
               headers: {

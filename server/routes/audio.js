@@ -67,17 +67,20 @@ router.post("/upload", upload.single("file"), (req, res) => {
       return res.status(400).json({ error: "没有上传文件" });
     }
 
-    // 自定义音频名称（默认为文件名）
-    const customName = req.body.name || req.file.originalname.replace(path.extname(req.file.originalname), "");
+    // 修复 multer 中文文件名乱码：Latin-1 → UTF-8
+    const decodedOriginalName = Buffer.from(req.file.originalname, 'latin1').toString('utf8');
+    // 自定义音频名称（默认为文件名去掉扩展名）
+    const customName = req.body.name || decodedOriginalName.replace(path.extname(decodedOriginalName), "");
 
     const newRecord = {
       id: uuidv4(),
       name: customName,
       fileName: req.file.filename,
-      originalName: req.file.originalname,
+      originalName: decodedOriginalName,
       size: req.file.size,
       createTime: new Date().toISOString(),
-      url: `/uploads/reference_audios/${req.file.filename}`
+      url: `/uploads/reference_audios/${req.file.filename}`,
+      remark: ''
     };
 
     const records = getAudioRecords();
@@ -231,6 +234,64 @@ router.post("/global-roles", (req, res) => {
   } catch (error) {
     console.error("保存全局角色绑定错误:", error);
     res.status(500).json({ error: "保存失败" });
+  }
+});
+
+// 6. 更新参考音频的备注
+router.patch("/:id/remark", (req, res) => {
+  try {
+    const { id } = req.params;
+    const { remark } = req.body;
+
+    if (typeof remark !== "string") {
+      return res.status(400).json({ error: "remark 必须为字符串" });
+    }
+
+    const records = getAudioRecords();
+    const record = records.find(r => r.id === id);
+
+    if (!record) {
+      return res.status(404).json({ error: "未找到该音频记录" });
+    }
+
+    record.remark = remark;
+    saveAudioRecords(records);
+    res.json({ success: true, message: "备注更新成功" });
+  } catch (error) {
+    console.error("更新备注错误:", error);
+    res.status(500).json({ error: "更新备注失败" });
+  }
+});
+
+// 7. 更新参考音频的参考文本（siliconflow 模式专用）
+router.patch("/:id/sample-text", (req, res) => {
+  try {
+    const { id } = req.params;
+    const { sampleText } = req.body;
+
+    if (typeof sampleText !== "string") {
+      return res.status(400).json({ error: "sampleText 必须为字符串" });
+    }
+
+    const records = getAudioRecords();
+    const record = records.find(r => r.id === id);
+
+    if (!record) {
+      return res.status(404).json({ error: "未找到该音频记录" });
+    }
+
+    record.sampleText = sampleText;
+
+    // 参考文本变更后清除缓存的 siliconUri，下次生成时会用新文本重新上传
+    if (record.siliconUri) {
+      delete record.siliconUri;
+    }
+
+    saveAudioRecords(records);
+    res.json({ success: true, message: "参考文本更新成功" });
+  } catch (error) {
+    console.error("更新参考文本错误:", error);
+    res.status(500).json({ error: "更新参考文本失败" });
   }
 });
 

@@ -170,17 +170,21 @@ const handleDeleteProject = async (name) => {
       type: "warning",
     });
 
-    const res = await axios.delete(`http://localhost:3000/api/projects/${name}`);
+    // 如果正在此项目中，先退出项目以停止草稿自动保存，避免文件占用
+    if (currentProject.value === name) {
+      currentProject.value = null;
+      currentParsedList.value = [];
+      currentNovelText.value = "";
+    }
+
+    const res = await axios.delete(`http://localhost:3000/api/projects/${encodeURIComponent(name)}`);
     if (res.data.success) {
       ElMessage.success("删除成功");
-      if (currentProject.value === name) {
-        currentProject.value = null;
-      }
       loadProjects();
     }
   } catch (e) {
     if (e !== "cancel") {
-      ElMessage.error("删除项目失败");
+      ElMessage.error(e.response?.data?.error || "删除项目失败");
     }
   }
 };
