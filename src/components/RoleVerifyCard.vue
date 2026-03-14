@@ -22,6 +22,18 @@
       </div>
     </div>
 
+    <!-- 进度条区域 -->
+    <div v-if="isGeneratingAll" class="px-6 py-4 bg-blue-50 border-b border-blue-100 flex flex-col gap-2 shrink-0 transition-all">
+      <div class="flex justify-between items-center text-sm text-blue-800 font-medium">
+        <span>正在合成音频... ({{ generateCurrentIndex }} / {{ generateTotal }})</span>
+        <span>{{ generateProgress }}%</span>
+      </div>
+      <el-progress :percentage="generateProgress" :show-text="false" :stroke-width="10" status="success"></el-progress>
+      <div class="text-xs text-blue-600 truncate">
+        当前片段: {{ currentGeneratingText }}
+      </div>
+    </div>
+
     <!-- 卡片列表 -->
     <div v-if="dialogueCards.length > 0" class="flex-1 p-6 overflow-y-auto space-y-4 pb-24 scroll-smooth">
       <div
@@ -118,7 +130,7 @@
 <script setup>
 import { ref, computed, watch } from "vue";
 import axios from "axios";
-import { ElMessage } from "element-plus";
+import { ElMessage, ElMessageBox } from "element-plus";
 import { MagicStick, VideoPlay, Microphone, Delete, Box, CircleCheckFilled, Check, Service, Setting } from "@element-plus/icons-vue";
 import AudioLibraryDialog from "./AudioLibraryDialog.vue";
 import RoleAudioSetupDialog from "./RoleAudioSetupDialog.vue";
@@ -142,6 +154,11 @@ const dialogueCards = ref([]);
 const isGeneratingAll = ref(false);
 const isMergingAll = ref(false);
 const downloadReadyUrl = ref(null);
+
+const generateProgress = ref(0);
+const generateCurrentIndex = ref(0);
+const generateTotal = ref(0);
+const currentGeneratingText = ref("");
 
 const audioLibraryDialogRef = ref(null);
 const roleAudioSetupDialogRef = ref(null);
@@ -239,7 +256,7 @@ const clearList = () => {
   downloadReadyUrl.value = null;
 };
 
-const handleGenerateSingle = async (index) => {
+const handleGenerateSingle = async (index, isBatch = false) => {
   const card = dialogueCards.value[index];
   if (!card) return;
 
@@ -255,10 +272,16 @@ const handleGenerateSingle = async (index) => {
       card.fileName = res.data.fileName;
       // 附加时间戳避免游览器缓存相同路径的临时音频
       card.audioUrl = res.data.audioUrl + "?t=" + Date.now();
-      ElMessage.success(`第 ${index + 1} 段音频生成成功`);
+      if (!isBatch) {
+        ElMessage.success(`第 ${index + 1} 段音频生成成功`);
+      }
     }
   } catch (error) {
-    ElMessage.error(error.response?.data?.error || `第 ${index + 1} 段音频生成失败`);
+    if (!isBatch) {
+      ElMessage.error(error.response?.data?.error || `第 ${index + 1} 段音频生成失败`);
+    } else {
+      throw error;
+    }
   } finally {
     card.isGenerating = false;
   }
@@ -267,23 +290,46 @@ const handleGenerateSingle = async (index) => {
 const handleGenerateAll = async () => {
   if (dialogueCards.value.length === 0) return;
 
+  const cardsToGenerate = dialogueCards.value.filter(c => !c.fileName);
+  if (cardsToGenerate.length === 0) {
+    ElMessage.info("所有片段均已生成音频。");
+    return;
+  }
+
   isGeneratingAll.value = true;
   downloadReadyUrl.value = null;
-  ElMessage.info("批量生成中，请耐心等待所有片段完成...");
+  generateTotal.value = cardsToGenerate.length;
+  generateCurrentIndex.value = 0;
+  generateProgress.value = 0;
 
   try {
     // 采用串行执行，避免瞬间高并发请求压垮下层 TTS，同时提供清晰进度感
     for (let i = 0; i < dialogueCards.value.length; i++) {
       const card = dialogueCards.value[i];
       if (!card.fileName) {
-        await handleGenerateSingle(i);
+        generateCurrentIndex.value++;
+        currentGeneratingText.value = card.text;
+        
+        await handleGenerateSingle(i, true);
+        
+        generateProgress.value = Math.floor((generateCurrentIndex.value / generateTotal.value) * 100);
       }
     }
-    ElMessage.success("所有未处理片段均已成功生成！您可以开始试听或修改。");
+    
+    ElMessageBox.alert("所有未处理片段均已成功生成！您可以开始试听或进行音频合并。", "生成完成", {
+      confirmButtonText: "确定",
+      type: "success",
+    });
   } catch (error) {
     ElMessage.error("批量请求中断或部分发生异常。");
   } finally {
     isGeneratingAll.value = false;
+    setTimeout(() => {
+      generateProgress.value = 0;
+      generateCurrentIndex.value = 0;
+      generateTotal.value = 0;
+      currentGeneratingText.value = "";
+    }, 1000);
   }
 };
 
