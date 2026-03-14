@@ -48,10 +48,10 @@
           <!-- 左侧：角色卡片 -->
           <div class="w-32 shrink-0 flex flex-col items-center p-2 rounded-lg relative" :class="card.type === 'narration' ? 'bg-gray-50' : 'bg-blue-50'">
             <div class="font-bold text-gray-700 text-sm mb-1">🎭 角色纠错</div>
-            <el-input v-model="card.role" size="small" class="mb-2" :readonly="card.type === 'narration'"></el-input>
+            <el-input v-model="card.role" size="small" class="mb-2" :readonly="card.type === 'narration'" @change="handleRoleChange(card)"></el-input>
 
             <div class="font-bold text-gray-700 text-sm mb-1 mt-1">🎙️ 情感选择</div>
-            <el-select v-model="card.emotion" size="small" placeholder="情绪选择" class="w-full">
+            <el-select v-model="card.emotion" size="small" placeholder="情绪选择" class="w-full" @change="handleEmotionChange(card)">
               <el-option label="高兴" value="happy"></el-option>
               <el-option label="愤怒" value="angry"></el-option>
               <el-option label="悲伤" value="sad"></el-option>
@@ -128,7 +128,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from "vue";
+import { ref, computed, watch, onMounted } from "vue";
 import axios from "axios";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { MagicStick, VideoPlay, Microphone, Delete, Box, CircleCheckFilled, Check, Service, Setting } from "@element-plus/icons-vue";
@@ -163,6 +163,43 @@ const currentGeneratingText = ref("");
 const audioLibraryDialogRef = ref(null);
 const roleAudioSetupDialogRef = ref(null);
 
+const globalAudioBindings = ref({});
+
+const fetchGlobalBindings = async () => {
+  try {
+    const globalRes = await axios.get("http://localhost:3000/api/audio/global-roles");
+    if (globalRes.data.success) {
+      globalAudioBindings.value = globalRes.data.roles;
+      return globalRes.data.roles;
+    }
+  } catch (e) {
+    console.error("尝试拉取全局参考音频失败", e);
+  }
+  return null;
+};
+
+onMounted(() => {
+  fetchGlobalBindings();
+});
+
+const handleEmotionChange = (card) => {
+  if (card.role && globalAudioBindings.value[card.role]) {
+    const roleData = globalAudioBindings.value[card.role];
+    const currentEmotion = card.emotion || "neutral";
+    if (roleData[currentEmotion]) {
+      card.referenceAudio = roleData[currentEmotion].id;
+    } else {
+      delete card.referenceAudio;
+    }
+  } else {
+    delete card.referenceAudio;
+  }
+};
+
+const handleRoleChange = (card) => {
+  handleEmotionChange(card);
+};
+
 const canMergeAll = computed(() => {
   return dialogueCards.value.length > 0 && dialogueCards.value.every((c) => c.fileName);
 });
@@ -179,7 +216,7 @@ const openRoleSetup = () => {
   }
 };
 
-const handleAudioSetupSaved = (bindings) => {
+const handleAudioSetupSaved = async (bindings) => {
   // bindings 格式: { "张三": { "happy": "audioId1", "neutral": null }, ... }
   dialogueCards.value.forEach((card) => {
     if (card.role && bindings.hasOwnProperty(card.role)) {
@@ -193,6 +230,8 @@ const handleAudioSetupSaved = (bindings) => {
       }
     }
   });
+  
+  await fetchGlobalBindings();
 };
 
 // 注入外部数据
@@ -207,25 +246,19 @@ watch(
 
       // -- 自动注入全局参考音频逻辑（匹配 角色名 + 当前情感 维度）--
       if (parsed.length > 0) {
-        try {
-          const globalRes = await axios.get("http://localhost:3000/api/audio/global-roles");
-          if (globalRes.data.success) {
-            const bindingsMap = globalRes.data.roles;
-            // 格式: { "张三": { "happy": { id, url, name }, "neutral": {...} }, ... }
-            parsed.forEach((card) => {
-              if (card.role) {
-                const roleData = bindingsMap[card.role];
-                const currentEmotion = card.emotion || "neutral";
-                if (roleData && roleData[currentEmotion]) {
-                  card.referenceAudio = roleData[currentEmotion].id;
-                } else {
-                  delete card.referenceAudio;
-                }
+        const bindingsMap = await fetchGlobalBindings();
+        if (bindingsMap) {
+          parsed.forEach((card) => {
+            if (card.role) {
+              const roleData = bindingsMap[card.role];
+              const currentEmotion = card.emotion || "neutral";
+              if (roleData && roleData[currentEmotion]) {
+                card.referenceAudio = roleData[currentEmotion].id;
+              } else {
+                delete card.referenceAudio;
               }
-            });
-          }
-        } catch (e) {
-          console.error("尝试拉取并注入全局参考音频失败", e);
+            }
+          });
         }
       }
 
