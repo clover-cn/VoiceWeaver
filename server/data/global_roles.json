@@ -1,5 +1,22 @@
 {
-  "旁白": {
-    "neutral": "901fe9ac-58b8-4c4a-801d-715cced981d4"
+  "杨芊芊": {
+    "disgusted": "f073a5bb-c4d8-4bfe-b9c7-089732ed5d0a",
+    "melancholy": "b0f13c31-1547-46ac-8955-63dc3ff5f8eb",
+    "neutral": "d79641f4-0d6c-4152-8083-bf4f90b9c24a",
+    "happy": "c5eddec8-c9be-468a-8483-689e1bf1f086",
+    "angry": "683558c6-2931-4293-ba66-0eff21175603"
+  },
+  "刻晴": {
+    "happy": "c5eddec8-c9be-468a-8483-689e1bf1f086",
+    "angry": "683558c6-2931-4293-ba66-0eff21175603",
+    "disgusted": "f073a5bb-c4d8-4bfe-b9c7-089732ed5d0a",
+    "melancholy": "b0f13c31-1547-46ac-8955-63dc3ff5f8eb",
+    "neutral": "12443f9a-6f51-482b-88f4-1fa9c3cd70ae"
+  },
+  "钟离": {
+    "neutral": "d79641f4-0d6c-4152-8083-bf4f90b9c24a"
+  },
+  "那维莱特": {
+    "neutral": "04324f2a-71da-4ba7-a85a-2cf65d5bab79"
   }
 }

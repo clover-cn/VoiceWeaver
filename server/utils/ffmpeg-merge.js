@@ -1,6 +1,12 @@
 const ffmpeg = require("fluent-ffmpeg");
+const ffmpegPath = require("ffmpeg-static");
+const ffprobePath = require("ffprobe-static").path;
 const fs = require("fs");
 const path = require("path");
+
+// 设置 ffmpeg 和 ffprobe 路径
+ffmpeg.setFfmpegPath(ffmpegPath);
+ffmpeg.setFfprobePath(ffprobePath);
 
 // 辅助函数
 function mergeAudioFiles(inputFiles, outputFile) {
