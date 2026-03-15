@@ -164,7 +164,8 @@ router.delete("/:id", async (req, res) => {
       const emotionMap = globalRoles[roleName];
       if (typeof emotionMap === "object" && emotionMap !== null) {
         for (const emotion in emotionMap) {
-          if (emotionMap[emotion] === id) {
+          const config = emotionMap[emotion];
+          if (config === id || (config && typeof config === "object" && config.id === id)) {
             delete emotionMap[emotion];
             rolesModified = true;
           }
@@ -194,19 +195,20 @@ router.get("/global-roles", (req, res) => {
     const roles = getGlobalRoles();
     const records = getAudioRecords();
 
-    // 组装格式，将对应的音频详情加上去，新结构: { "角色A": { "happy": { id, url, name }, "sad": {...} } }
+    // 组装格式，支持新版带模式和权重的对象结构
     const result = {};
     for (const roleName in roles) {
       const emotionMap = roles[roleName];
       if (typeof emotionMap !== "object" || emotionMap === null) continue;
       result[roleName] = {};
       for (const emotion in emotionMap) {
-        const audioId = emotionMap[emotion];
-        const audio = records.find((r) => r.id === audioId);
-        if (audio) {
-          result[roleName][emotion] = audio;
+        const config = emotionMap[emotion];
+        const audioInfo = typeof config === "string" ? { id: config } : { ...config };
+
+        const audio = records.find((r) => r.id === audioInfo.id);
+        if (audio || audioInfo.mode === 3) {
+          result[roleName][emotion] = { ...audioInfo, ...audio };
         }
-        // 音频已删除则忽略，不清空存储中的记录
       }
     }
 
@@ -220,7 +222,6 @@ router.get("/global-roles", (req, res) => {
 // 5. 更新（完全覆盖）全局角色的音频绑定
 router.post("/global-roles", (req, res) => {
   try {
-    // 期望新结构: { "角色A": { "happy": "音频IDA", "neutral": null }, "角色B": { "sad": "音频IDB" } }
     const { bindings } = req.body;
 
     if (!bindings || typeof bindings !== "object") {
@@ -232,7 +233,6 @@ router.post("/global-roles", (req, res) => {
     for (const roleName in bindings) {
       const emotionMap = bindings[roleName];
       if (!emotionMap || typeof emotionMap !== "object") {
-        // 如果传了 null/空就删除整个角色
         delete roles[roleName];
         continue;
       }
@@ -242,12 +242,12 @@ router.post("/global-roles", (req, res) => {
       }
 
       for (const emotion in emotionMap) {
-        const audioId = emotionMap[emotion];
-        if (!audioId) {
-          // 空则删除该情感维度
+        const config = emotionMap[emotion];
+        // 如果传入 null 或者无有效配置，则删除对应情感
+        if (!config || (typeof config === "object" && !config.id && config.mode !== 3)) {
           delete roles[roleName][emotion];
         } else {
-          roles[roleName][emotion] = audioId;
+          roles[roleName][emotion] = config;
         }
       }
 

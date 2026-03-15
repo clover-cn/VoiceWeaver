@@ -29,18 +29,12 @@
         <span>{{ generateProgress }}%</span>
       </div>
       <el-progress :percentage="generateProgress" :show-text="false" :stroke-width="10" status="success"></el-progress>
-      <div class="text-xs text-blue-600 truncate">
-        当前片段: {{ currentGeneratingText }}
-      </div>
+      <div class="text-xs text-blue-600 truncate">当前片段: {{ currentGeneratingText }}</div>
     </div>
 
     <!-- 卡片列表 -->
     <div v-if="dialogueCards.length > 0" class="flex-1 p-6 overflow-y-auto space-y-4 pb-24 scroll-smooth">
-      <div
-        v-for="(card, index) in dialogueCards"
-        :key="index"
-        class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 hover:shadow-md transition-shadow duration-200 relative group overflow-hidden"
-      >
+      <div v-for="(card, index) in dialogueCards" :key="index" class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 hover:shadow-md transition-shadow duration-200 relative group overflow-hidden">
         <!-- 侧边颜色条指示 (对话/旁白) -->
         <div class="absolute left-0 top-0 bottom-0 w-1.5" :class="card.type === 'narration' ? 'bg-gray-300' : 'bg-blue-500'"></div>
 
@@ -62,12 +56,8 @@
               <el-option label="平静" value="neutral"></el-option>
             </el-select>
 
-            <!-- 绑定参考音频的标识提示 -->
-            <div
-              v-if="card.referenceAudio"
-              class="mt-2 text-[10px] text-green-600 font-bold bg-green-100 px-1 py-0.5 rounded w-full text-center flex items-center justify-center gap-1 shadow-sm border border-green-200"
-            >
-              <el-icon><Check /></el-icon>带参考音
+            <div v-if="card.referenceAudio" class="mt-2 text-[10px] text-green-600 font-bold bg-green-100 px-1 py-0.5 rounded w-full text-center flex items-center justify-center gap-1 shadow-sm border border-green-200">
+              <el-icon><Check /></el-icon>{{ typeof card.referenceAudio === "object" && card.referenceAudio.mode === 3 ? "带向量控制" : "带参考音" }}
             </div>
           </div>
 
@@ -104,10 +94,7 @@
     </div>
 
     <!-- 下载横幅 -->
-    <div
-      v-if="downloadReadyUrl"
-      class="absolute bottom-6 left-1/2 transform -translate-x-1/2 z-10 w-[90%] bg-green-500 rounded-lg shadow-xl p-4 flex items-center justify-between text-white transition-all"
-    >
+    <div v-if="downloadReadyUrl" class="absolute bottom-6 left-1/2 transform -translate-x-1/2 z-10 w-[90%] bg-green-500 rounded-lg shadow-xl p-4 flex items-center justify-between text-white transition-all">
       <div class="flex items-center gap-3">
         <el-icon :size="24"><CircleCheckFilled /></el-icon>
         <div>
@@ -187,7 +174,7 @@ const handleEmotionChange = (card) => {
     const roleData = globalAudioBindings.value[card.role];
     const currentEmotion = card.emotion || "neutral";
     if (roleData[currentEmotion]) {
-      card.referenceAudio = roleData[currentEmotion].id;
+      card.referenceAudio = roleData[currentEmotion];
     } else {
       delete card.referenceAudio;
     }
@@ -222,15 +209,15 @@ const handleAudioSetupSaved = async (bindings) => {
     if (card.role && bindings.hasOwnProperty(card.role)) {
       const emotionMap = bindings[card.role];
       const currentEmotion = card.emotion || "neutral";
-      const newAudioId = emotionMap ? emotionMap[currentEmotion] : null;
-      if (newAudioId) {
-        card.referenceAudio = newAudioId;
+      const newAudioConfig = emotionMap ? emotionMap[currentEmotion] : null;
+      if (newAudioConfig) {
+        card.referenceAudio = newAudioConfig;
       } else {
         delete card.referenceAudio;
       }
     }
   });
-  
+
   await fetchGlobalBindings();
 };
 
@@ -253,7 +240,7 @@ watch(
               const roleData = bindingsMap[card.role];
               const currentEmotion = card.emotion || "neutral";
               if (roleData && roleData[currentEmotion]) {
-                card.referenceAudio = roleData[currentEmotion].id;
+                card.referenceAudio = roleData[currentEmotion];
               } else {
                 delete card.referenceAudio;
               }
@@ -323,7 +310,7 @@ const handleGenerateSingle = async (index, isBatch = false) => {
 const handleGenerateAll = async () => {
   if (dialogueCards.value.length === 0) return;
 
-  const cardsToGenerate = dialogueCards.value.filter(c => !c.fileName);
+  const cardsToGenerate = dialogueCards.value.filter((c) => !c.fileName);
   if (cardsToGenerate.length === 0) {
     ElMessage.info("所有片段均已生成音频。");
     return;
@@ -342,13 +329,13 @@ const handleGenerateAll = async () => {
       if (!card.fileName) {
         generateCurrentIndex.value++;
         currentGeneratingText.value = card.text;
-        
+
         await handleGenerateSingle(i, true);
-        
+
         generateProgress.value = Math.floor((generateCurrentIndex.value / generateTotal.value) * 100);
       }
     }
-    
+
     ElMessageBox.alert("所有未处理片段均已成功生成！您可以开始试听或进行音频合并。", "生成完成", {
       confirmButtonText: "确定",
       type: "success",
