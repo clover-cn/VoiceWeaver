@@ -34,7 +34,11 @@
 
     <!-- 卡片列表 -->
     <div v-if="dialogueCards.length > 0" class="flex-1 p-6 overflow-y-auto space-y-4 pb-24 scroll-smooth">
-      <div v-for="(card, index) in dialogueCards" :key="index" class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 hover:shadow-md transition-shadow duration-200 relative group overflow-hidden">
+      <div
+        v-for="(card, index) in dialogueCards"
+        :key="index"
+        class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 hover:shadow-md transition-shadow duration-200 relative group overflow-hidden"
+      >
         <!-- 侧边颜色条指示 (对话/旁白) -->
         <div class="absolute left-0 top-0 bottom-0 w-1.5" :class="card.type === 'narration' ? 'bg-gray-300' : 'bg-blue-500'"></div>
 
@@ -56,7 +60,10 @@
               <el-option label="平静" value="neutral"></el-option>
             </el-select>
 
-            <div v-if="card.referenceAudio" class="mt-2 text-[10px] text-green-600 font-bold bg-green-100 px-1 py-0.5 rounded w-full text-center flex items-center justify-center gap-1 shadow-sm border border-green-200">
+            <div
+              v-if="card.referenceAudio"
+              class="mt-2 text-[10px] text-green-600 font-bold bg-green-100 px-1 py-0.5 rounded w-full text-center flex items-center justify-center gap-1 shadow-sm border border-green-200"
+            >
               <el-icon><Check /></el-icon>{{ typeof card.referenceAudio === "object" && card.referenceAudio.mode === 3 ? "带向量控制" : "带参考音" }}
             </div>
           </div>
@@ -94,7 +101,10 @@
     </div>
 
     <!-- 下载横幅 -->
-    <div v-if="downloadReadyUrl" class="absolute bottom-6 left-1/2 transform -translate-x-1/2 z-10 w-[90%] bg-green-500 rounded-lg shadow-xl p-4 flex items-center justify-between text-white transition-all">
+    <div
+      v-if="downloadReadyUrl"
+      class="absolute bottom-6 left-1/2 transform -translate-x-1/2 z-10 w-[90%] bg-green-500 rounded-lg shadow-xl p-4 flex items-center justify-between text-white transition-all"
+    >
       <div class="flex items-center gap-3">
         <el-icon :size="24"><CircleCheckFilled /></el-icon>
         <div>
@@ -356,6 +366,25 @@ const handleGenerateAll = async () => {
 const handleMergeAll = async () => {
   if (!canMergeAll.value) return;
 
+  let pauseDuration = 0;
+  try {
+    const { value } = await ElMessageBox.prompt("请输入每段语音结尾的停顿时间（秒），默认0秒，最长5秒", "设置停顿时间", {
+      confirmButtonText: "确定",
+      cancelButtonText: "取消",
+      inputValue: "0",
+      inputPattern: /^([0-4](\.\d+)?|5(\.0+)?)$/,
+      inputErrorMessage: "请输入0到5之间的数字",
+    });
+    pauseDuration = parseFloat(value) || 0;
+    if (pauseDuration < 0 || pauseDuration > 5) {
+      ElMessage.error("停顿时间必须在0到5秒之间");
+      return;
+    }
+  } catch (e) {
+    // 用户取消输入
+    return;
+  }
+
   isMergingAll.value = true;
   downloadReadyUrl.value = null;
   ElMessage.info("正在将生成的音频合成为最终文件，请稍候...");
@@ -365,6 +394,7 @@ const handleMergeAll = async () => {
     const res = await axios.post("http://localhost:3000/api/tts/merge", {
       fileNames: fileArg,
       projectName: props.projectName,
+      pauseDuration: pauseDuration,
     });
 
     if (res.data.success) {

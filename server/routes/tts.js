@@ -66,7 +66,7 @@ router.post("/generate-single", async (req, res) => {
 // 2. 合并多段音频
 router.post("/merge", async (req, res) => {
   try {
-    const { fileNames, projectName } = req.body;
+    const { fileNames, projectName, pauseDuration } = req.body;
     if (!fileNames || !Array.isArray(fileNames) || fileNames.length === 0) {
       return res.status(400).json({ error: "需要有效的文件名数组" });
     }
@@ -97,7 +97,7 @@ router.post("/merge", async (req, res) => {
     const finalFilePath = path.join(finalOutputDir, finalFileName);
 
     try {
-      await mergeAudioFiles(inputFiles, finalFilePath);
+      await mergeAudioFiles(inputFiles, finalFilePath, pauseDuration || 0);
       // cleanUpTempFiles(inputFiles);
     } catch (e) {
       console.error("FFmpeg 合并失败:", e);
