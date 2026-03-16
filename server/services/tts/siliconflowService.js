@@ -4,6 +4,7 @@ const axios = require("axios");
 const FormData = require("form-data");
 
 const audioRecordsPath = path.join(__dirname, "../../data/audio_records.json");
+const globalRolesPath = path.join(__dirname, "../../data/global_roles.json");
 const uploadsDir = path.join(__dirname, "../../uploads/reference_audios");
 
 function getAudioRecords() {
@@ -14,6 +15,16 @@ function getAudioRecords() {
     return [];
   }
 }
+
+function getGlobalRoles() {
+  if (!fs.existsSync(globalRolesPath)) return {};
+  try {
+    return JSON.parse(fs.readFileSync(globalRolesPath, "utf8"));
+  } catch (e) {
+    return {};
+  }
+}
+
 function saveAudioRecords(records) {
   fs.writeFileSync(audioRecordsPath, JSON.stringify(records, null, 2), "utf8");
 }
@@ -22,10 +33,42 @@ async function generate({ dialogue, projectName, tempFilename, localChars }) {
   let targetVoice = "fnlp/MOSS-TTSD-v0.5:alex";
   const API_KEY = process.env.SILICONFLOW_API_KEY;
 
+  const globalRoles = getGlobalRoles();
+  const roleName = dialogue.role || "未知角色";
+  const currentEmotion = dialogue.emotion || "neutral";
+
+  const roleConfig = globalRoles[roleName] || {};
+  let baseAudioId = null;
+  
+  if (roleConfig["neutral"]) {
+    baseAudioId = typeof roleConfig["neutral"] === "string" ? roleConfig["neutral"] : roleConfig["neutral"].id;
+  }
+  if (!baseAudioId) {
+    const firstAvailableEmotion = Object.keys(roleConfig).find((em) => {
+      const conf = roleConfig[em];
+      return conf && (typeof conf === "string" || conf.id);
+    });
+    if (firstAvailableEmotion) {
+      const conf = roleConfig[firstAvailableEmotion];
+      baseAudioId = typeof conf === "string" ? conf : conf.id;
+    }
+  }
+
+  let currentConfig = dialogue.referenceAudio || roleConfig[currentEmotion];
+  if (typeof currentConfig === "string") {
+    currentConfig = { id: currentConfig };
+  }
+
+  let audioId = null;
+  if (currentConfig && currentConfig.id) {
+    audioId = currentConfig.id;
+  } else if (baseAudioId) {
+    audioId = baseAudioId;
+  }
+
   // --- 参考音频克隆优先 ---
   // 旁白也允许使用参考音频
-  if (dialogue.referenceAudio) {
-    const audioId = dialogue.referenceAudio;
+  if (audioId) {
     const records = getAudioRecords();
     const record = records.find((r) => r.id === audioId);
 
