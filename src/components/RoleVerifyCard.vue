@@ -61,10 +61,10 @@
             </el-select>
 
             <div
-              v-if="card.referenceAudio"
+              v-if="hasReferenceAudio(card)"
               class="mt-2 text-[10px] text-green-600 font-bold bg-green-100 px-1 py-0.5 rounded w-full text-center flex items-center justify-center gap-1 shadow-sm border border-green-200"
             >
-              <el-icon><Check /></el-icon>{{ typeof card.referenceAudio === "object" && card.referenceAudio.mode === 3 ? "带向量控制" : "带参考音" }}
+              <el-icon><Check /></el-icon>{{ ttsProvider === 'indextts2' && card.referenceAudio && typeof card.referenceAudio === "object" && card.referenceAudio.mode === 3 ? "带向量控制" : "带参考音" }}
             </div>
           </div>
 
@@ -161,6 +161,18 @@ const audioLibraryDialogRef = ref(null);
 const roleAudioSetupDialogRef = ref(null);
 
 const globalAudioBindings = ref({});
+const ttsProvider = ref("siliconflow");
+
+const fetchProvider = async () => {
+  try {
+    const res = await axios.get("http://localhost:3000/api/tts/provider");
+    if (res.data.success) {
+      ttsProvider.value = res.data.provider;
+    }
+  } catch (error) {
+    console.warn("获取 TTS 提供商失败，默认使用 siliconflow 模式");
+  }
+};
 
 const fetchGlobalBindings = async () => {
   try {
@@ -176,6 +188,7 @@ const fetchGlobalBindings = async () => {
 };
 
 onMounted(() => {
+  fetchProvider();
   fetchGlobalBindings();
 });
 
@@ -195,6 +208,23 @@ const handleEmotionChange = (card) => {
 
 const handleRoleChange = (card) => {
   handleEmotionChange(card);
+};
+
+const hasReferenceAudio = (card) => {
+  if (card.referenceAudio) {
+    if (typeof card.referenceAudio === "string") return true;
+    if (card.referenceAudio.id) return true;
+    if (ttsProvider.value === "indextts2" && card.referenceAudio.mode === 3) return true;
+  }
+  
+  // 如果当前情感没有配置或没有 id，检查是否有 neutral 的 id 作为 fallback
+  if (card.role && globalAudioBindings.value[card.role]) {
+    const roleData = globalAudioBindings.value[card.role];
+    if (roleData["neutral"] && (typeof roleData["neutral"] === "string" || roleData["neutral"].id)) {
+      return true;
+    }
+  }
+  return false;
 };
 
 const canMergeAll = computed(() => {
