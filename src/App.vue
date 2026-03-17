@@ -12,7 +12,12 @@
       <div class="flex items-center gap-4 text-sm text-gray-500 font-medium">
         <el-button v-if="currentProject" size="small" @click="currentProject = null" type="info" plain class="mr-2">切换项目</el-button>
         <div class="flex items-center gap-1">
-          <el-icon class="text-green-500"><CircleCheck /></el-icon> 服务已连接
+          <el-icon :class="isBackendOnline ? 'text-green-500' : 'text-red-500'">
+            <component :is="isBackendOnline ? CircleCheck : CircleClose" />
+          </el-icon>
+          <span :class="isBackendOnline ? '' : 'text-red-500'">
+            {{ isBackendOnline ? '服务已连接' : '服务离线' }}
+          </span>
         </div>
         <a href="https://github.com" target="_blank" class="hover:text-blue-600 transition-colors">使用文档</a>
       </div>
@@ -66,8 +71,8 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
-import { CircleCheck } from "@element-plus/icons-vue";
+import { ref, onMounted, onUnmounted } from "vue";
+import { CircleCheck, CircleClose } from "@element-plus/icons-vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import axios from "axios";
 import NovelInput from "./components/NovelInput.vue";
@@ -84,19 +89,45 @@ const newProjectName = ref("");
 const isCreating = ref(false);
 const currentNovelText = ref("");
 
+const isBackendOnline = ref(true);
+let statusTimer = null;
+
 const loadProjects = async () => {
   isLoadingProjects.value = true;
   try {
-    const res = await axios.get("http://localhost:3000/api/projects");
+    const res = await axios.get("http://localhost:3000/api/projects", { timeout: 3000 });
     if (res.data.success) {
       projects.value = res.data.projects;
+      isBackendOnline.value = true;
     }
   } catch (e) {
+    isBackendOnline.value = false;
     ElMessage.error("无法加载项目列表，请检查服务端是否运行");
   } finally {
     isLoadingProjects.value = false;
   }
 };
+
+const checkBackendStatus = async () => {
+  try {
+    await axios.get("http://localhost:3000/api/projects", { timeout: 3000 });
+    if (!isBackendOnline.value) {
+      isBackendOnline.value = true;
+      loadProjects(); // 重新连接后自动重载
+    }
+  } catch (e) {
+    isBackendOnline.value = false;
+  }
+};
+
+onMounted(() => {
+  loadProjects();
+  statusTimer = setInterval(checkBackendStatus, 5000);
+});
+
+onUnmounted(() => {
+  if (statusTimer) clearInterval(statusTimer);
+});
 
 const saveDraft = async () => {
   if (!currentProject.value) return;
@@ -109,10 +140,6 @@ const saveDraft = async () => {
     console.error("保存草稿失败", e);
   }
 };
-
-onMounted(() => {
-  loadProjects();
-});
 
 const selectProject = async (name) => {
   // 切换前尝试立即保存上一个
