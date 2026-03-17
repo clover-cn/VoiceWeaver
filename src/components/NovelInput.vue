@@ -6,7 +6,7 @@
         <el-icon><Document /></el-icon> 小说原文输入
       </h2>
       <el-button type="primary" :loading="isParsing" @click="handleParseText">
-        AI 智能拆解解析 <el-icon class="ml-1"><Right /></el-icon>
+        开始智能拆解 <el-icon class="ml-1"><Right /></el-icon>
       </el-button>
     </div>
 

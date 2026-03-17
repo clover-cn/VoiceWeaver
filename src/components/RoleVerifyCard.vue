@@ -3,21 +3,21 @@
     <!-- 头控件 -->
     <div class="p-4 bg-white border-b border-gray-200 flex justify-between items-center shadow-sm shrink-0">
       <h2 class="text-lg font-bold text-gray-800 flex items-center gap-2">
-        <el-icon><MagicStick /></el-icon> AI 解析与调度台
+        <el-icon><MagicStick /></el-icon> 调度台
       </h2>
       <div class="space-x-3">
         <el-button @click="openAudioLibrary" plain type="info"
-          ><el-icon class="mr-1"><Service /></el-icon>参考音频库</el-button
+          ><el-icon><Service /></el-icon>参考音频库</el-button
         >
         <el-button @click="openRoleSetup" plain type="warning" :disabled="dialogueCards.length === 0"
-          ><el-icon class="mr-1"><Setting /></el-icon>统一音频配置</el-button
+          ><el-icon><Setting /></el-icon>统一音频配置</el-button
         >
         <el-button plain @click="clearList" :disabled="dialogueCards.length === 0">清空列表</el-button>
         <el-button type="primary" :loading="isGeneratingAll" @click="handleGenerateAll" :disabled="dialogueCards.length === 0 || isGeneratingAll || isMergingAll">
-          <el-icon><Microphone class="mr-1" /></el-icon> 一键生成音频
+          <el-icon><Microphone /></el-icon> 一键生成音频
         </el-button>
         <el-button type="success" :loading="isMergingAll" @click="handleMergeAll" :disabled="!canMergeAll || isGeneratingAll || isMergingAll">
-          <el-icon><VideoPlay class="mr-1" /></el-icon> 音频合并
+          <el-icon><VideoPlay /></el-icon> 音频合并
         </el-button>
       </div>
     </div>
