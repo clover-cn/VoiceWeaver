@@ -46,7 +46,10 @@
           <!-- 左侧：角色卡片 -->
           <div class="w-32 shrink-0 flex flex-col items-center p-2 rounded-lg relative" :class="card.type === 'narration' ? 'bg-gray-50' : 'bg-blue-50'">
             <div class="font-bold text-gray-700 text-sm mb-1">🎭 角色纠错</div>
-            <el-input v-model="card.role" size="small" class="mb-2" :readonly="card.type === 'narration'" @change="handleRoleChange(card)"></el-input>
+            <el-select v-model="card.role" size="small" class="mb-2 w-full" filterable allow-create default-first-option @change="handleRoleChange(card)">
+              <el-option label="旁白" value="旁白"></el-option>
+              <el-option v-for="roleName in availableRoles" :key="roleName" :label="roleName" :value="roleName"></el-option>
+            </el-select>
 
             <div class="font-bold text-gray-700 text-sm mb-1 mt-1">🎙️ 情感选择</div>
             <el-select v-model="card.emotion" size="small" placeholder="情绪选择" class="w-full" @change="handleEmotionChange(card)">
@@ -64,7 +67,8 @@
               v-if="hasReferenceAudio(card)"
               class="mt-2 text-[10px] text-green-600 font-bold bg-green-100 px-1 py-0.5 rounded w-full text-center flex items-center justify-center gap-1 shadow-sm border border-green-200"
             >
-              <el-icon><Check /></el-icon>{{ ttsProvider === 'indextts2' && card.referenceAudio && typeof card.referenceAudio === "object" && card.referenceAudio.mode === 3 ? "带向量控制" : "带参考音" }}
+              <el-icon><Check /></el-icon
+              >{{ ttsProvider === "indextts2" && card.referenceAudio && typeof card.referenceAudio === "object" && card.referenceAudio.mode === 3 ? "带向量控制" : "带参考音" }}
             </div>
           </div>
 
@@ -207,8 +211,32 @@ const handleEmotionChange = (card) => {
 };
 
 const handleRoleChange = (card) => {
+  if (card.role === "旁白") {
+    card.type = "narration";
+  } else {
+    card.type = "dialogue";
+  }
   handleEmotionChange(card);
 };
+
+const availableRoles = computed(() => {
+  const roles = new Set();
+  // 收集当前卡片中已有的角色
+  dialogueCards.value.forEach((card) => {
+    if (card.role && card.role !== "旁白") {
+      roles.add(card.role);
+    }
+  });
+  // 收集解析出的全局角色
+  if (props.globalCharacters) {
+    Object.keys(props.globalCharacters).forEach((role) => {
+      if (role !== "旁白") {
+        roles.add(role);
+      }
+    });
+  }
+  return Array.from(roles);
+});
 
 const hasReferenceAudio = (card) => {
   if (card.referenceAudio) {
@@ -216,7 +244,7 @@ const hasReferenceAudio = (card) => {
     if (card.referenceAudio.id) return true;
     if (ttsProvider.value === "indextts2" && card.referenceAudio.mode === 3) return true;
   }
-  
+
   // 如果当前情感没有配置或没有 id，检查是否有 neutral 的 id 作为 fallback
   if (card.role && globalAudioBindings.value[card.role]) {
     const roleData = globalAudioBindings.value[card.role];

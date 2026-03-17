@@ -83,14 +83,15 @@
     "siliconUri": "speech:voice_04324f2a_71da_4ba7_a85a_2cf65d5bab79:cm0l76q8q00vgihkaez0a28rw:ctpgadkjtquqsirurrps"
   },
   {
-    "id": "96b92e94-18c2-44ed-b841-9b48fbcafc51",
-    "name": "步非烟原声 等你回来啊，我一定亲手做好多好吃的，给你好好补一补身体",
-    "fileName": "b61aae3a-16f1-4d21-97d6-ae43b59aaa12.wav",
-    "originalName": "步非烟原声 等你回来啊，我一定亲手做好多好吃的，给你好好补一补身体.wav",
-    "size": 150444,
-    "createTime": "2026-03-15T12:12:25.259Z",
-    "url": "/uploads/reference_audios/b61aae3a-16f1-4d21-97d6-ae43b59aaa12.wav",
+    "id": "ff74937c-32a3-469e-8946-975555da2317",
+    "name": "行秋-旁白",
+    "fileName": "8be3bee4-dd20-45b2-95e3-6c8150278d3d.mp3",
+    "originalName": "行秋-旁白.mp3",
+    "size": 247514,
+    "createTime": "2026-03-17T05:40:45.266Z",
+    "url": "/uploads/reference_audios/8be3bee4-dd20-45b2-95e3-6c8150278d3d.mp3",
     "remark": "",
-    "sampleText": ""
+    "sampleText": "在下行秋，不过书海一蠹。某虽不才，仍愿为君略尽绵薄。难得有机会说这种风格的台词，感觉还不错。",
+    "siliconUri": "speech:voice_ff74937c_32a3_469e_8946_975555da2317:cm0l76q8q00vgihkaez0a28rw:yuthqadvkmlwclpwisxp"
   }
 ]
