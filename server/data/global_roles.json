@@ -34,6 +34,56 @@
       "id": null,
       "mode": 3,
       "emoWeight": 0
+    },
+    "neutral": {
+      "id": "f2c00789-01a1-474d-bfcd-c5f940006be9",
+      "mode": 1,
+      "emoWeight": 0.65,
+      "emoAlpha": 0.6
+    }
+  },
+  "刻晴": {
+    "happy": {
+      "id": "d1707117-4a36-48a7-b8ce-792b7a26c0b5",
+      "mode": 1,
+      "emoWeight": 0.65
+    },
+    "angry": {
+      "id": "d0fc651f-c4c3-4914-b7fe-8c898867423d",
+      "mode": 1,
+      "emoWeight": 0.65
+    },
+    "disgusted": {
+      "id": "b5ce78c8-acbd-4fba-a21c-914a295ccfce",
+      "mode": 1,
+      "emoWeight": 0.65
+    },
+    "melancholy": {
+      "id": "39a8e2ba-7220-42ea-84ae-1e01808c5c3d",
+      "mode": 1,
+      "emoWeight": 0.65
+    },
+    "neutral": {
+      "id": "4cea6ef9-cd75-4f90-afdb-4d1531e0a448",
+      "mode": 1,
+      "emoWeight": 0.65,
+      "emoAlpha": 0.6
+    }
+  },
+  "钟离": {
+    "neutral": {
+      "id": "857e60db-4894-4c6b-9de3-f95d9e5ed8bf",
+      "mode": 1,
+      "emoWeight": 0.65,
+      "emoAlpha": 0.6
+    }
+  },
+  "那维莱特": {
+    "neutral": {
+      "id": "350dc131-c232-4986-a145-d851608e411e",
+      "mode": 1,
+      "emoWeight": 0.65,
+      "emoAlpha": 0.6
     }
   }
 }

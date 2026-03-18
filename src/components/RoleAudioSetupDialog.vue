@@ -42,7 +42,7 @@
 
           <!-- 情感维度网格：2列 -->
           <div class="grid grid-cols-2 gap-0 divide-x divide-y divide-gray-100">
-            <div v-for="dim in EMOTION_DIMS" :key="dim.value" class="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors">
+            <div v-for="dim in getVisibleEmotionDims(role)" :key="dim.value" class="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors">
               <!-- 情感标签 -->
               <div class="flex items-center gap-1.5 w-20 shrink-0">
                 <!-- <span class="text-lg leading-none">{{ dim.emoji }}</span> -->
@@ -147,6 +147,14 @@ const autoPrefillBindings = ref({});
 const previewPlayer = ref(null);
 const isPlaying = ref(false);
 
+const getVisibleEmotionDims = (role) => {
+  // 旁白在同音色模式下只保留平静；其余模式保持完整情绪维度
+  if (role === "旁白" && roleModes.value[role] === 1) {
+    return EMOTION_DIMS.filter((dim) => dim.value === "neutral");
+  }
+  return EMOTION_DIMS;
+};
+
 const handleRoleModeChange = (role) => {
   const mode = roleModes.value[role];
   if (localBindings.value[role]) {
@@ -237,9 +245,24 @@ const fetchData = async () => {
 
         EMOTION_DIMS.forEach((dim) => {
           const audioDetail = globalRoles[role]?.[dim.value];
-          if (audioDetail) {
+          const rolePrefill = autoPrefillBindings.value[role] || {};
+          const prefillDetail = rolePrefill[dim.value];
+
+          if (audioDetail && audioDetail.id) {
             newBindings[role][dim.value] = {
-              id: audioDetail.id || null,
+              id: audioDetail.id,
+              mode: rMode,
+              emoWeight: audioDetail.emoWeight !== undefined ? audioDetail.emoWeight : 0.65,
+            };
+          } else if (prefillDetail && prefillDetail.id) {
+            newBindings[role][dim.value] = {
+              id: prefillDetail.id,
+              mode: prefillDetail.mode || 1,
+              emoWeight: prefillDetail.emoWeight !== undefined ? prefillDetail.emoWeight : 0.65,
+            };
+          } else if (audioDetail) {
+            newBindings[role][dim.value] = {
+              id: null,
               mode: rMode,
               emoWeight: audioDetail.emoWeight !== undefined ? audioDetail.emoWeight : 0.65,
             };
@@ -247,22 +270,6 @@ const fetchData = async () => {
             newBindings[role][dim.value] = { id: null, mode: rMode, emoWeight: 0.65 };
           }
         });
-
-        // 该角色没有手工全局绑定时，回显自动分配结果
-        if (!globalRoles[role] || Object.keys(globalRoles[role]).length === 0) {
-          const rolePrefill = autoPrefillBindings.value[role] || {};
-          Object.keys(rolePrefill).forEach((emotion) => {
-            if (!newBindings[role][emotion]) return;
-            const conf = rolePrefill[emotion];
-            if (conf && conf.id) {
-              newBindings[role][emotion] = {
-                id: conf.id,
-                mode: conf.mode || 1,
-                emoWeight: conf.emoWeight !== undefined ? conf.emoWeight : 0.65,
-              };
-            }
-          });
-        }
       });
       localBindings.value = newBindings;
     } else {
@@ -333,6 +340,19 @@ const handleSave = async () => {
     const cleanBindings = {};
     for (const role in localBindings.value) {
       cleanBindings[role] = { ...localBindings.value[role] };
+
+      // 旁白在同音色模式下仅保存 neutral，删除其他情绪配置
+      if (role === "旁白" && roleModes.value[role] === 1) {
+        const neutralConfig = cleanBindings[role]["neutral"] || { id: null, mode: 1, emoWeight: 0.65 };
+        cleanBindings[role] = {
+          neutral: {
+            id: neutralConfig.id || null,
+            mode: 1,
+            emoWeight: neutralConfig.emoWeight !== undefined ? neutralConfig.emoWeight : 0.65,
+          },
+        };
+      }
+
       // 将全局的情感权重 (emoAlpha) 保存到该角色的基础配置(neutral)里以便下发利用
       if (cleanBindings[role]["neutral"]) {
         cleanBindings[role]["neutral"].emoAlpha = roleEmoAlphas.value[role];

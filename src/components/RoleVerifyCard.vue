@@ -279,21 +279,23 @@ const openRoleSetup = () => {
   const autoPrefill = {};
 
   dialogueCards.value.forEach((card) => {
-    if (!card || !card.role) return;
-    if (!autoPrefill[card.role]) autoPrefill[card.role] = {};
+    if (!card) return;
+    const roleKey = card.role || (card.type === "narration" ? "旁白" : "");
+    if (!roleKey) return;
+    if (!autoPrefill[roleKey]) autoPrefill[roleKey] = {};
 
     if (card.autoEmotionAudioMap && typeof card.autoEmotionAudioMap === "object") {
       Object.keys(card.autoEmotionAudioMap).forEach((emotion) => {
         const conf = card.autoEmotionAudioMap[emotion];
-        if (conf && conf.id && !autoPrefill[card.role][emotion]) {
-          autoPrefill[card.role][emotion] = { id: conf.id, mode: conf.mode || 1, emoWeight: conf.emoWeight ?? 0.65 };
+        if (conf && conf.id && !autoPrefill[roleKey][emotion]) {
+          autoPrefill[roleKey][emotion] = { id: conf.id, mode: conf.mode || 1, emoWeight: conf.emoWeight ?? 0.65 };
         }
       });
     }
 
-    if ((card.type === "narration" || card.role === "旁白") && card.referenceAudio && card.referenceAudio.id) {
-      if (!autoPrefill[card.role]["neutral"]) {
-        autoPrefill[card.role]["neutral"] = {
+    if ((card.type === "narration" || roleKey === "旁白") && card.referenceAudio && card.referenceAudio.id) {
+      if (!autoPrefill[roleKey]["neutral"]) {
+        autoPrefill[roleKey]["neutral"] = {
           id: card.referenceAudio.id,
           mode: card.referenceAudio.mode || 1,
           emoWeight: card.referenceAudio.emoWeight ?? 0.65,
