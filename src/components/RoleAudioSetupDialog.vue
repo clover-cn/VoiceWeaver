@@ -142,6 +142,7 @@ const localBindings = ref({});
 const ttsProvider = ref("siliconflow");
 const roleModes = ref({});
 const roleEmoAlphas = ref({});
+const autoPrefillBindings = ref({});
 
 const previewPlayer = ref(null);
 const isPlaying = ref(false);
@@ -159,7 +160,7 @@ const handleRoleModeChange = (role) => {
   }
 };
 
-const openDialog = async (roles) => {
+const openDialog = async (roles, autoPrefill = {}) => {
   // 旁白始终排在第一位
   const sorted = [...(roles || [])];
   const idx = sorted.indexOf("旁白");
@@ -184,6 +185,7 @@ const openDialog = async (roles) => {
   localBindings.value = skeleton;
   roleModes.value = skeletonModes;
   roleEmoAlphas.value = skeletonAlphas;
+  autoPrefillBindings.value = autoPrefill && typeof autoPrefill === "object" ? autoPrefill : {};
 
   dialogVisible.value = true;
   await fetchProvider();
@@ -245,10 +247,68 @@ const fetchData = async () => {
             newBindings[role][dim.value] = { id: null, mode: rMode, emoWeight: 0.65 };
           }
         });
+
+        // 该角色没有手工全局绑定时，回显自动分配结果
+        if (!globalRoles[role] || Object.keys(globalRoles[role]).length === 0) {
+          const rolePrefill = autoPrefillBindings.value[role] || {};
+          Object.keys(rolePrefill).forEach((emotion) => {
+            if (!newBindings[role][emotion]) return;
+            const conf = rolePrefill[emotion];
+            if (conf && conf.id) {
+              newBindings[role][emotion] = {
+                id: conf.id,
+                mode: conf.mode || 1,
+                emoWeight: conf.emoWeight !== undefined ? conf.emoWeight : 0.65,
+              };
+            }
+          });
+        }
       });
       localBindings.value = newBindings;
+    } else {
+      // 接口异常时也尽量回显自动分配结果
+      const fallbackBindings = {};
+      uniqueRoles.value.forEach((role) => {
+        fallbackBindings[role] = {};
+        EMOTION_DIMS.forEach((dim) => {
+          fallbackBindings[role][dim.value] = { id: null, mode: 1, emoWeight: 0.65 };
+        });
+        const rolePrefill = autoPrefillBindings.value[role] || {};
+        Object.keys(rolePrefill).forEach((emotion) => {
+          if (!fallbackBindings[role][emotion]) return;
+          const conf = rolePrefill[emotion];
+          if (conf && conf.id) {
+            fallbackBindings[role][emotion] = {
+              id: conf.id,
+              mode: conf.mode || 1,
+              emoWeight: conf.emoWeight !== undefined ? conf.emoWeight : 0.65,
+            };
+          }
+        });
+      });
+      localBindings.value = fallbackBindings;
     }
   } catch (error) {
+    const fallbackBindings = {};
+    uniqueRoles.value.forEach((role) => {
+      fallbackBindings[role] = {};
+      EMOTION_DIMS.forEach((dim) => {
+        fallbackBindings[role][dim.value] = { id: null, mode: 1, emoWeight: 0.65 };
+      });
+      const rolePrefill = autoPrefillBindings.value[role] || {};
+      Object.keys(rolePrefill).forEach((emotion) => {
+        if (!fallbackBindings[role][emotion]) return;
+        const conf = rolePrefill[emotion];
+        if (conf && conf.id) {
+          fallbackBindings[role][emotion] = {
+            id: conf.id,
+            mode: conf.mode || 1,
+            emoWeight: conf.emoWeight !== undefined ? conf.emoWeight : 0.65,
+          };
+        }
+      });
+    });
+    localBindings.value = fallbackBindings;
     ElMessage.error("加载配置失败");
     console.error(error);
   } finally {

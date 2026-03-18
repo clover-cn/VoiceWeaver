@@ -197,9 +197,16 @@ onMounted(() => {
 });
 
 const handleEmotionChange = (card) => {
+  const currentEmotion = card.emotion || "neutral";
+
+  // 优先使用 LLM 解析阶段自动分配好的同音色映射
+  if (card.autoEmotionAudioMap && card.autoEmotionAudioMap[currentEmotion]) {
+    card.referenceAudio = card.autoEmotionAudioMap[currentEmotion];
+    return;
+  }
+
   if (card.role && globalAudioBindings.value[card.role]) {
     const roleData = globalAudioBindings.value[card.role];
-    const currentEmotion = card.emotion || "neutral";
     if (roleData[currentEmotion]) {
       card.referenceAudio = roleData[currentEmotion];
     } else {
@@ -216,6 +223,9 @@ const handleRoleChange = (card) => {
   } else {
     card.type = "dialogue";
   }
+  // 角色被手工切换后，自动分配映射失效，避免错配到旧角色音色
+  delete card.autoEmotionAudioMap;
+  delete card.autoAssignedVoiceActor;
   handleEmotionChange(card);
 };
 
@@ -266,8 +276,34 @@ const openAudioLibrary = () => {
 const openRoleSetup = () => {
   // 提取唯一的角色（包含旁白）
   const roles = [...new Set(dialogueCards.value.filter((c) => c.role).map((c) => c.role))];
+  const autoPrefill = {};
+
+  dialogueCards.value.forEach((card) => {
+    if (!card || !card.role) return;
+    if (!autoPrefill[card.role]) autoPrefill[card.role] = {};
+
+    if (card.autoEmotionAudioMap && typeof card.autoEmotionAudioMap === "object") {
+      Object.keys(card.autoEmotionAudioMap).forEach((emotion) => {
+        const conf = card.autoEmotionAudioMap[emotion];
+        if (conf && conf.id && !autoPrefill[card.role][emotion]) {
+          autoPrefill[card.role][emotion] = { id: conf.id, mode: conf.mode || 1, emoWeight: conf.emoWeight ?? 0.65 };
+        }
+      });
+    }
+
+    if ((card.type === "narration" || card.role === "旁白") && card.referenceAudio && card.referenceAudio.id) {
+      if (!autoPrefill[card.role]["neutral"]) {
+        autoPrefill[card.role]["neutral"] = {
+          id: card.referenceAudio.id,
+          mode: card.referenceAudio.mode || 1,
+          emoWeight: card.referenceAudio.emoWeight ?? 0.65,
+        };
+      }
+    }
+  });
+
   if (roleAudioSetupDialogRef.value) {
-    roleAudioSetupDialogRef.value.openDialog(roles);
+    roleAudioSetupDialogRef.value.openDialog(roles, autoPrefill);
   }
 };
 
@@ -304,9 +340,17 @@ watch(
         const bindingsMap = await fetchGlobalBindings();
         if (bindingsMap) {
           parsed.forEach((card) => {
+            // 后端已自动分配到卡片时，前端不再覆盖
+            if (card.referenceAudio) return;
+
+            const currentEmotion = card.emotion || "neutral";
+            if (card.autoEmotionAudioMap && card.autoEmotionAudioMap[currentEmotion]) {
+              card.referenceAudio = card.autoEmotionAudioMap[currentEmotion];
+              return;
+            }
+
             if (card.role) {
               const roleData = bindingsMap[card.role];
-              const currentEmotion = card.emotion || "neutral";
               if (roleData && roleData[currentEmotion]) {
                 card.referenceAudio = roleData[currentEmotion];
               } else {
