@@ -209,12 +209,16 @@ const handleEmotionChange = (card) => {
     const roleData = globalAudioBindings.value[card.role];
     if (roleData[currentEmotion]) {
       card.referenceAudio = roleData[currentEmotion];
-    } else {
-      delete card.referenceAudio;
+      return;
     }
-  } else {
-    delete card.referenceAudio;
   }
+  
+  // 如果是旁白，且已经有 referenceAudio，则保留
+  if (card.role === "旁白" && card.referenceAudio) {
+    return;
+  }
+
+  delete card.referenceAudio;
 };
 
 const handleRoleChange = (card) => {
@@ -226,6 +230,22 @@ const handleRoleChange = (card) => {
   // 角色被手工切换后，自动分配映射失效，避免错配到旧角色音色
   delete card.autoEmotionAudioMap;
   delete card.autoAssignedVoiceActor;
+  delete card.referenceAudio;
+
+  // 尝试从其他同角色的卡片中恢复自动分配的音色映射
+  if (card.role === "旁白") {
+    const sameRoleCard = dialogueCards.value.find(c => c.role === "旁白" && c.referenceAudio && c !== card);
+    if (sameRoleCard) {
+      card.referenceAudio = JSON.parse(JSON.stringify(sameRoleCard.referenceAudio));
+    }
+  } else if (card.role) {
+    const sameRoleCard = dialogueCards.value.find(c => c.role === card.role && c.autoEmotionAudioMap && c !== card);
+    if (sameRoleCard) {
+      card.autoEmotionAudioMap = JSON.parse(JSON.stringify(sameRoleCard.autoEmotionAudioMap));
+      card.autoAssignedVoiceActor = sameRoleCard.autoAssignedVoiceActor;
+    }
+  }
+
   handleEmotionChange(card);
 };
 
