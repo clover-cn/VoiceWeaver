@@ -54,7 +54,7 @@ router.post("/parse", async (req, res) => {
       目标：将用户提供的长文本按对话和旁白进行拆解。
       
       【重要规则：严格限定的视角转换】
-      1. 仅限第一人称替换：如果输入文本为第一人称视角（主角自述使用“我”），请务必通过上下文推断出主角的真实姓名，如果上下文没有出现主角名请保持原文一致。在提取的 text 内容中，**仅将**代表主角的“我”或“我的”替换为“主角名”或“主角名的”（例如将“我挡在门口”替换为“江桥挡在门口”）。
+      1. 仅限第一人称替换：如果输入文本为第一人称视角（主角自述使用“我”），请务必通过上下文推断出主角的真实姓名，如果上下文没有出现主角名请保持原文一致。在提取的 text 内容中，**仅将**代表主角的“我”替换为“主角名称（例如将“我挡在门口”替换为“江桥挡在门口”）。
       2. 禁止过度替换（非常重要）：**绝对不要**修改原文中的第三人称代词（如“他”、“她”）或描述性称呼（如“丫头”、“那人”）。原文如果写的是“她带着一点儿小得意回道”，提取后必须原样保持为“她带着一点儿小得意回道”，切勿自作主张将其替换为具体名字或其它称呼！保持原文的原汁原味。
       
       【输出格式要求】
@@ -76,6 +76,7 @@ router.post("/parse", async (req, res) => {
         { role: "user", content: text },
       ],
       temperature: 0.1, // 降低温度以保证结构稳定
+      stream: true, // 开启流式输出
     };
 
     const response = await axios.post(aiEndpoint, payload, {
@@ -83,10 +84,48 @@ router.post("/parse", async (req, res) => {
         "Content-Type": "application/json",
         Authorization: `Bearer ${apiKey}`,
       },
+      responseType: "stream", // 接收流式响应
       timeout: 120000, // 设置超时时间为 120 秒 (120000 毫秒)
     });
 
-    let rawResult = response.data.choices[0].message.content;
+    let rawResult = "";
+    // 处理流式数据
+    await new Promise((resolve, reject) => {
+      let buffer = "";
+      response.data.on("data", (chunk) => {
+        buffer += chunk.toString();
+        const lines = buffer.split("\n");
+        buffer = lines.pop(); // 最后一行可能不完整，留到下一次处理
+        
+        for (const line of lines) {
+          const trimmedLine = line.trim();
+          if (trimmedLine === "") continue;
+          if (trimmedLine === "data: [DONE]") {
+            resolve();
+            return;
+          }
+          if (trimmedLine.startsWith("data: ")) {
+            try {
+              const data = JSON.parse(trimmedLine.slice(6));
+              if (data.choices && data.choices.length > 0 && data.choices[0].delta && data.choices[0].delta.content) {
+                const content = data.choices[0].delta.content;
+                rawResult += content;
+                // process.stdout.write(content); // 在终端实时打印接收到的流式数据
+              }
+            } catch (e) {
+              console.error("解析流式数据块失败:", e, trimmedLine);
+            }
+          }
+        }
+      });
+      
+      response.data.on("end", () => {
+        console.log("\n--- 流式接收完成 ---");
+        resolve();
+      });
+      response.data.on("error", reject);
+    });
+
     // 清理可能附带的 Markdown json 标签
     rawResult = rawResult
       .replace(/\`\`\`json/g, "")
