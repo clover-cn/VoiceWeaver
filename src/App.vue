@@ -64,7 +64,7 @@
 
       <!-- 右窗格：验证和仪表板 -->
       <section class="lg:flex-1 w-full h-full relative shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.05)]" :class="{ 'opacity-20 pointer-events-none': !currentProject, 'z-0': currentProject }">
-        <RoleVerifyCard :projectName="currentProject" :initialCards="currentParsedList" :globalCharacters="globalChars" @onCardsChanged="handleCardsChanged" />
+        <RoleVerifyCard :projectName="currentProject" :initialCards="currentParsedList" :globalCharacters="globalChars" @onCardsChanged="handleCardsChanged" @onAliasesUpdated="handleAliasesUpdated" />
       </section>
     </main>
   </div>
@@ -229,6 +229,10 @@ const handleTextChanged = (newText) => {
 
 const handleCardsChanged = (newCards) => {
   currentParsedList.value = newCards;
+};
+
+const handleAliasesUpdated = (updatedCharacters) => {
+  globalChars.value = updatedCharacters;
 };
 </script>
 

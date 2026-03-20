@@ -152,4 +152,85 @@ router.post("/:projectName/draft", (req, res) => {
   }
 });
 
+// 更新角色别名
+router.put("/:projectName/characters/:characterName/aliases", (req, res) => {
+  try {
+    const { projectName, characterName } = req.params;
+    const { aliases } = req.body;
+
+    if (!Array.isArray(aliases)) {
+      return res.status(400).json({ error: "aliases 必须为数组" });
+    }
+
+    const safeName = projectName.trim().replace(/[\\/:*?"<>|]/g, "");
+    const projectPath = path.join(projectsDir, safeName);
+
+    if (!fs.existsSync(projectPath)) {
+      return res.status(404).json({ error: "项目不存在" });
+    }
+
+    const charsPath = path.join(projectPath, "characters.json");
+    let chars = {};
+    if (fs.existsSync(charsPath)) {
+      chars = JSON.parse(fs.readFileSync(charsPath, "utf8"));
+    }
+
+    if (!chars[characterName]) {
+      return res.status(404).json({ error: `角色 "${characterName}" 不存在` });
+    }
+
+    // 去重并过滤空字符串
+    const cleanAliases = [...new Set(aliases.map(a => String(a).trim()).filter(Boolean))];
+    chars[characterName].aliases = cleanAliases;
+
+    fs.writeFileSync(charsPath, JSON.stringify(chars, null, 2), "utf8");
+
+    res.json({ success: true, character: characterName, aliases: cleanAliases });
+  } catch (error) {
+    console.error("更新角色别名失败:", error);
+    res.status(500).json({ error: "更新角色别名失败" });
+  }
+});
+
+// 批量更新所有角色的别名
+router.put("/:projectName/characters-aliases", (req, res) => {
+  try {
+    const { projectName } = req.params;
+    const { aliasMap } = req.body; // { "角色名": ["别名1", "别名2"], ... }
+
+    if (!aliasMap || typeof aliasMap !== "object") {
+      return res.status(400).json({ error: "aliasMap 必须为对象" });
+    }
+
+    const safeName = projectName.trim().replace(/[\\/:*?"<>|]/g, "");
+    const projectPath = path.join(projectsDir, safeName);
+
+    if (!fs.existsSync(projectPath)) {
+      return res.status(404).json({ error: "项目不存在" });
+    }
+
+    const charsPath = path.join(projectPath, "characters.json");
+    let chars = {};
+    if (fs.existsSync(charsPath)) {
+      chars = JSON.parse(fs.readFileSync(charsPath, "utf8"));
+    }
+
+    Object.keys(aliasMap).forEach((charName) => {
+      if (chars[charName]) {
+        const aliases = aliasMap[charName];
+        if (Array.isArray(aliases)) {
+          chars[charName].aliases = [...new Set(aliases.map(a => String(a).trim()).filter(Boolean))];
+        }
+      }
+    });
+
+    fs.writeFileSync(charsPath, JSON.stringify(chars, null, 2), "utf8");
+
+    res.json({ success: true, characters: chars });
+  } catch (error) {
+    console.error("批量更新角色别名失败:", error);
+    res.status(500).json({ error: "批量更新角色别名失败" });
+  }
+});
+
 module.exports = router;

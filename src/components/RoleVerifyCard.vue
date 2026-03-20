@@ -9,6 +9,9 @@
         <el-button @click="openAudioLibrary" plain type="info"
           ><el-icon><Service /></el-icon>参考音频库</el-button
         >
+        <el-button @click="openAliasDialog" plain type="success" :disabled="availableRoles.length === 0"
+          ><el-icon><User /></el-icon>角色别名</el-button
+        >
         <el-button @click="openRoleSetup" plain type="warning" :disabled="dialogueCards.length === 0"
           ><el-icon><Setting /></el-icon>统一音频配置</el-button
         >
@@ -122,6 +125,48 @@
       </a>
     </div>
 
+    <!-- 角色别名管理弹窗 -->
+    <el-dialog v-model="aliasDialogVisible" title="角色别名管理" width="640px" destroy-on-close>
+      <div class="text-sm text-gray-500 mb-4">
+        为角色配置别名/小名，AI 解析时能自动将别名统一归入同一角色。例如角色"陈艺"的别名可以是"小艺艺"、"艺姐"等。
+      </div>
+      <div class="space-y-4 max-h-[400px] overflow-y-auto pr-2">
+        <div v-for="roleName in availableRoles" :key="roleName" class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="font-bold text-gray-700 text-base">🎭 {{ roleName }}</span>
+            <el-tag size="small" type="info">{{ (aliasEditMap[roleName] || []).length }} 个别名</el-tag>
+          </div>
+          <div class="flex flex-wrap gap-2 items-center">
+            <el-tag
+              v-for="(alias, idx) in (aliasEditMap[roleName] || [])"
+              :key="idx"
+              closable
+              type="warning"
+              @close="removeAlias(roleName, idx)"
+            >
+              {{ alias }}
+            </el-tag>
+            <div class="inline-flex items-center gap-1">
+              <el-input
+                v-model="newAliasInputs[roleName]"
+                size="small"
+                placeholder="输入别名"
+                style="width: 120px"
+                @keyup.enter="addAlias(roleName)"
+              />
+              <el-button size="small" type="primary" text @click="addAlias(roleName)">
+                <el-icon><Plus /></el-icon>
+              </el-button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <template #footer>
+        <el-button @click="aliasDialogVisible = false">取消</el-button>
+        <el-button type="primary" :loading="isSavingAliases" @click="saveAliases">保存别名</el-button>
+      </template>
+    </el-dialog>
+
     <!-- 弹窗组件挂载区 -->
     <AudioLibraryDialog ref="audioLibraryDialogRef" />
     <RoleAudioSetupDialog ref="roleAudioSetupDialogRef" @saved="handleAudioSetupSaved" />
@@ -132,7 +177,7 @@
 import { ref, computed, watch, onMounted } from "vue";
 import axios from "axios";
 import { ElMessage, ElMessageBox } from "element-plus";
-import { MagicStick, VideoPlay, Microphone, Delete, Box, CircleCheckFilled, Check, Service, Setting } from "@element-plus/icons-vue";
+import { MagicStick, VideoPlay, Microphone, Delete, Box, CircleCheckFilled, Check, Service, Setting, User, Plus } from "@element-plus/icons-vue";
 import AudioLibraryDialog from "./AudioLibraryDialog.vue";
 import RoleAudioSetupDialog from "./RoleAudioSetupDialog.vue";
 
@@ -166,6 +211,72 @@ const roleAudioSetupDialogRef = ref(null);
 
 const globalAudioBindings = ref({});
 const ttsProvider = ref("siliconflow");
+
+// 角色别名管理
+const aliasDialogVisible = ref(false);
+const aliasEditMap = ref({}); // { "角色名": ["别名1", "别名2"] }
+const newAliasInputs = ref({}); // { "角色名": "正在输入的新别名" }
+const isSavingAliases = ref(false);
+
+const openAliasDialog = () => {
+  // 从 globalCharacters props 中加载现有别名
+  const map = {};
+  const inputs = {};
+  availableRoles.value.forEach(roleName => {
+    const charData = props.globalCharacters[roleName];
+    map[roleName] = charData && charData.aliases ? [...charData.aliases] : [];
+    inputs[roleName] = "";
+  });
+  aliasEditMap.value = map;
+  newAliasInputs.value = inputs;
+  aliasDialogVisible.value = true;
+};
+
+const addAlias = (roleName) => {
+  const val = (newAliasInputs.value[roleName] || "").trim();
+  if (!val) return;
+  // 检查重复
+  if (!aliasEditMap.value[roleName]) {
+    aliasEditMap.value[roleName] = [];
+  }
+  if (aliasEditMap.value[roleName].includes(val)) {
+    ElMessage.warning(`别名 "${val}" 已存在`);
+    return;
+  }
+  // 检查是否跟某个角色大名重复
+  if (availableRoles.value.includes(val)) {
+    ElMessage.warning(`"${val}" 是一个角色大名，不能作为别名`);
+    return;
+  }
+  aliasEditMap.value[roleName].push(val);
+  newAliasInputs.value[roleName] = "";
+};
+
+const removeAlias = (roleName, idx) => {
+  if (aliasEditMap.value[roleName]) {
+    aliasEditMap.value[roleName].splice(idx, 1);
+  }
+};
+
+const saveAliases = async () => {
+  isSavingAliases.value = true;
+  try {
+    const res = await axios.put(
+      `http://localhost:3000/api/projects/${encodeURIComponent(props.projectName)}/characters-aliases`,
+      { aliasMap: aliasEditMap.value }
+    );
+    if (res.data.success) {
+      ElMessage.success("角色别名保存成功");
+      aliasDialogVisible.value = false;
+      // 通知父组件更新 globalCharacters
+      emit("onAliasesUpdated", res.data.characters);
+    }
+  } catch (error) {
+    ElMessage.error(error.response?.data?.error || "保存别名失败");
+  } finally {
+    isSavingAliases.value = false;
+  }
+};
 
 const fetchProvider = async () => {
   try {
@@ -390,7 +501,7 @@ watch(
   { deep: true },
 );
 
-const emit = defineEmits(["onCardsChanged"]);
+const emit = defineEmits(["onCardsChanged", "onAliasesUpdated"]);
 
 // 当内部卡片数据有变动（如角色修改、情绪修改、删卡片）抛给上级保存
 watch(
