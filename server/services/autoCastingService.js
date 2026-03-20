@@ -286,7 +286,7 @@ function autoAssignReferenceAudios({ parsedCards, projectName, provider }) {
     const actor = actorPool[conf.voiceActor];
     if (!actor) return;
     const expectedGender = roleGenders[role];
-    if (expectedGender !== "unknown" && actor.gender !== expectedGender) return;
+    if (expectedGender && expectedGender !== "unknown" && actor.gender !== expectedGender) return;
     if (usedActors.has(conf.voiceActor)) return;
     validatedRoleAssignments[role] = {
       voiceActor: conf.voiceActor,
