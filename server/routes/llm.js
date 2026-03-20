@@ -54,7 +54,7 @@ router.post("/parse", async (req, res) => {
       目标：将用户提供的长文本按对话和旁白进行拆解。
       
       【重要规则：严格限定的视角转换】
-      1. 仅限第一人称替换：如果输入文本为第一人称视角（主角自述使用“我”），请务必通过上下文推断出主角的真实姓名。在提取的 text 内容中，**仅将**代表主角的“我”或“我的”替换为“主角名”或“主角名的”（例如将“我挡在门口”替换为“江桥挡在门口”）。
+      1. 仅限第一人称替换：如果输入文本为第一人称视角（主角自述使用“我”），请务必通过上下文推断出主角的真实姓名，如果上下文没有出现主角名请保持原文一致。在提取的 text 内容中，**仅将**代表主角的“我”或“我的”替换为“主角名”或“主角名的”（例如将“我挡在门口”替换为“江桥挡在门口”）。
       2. 禁止过度替换（非常重要）：**绝对不要**修改原文中的第三人称代词（如“他”、“她”）或描述性称呼（如“丫头”、“那人”）。原文如果写的是“她带着一点儿小得意回道”，提取后必须原样保持为“她带着一点儿小得意回道”，切勿自作主张将其替换为具体名字或其它称呼！保持原文的原汁原味。
       
       【输出格式要求】
@@ -64,7 +64,7 @@ router.post("/parse", async (req, res) => {
          "type": "narration" | "dialogue",
          "role": "标准角色名（旁白请填 '旁白'，对话角色无论原文称谓怎么变，请统一为一个名字，如：张三）",
          "text": "提取的文本内容（注意：1. 严格执行上述'仅替换我，不替换他/她'的规则；2. 旁白如果以动作描写结尾且直接引出后续对话，请在语境末尾自动补全发音引导词，比如'，开口问道：'，以此实现听觉平滑）",
-         "emotion": "该句话的情绪（旁白必须为 'neutral'。如果是对话，请归纳为 happy, angry, sad, fearful, disgusted, melancholy, surprised, neutral(平静) 等英文发音情绪标识之一, 如果情绪未知默认使用 'neutral'）",
+         "emotion": "该句话的情绪（旁白必须为 'neutral'。如果是对话，必须从以下情绪选择： happy, angry, sad, fearful, disgusted, melancholy, surprised, neutral(平静) 英文发音情绪标识之一, 如果情绪没有匹配上默认使用 'neutral'）",
          "gender": "仅对 dialogue 必填：male|female|unknown；旁白固定填写 unknown"
       }
     `;
@@ -83,16 +83,15 @@ router.post("/parse", async (req, res) => {
         "Content-Type": "application/json",
         Authorization: `Bearer ${apiKey}`,
       },
+      timeout: 120000, // 设置超时时间为 120 秒 (120000 毫秒)
     });
 
     let rawResult = response.data.choices[0].message.content;
-
     // 清理可能附带的 Markdown json 标签
     rawResult = rawResult
       .replace(/\`\`\`json/g, "")
       .replace(/\`\`\`/g, "")
       .trim();
-
     const parsedData = JSON.parse(rawResult);
     const normalizedData = Array.isArray(parsedData)
       ? parsedData.map((item) => ({
@@ -100,11 +99,9 @@ router.post("/parse", async (req, res) => {
           gender: item && item.type === "dialogue" ? normalizeGender(item.gender) : "unknown",
         }))
       : [];
-
     // --- 归一化校验：与本地角色字典同步 ---
     const localChars = getCharacters(projectName);
     let charsUpdated = false;
-
     normalizedData.forEach((item) => {
       // 若出现新角色，则缓存进去
       if (item.type === "dialogue" && item.role && item.role !== "旁白") {
@@ -115,7 +112,6 @@ router.post("/parse", async (req, res) => {
         }
       }
     });
-
     if (charsUpdated) {
       saveCharacters(projectName, localChars);
     }
