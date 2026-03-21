@@ -16,7 +16,7 @@
             <component :is="isBackendOnline ? CircleCheck : CircleClose" />
           </el-icon>
           <span :class="isBackendOnline ? '' : 'text-red-500'">
-            {{ isBackendOnline ? '服务已连接' : '服务离线' }}
+            {{ isBackendOnline ? "服务已连接" : "服务离线" }}
           </span>
         </div>
         <a href="https://github.com" target="_blank" class="hover:text-blue-600 transition-colors">使用文档</a>
@@ -59,7 +59,7 @@
 
       <!-- 左窗格：输入 -->
       <section class="lg:w-[45%] w-full h-full" :class="{ 'opacity-20 pointer-events-none': !currentProject }">
-        <NovelInput :projectName="currentProject" :initialText="currentNovelText" @onParsed="handleParsedData" @onTextChanged="handleTextChanged" />
+        <NovelInput :projectName="currentProject" :initialText="currentNovelText" @onParsed="handleParsedData" @onTextChanged="handleTextChanged" @onPrescanSuccess="handlePrescanSuccess" />
       </section>
 
       <!-- 右窗格：验证和仪表板 -->
@@ -217,6 +217,11 @@ const handleDeleteProject = async (name) => {
 };
 
 // 接收左侧组件的解析结果
+
+const handlePrescanSuccess = (updatedCharacters) => {
+  globalChars.value = updatedCharacters;
+};
+
 const handleParsedData = (dataList, characters) => {
   currentParsedList.value = dataList;
   globalChars.value = characters;

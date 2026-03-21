@@ -127,9 +127,7 @@
 
     <!-- 角色别名管理弹窗 -->
     <el-dialog v-model="aliasDialogVisible" title="角色别名管理" width="640px" destroy-on-close>
-      <div class="text-sm text-gray-500 mb-4">
-        为角色配置别名/小名，AI 解析时能自动将别名统一归入同一角色。例如角色"陈艺"的别名可以是"小艺艺"、"艺姐"等。
-      </div>
+      <div class="text-sm text-gray-500 mb-4">为角色配置别名/小名，AI 解析时能自动将别名统一归入同一角色。例如角色"陈艺"的别名可以是"小艺艺"、"艺姐"等。</div>
       <div class="space-y-4 max-h-[400px] overflow-y-auto pr-2">
         <div v-for="roleName in availableRoles" :key="roleName" class="bg-gray-50 rounded-lg p-4 border border-gray-200">
           <div class="flex items-center gap-2 mb-2">
@@ -137,23 +135,11 @@
             <el-tag size="small" type="info">{{ (aliasEditMap[roleName] || []).length }} 个别名</el-tag>
           </div>
           <div class="flex flex-wrap gap-2 items-center">
-            <el-tag
-              v-for="(alias, idx) in (aliasEditMap[roleName] || [])"
-              :key="idx"
-              closable
-              type="warning"
-              @close="removeAlias(roleName, idx)"
-            >
+            <el-tag v-for="(alias, idx) in aliasEditMap[roleName] || []" :key="idx" closable type="warning" @close="removeAlias(roleName, idx)">
               {{ alias }}
             </el-tag>
             <div class="inline-flex items-center gap-1">
-              <el-input
-                v-model="newAliasInputs[roleName]"
-                size="small"
-                placeholder="输入别名"
-                style="width: 120px"
-                @keyup.enter="addAlias(roleName)"
-              />
+              <el-input v-model="newAliasInputs[roleName]" size="small" placeholder="输入别名" style="width: 120px" @keyup.enter="addAlias(roleName)" />
               <el-button size="small" type="primary" text @click="addAlias(roleName)">
                 <el-icon><Plus /></el-icon>
               </el-button>
@@ -222,7 +208,7 @@ const openAliasDialog = () => {
   // 从 globalCharacters props 中加载现有别名
   const map = {};
   const inputs = {};
-  availableRoles.value.forEach(roleName => {
+  availableRoles.value.forEach((roleName) => {
     const charData = props.globalCharacters[roleName];
     map[roleName] = charData && charData.aliases ? [...charData.aliases] : [];
     inputs[roleName] = "";
@@ -261,10 +247,7 @@ const removeAlias = (roleName, idx) => {
 const saveAliases = async () => {
   isSavingAliases.value = true;
   try {
-    const res = await axios.put(
-      `http://localhost:3000/api/projects/${encodeURIComponent(props.projectName)}/characters-aliases`,
-      { aliasMap: aliasEditMap.value }
-    );
+    const res = await axios.put(`http://localhost:3000/api/projects/${encodeURIComponent(props.projectName)}/characters-aliases`, { aliasMap: aliasEditMap.value });
     if (res.data.success) {
       ElMessage.success("角色别名保存成功");
       aliasDialogVisible.value = false;
@@ -323,7 +306,7 @@ const handleEmotionChange = (card) => {
       return;
     }
   }
-  
+
   // 如果是旁白，且已经有 referenceAudio，则保留
   if (card.role === "旁白" && card.referenceAudio) {
     return;
@@ -345,12 +328,12 @@ const handleRoleChange = (card) => {
 
   // 尝试从其他同角色的卡片中恢复自动分配的音色映射
   if (card.role === "旁白") {
-    const sameRoleCard = dialogueCards.value.find(c => c.role === "旁白" && c.referenceAudio && c !== card);
+    const sameRoleCard = dialogueCards.value.find((c) => c.role === "旁白" && c.referenceAudio && c !== card);
     if (sameRoleCard) {
       card.referenceAudio = JSON.parse(JSON.stringify(sameRoleCard.referenceAudio));
     }
   } else if (card.role) {
-    const sameRoleCard = dialogueCards.value.find(c => c.role === card.role && c.autoEmotionAudioMap && c !== card);
+    const sameRoleCard = dialogueCards.value.find((c) => c.role === card.role && c.autoEmotionAudioMap && c !== card);
     if (sameRoleCard) {
       card.autoEmotionAudioMap = JSON.parse(JSON.stringify(sameRoleCard.autoEmotionAudioMap));
       card.autoAssignedVoiceActor = sameRoleCard.autoAssignedVoiceActor;

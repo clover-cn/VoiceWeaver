@@ -5,6 +5,7 @@
       <h2 class="text-lg font-bold text-gray-800 flex items-center gap-2">
         <el-icon><Document /></el-icon> 小说原文输入
       </h2>
+      <el-button type="success" plain :loading="isPrescanning" @click="handlePrescan" class="mr-2" title="粘贴前几章文本，提前提取并建立全局角色档案"> 全局角色预扫描 </el-button>
       <el-button type="primary" :loading="isParsing" @click="handleParseText">
         开始智能拆解 <el-icon class="ml-1"><Right /></el-icon>
       </el-button>
@@ -42,10 +43,11 @@ const props = defineProps({
   },
 });
 
-const emit = defineEmits(["onParsed", "onTextChanged"]);
+const emit = defineEmits(["onParsed", "onTextChanged", "onPrescanSuccess"]);
 
 const novelText = ref("");
 const isParsing = ref(false);
+const isPrescanning = ref(false);
 
 // 监听项目切换，清空当前输入，使得新项目有一个干净的输入栏
 watch(
@@ -69,6 +71,30 @@ watch(
 watch(novelText, (newVal) => {
   emit("onTextChanged", newVal);
 });
+
+const handlePrescan = async () => {
+  if (!novelText.value.trim()) {
+    ElMessage.warning("请在此处粘贴前几章文本（建议10章左右）作为预扫描语料！");
+    return;
+  }
+
+  isPrescanning.value = true;
+  ElMessage.info("开始全局角色预扫描，这可能需要1-2分钟...");
+  try {
+    const res = await axios.post("http://localhost:3000/api/llm/prescan-characters", {
+      combinedText: novelText.value,
+      projectName: props.projectName,
+    });
+    if (res.data.success) {
+      ElMessage.success("全局角色预扫描完成！已建立角色档案。");
+      emit("onPrescanSuccess", res.data.data);
+    }
+  } catch (error) {
+    ElMessage.error(error.response?.data?.error || "预扫描接口出错，请检查 LLM 配置并重启");
+  } finally {
+    isPrescanning.value = false;
+  }
+};
 
 const handleParseText = async () => {
   if (!novelText.value.trim()) {

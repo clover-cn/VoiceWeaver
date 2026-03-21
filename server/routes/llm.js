@@ -35,36 +35,38 @@ function saveCharacters(projectName, chars) {
 
 // 构建角色别名上下文信息
 function buildCharacterContext(localChars) {
-  const charNames = Object.keys(localChars).filter(name => name !== '旁白');
-  if (charNames.length === 0) return '';
+  const charNames = Object.keys(localChars).filter((name) => name !== "旁白");
+  if (charNames.length === 0) return "";
 
   // 构建包含别名映射的角色信息
-  const charLines = charNames.map(name => {
+  const charLines = charNames.map((name) => {
     const charData = localChars[name];
-    const aliases = charData.aliases && charData.aliases.length > 0
-      ? charData.aliases
-      : [];
-    if (aliases.length > 0) {
-      return `- 「${name}」的别名/小名有：${aliases.join('、')}`;
+    const aliases = charData.aliases && charData.aliases.length > 0 ? charData.aliases : [];
+    let line = `- 「${name}」`;
+    if (charData.description) {
+      line += `（${charData.description}）`;
     }
-    return `- 「${name}」`;
+    if (aliases.length > 0) {
+      line += `，别名/小名有：${aliases.join("、")}`;
+    }
+    return line;
   });
 
   // 提取所有别名到大名的显式映射表，方便 LLM 直接查表
   const aliasMap = [];
-  charNames.forEach(name => {
+  charNames.forEach((name) => {
     const charData = localChars[name];
     if (charData.aliases && charData.aliases.length > 0) {
-      charData.aliases.forEach(alias => {
+      charData.aliases.forEach((alias) => {
         aliasMap.push(`"${alias}" → "${name}"`);
       });
     }
   });
 
-  let context = `\n      【已知角色及别名映射】\n      本项目之前已出现的角色：\n      ${charLines.join('\n      ')}`;
+  let context = `\n      【已知角色及别名映射】\n      本项目之前已出现的角色：\n      ${charLines.join("\n      ")}`;
 
   if (aliasMap.length > 0) {
-    context += `\n\n      【别名→标准名 速查表】（在 role 字段中必须使用箭头右边的标准名）\n      ${aliasMap.join('\n      ')}`;
+    context += `\n\n      【别名→标准名 速查表】（在 role 字段中必须使用箭头右边的标准名）\n      ${aliasMap.join("\n      ")}`;
   }
 
   context += `\n\n      特别说明："我"也是一种别名。如果某角色的别名列表中包含"我"，说明该角色就是本文的第一人称主角。无论是在旁白还是对话的 text 中，都需要将"我"替换为该主角的标准大名（例如速查表中有 "我" → "江桥"，则旁白"我走上前去"应替换为"江桥走上前去"）。如果出现了其他角色的别名或小名，也请根据上面的速查表统一替换为对应的标准大名。`;
@@ -84,11 +86,13 @@ router.post("/parse", async (req, res) => {
     }
 
     const localChars = getCharacters(projectName);
-    const existingCharacterNames = Object.keys(localChars).filter(name => name !== '旁白').join('、');
-    console.log('本项目之前已出现的角色有：', existingCharacterNames);
-    
+    const existingCharacterNames = Object.keys(localChars)
+      .filter((name) => name !== "旁白")
+      .join("、");
+
     const characterContext = buildCharacterContext(localChars);
 
+    console.log("本项目之前已出现的角色有：", characterContext);
     // 假设通过第三方大模型 API
     // 你可以在 .env 中配置 API_KEY 和 MODEL_ENDPOINT
     const apiKey = process.env.LLM_API_KEY;
@@ -102,7 +106,8 @@ router.post("/parse", async (req, res) => {
       【重要规则：严格限定的视角转换】
       1. 仅限"我"字替换（对话和旁白的text中都适用）：如果输入文本为第一人称视角（主角自述使用"我"），请务必通过上下文或【已知角色及别名映射】（注意：如果某角色的别名中包含"我"，说明该角色就是第一人称主角）推断出主角的真实姓名，如果上下文和已知角色中都没有出现主角名请保持原文一致。在提取的 text 内容中（无论是旁白还是对话），**只允许将"我"这一个字替换为主角名称**，其他任何代词一律不动。例如旁白"我走上前去"替换为"江桥走上前去"，但"她看了看他"必须保持原样。对于对话角色(role字段)，如果出现了角色的别名或小名，请严格参照【别名→标准名 速查表】统一替换为标准大名。
       2. 禁止过度替换（非常重要）：在 text 内容中，除了"我"→主角名的替换外，**绝对不要**修改原文中的任何其他代词，包括但不限于"他"、"她"、"他们"、"她们"，也不要替换描述性称呼（如"丫头"、"那人"）。原文如果写的是"她带着一点儿小得意回道"，提取后必须原样保持为"她带着一点儿小得意回道"，切勿自作主张将其替换为具体名字或其它称呼！保持原文的原汁原味。
-      
+      3. 角色推断与情绪判断：请充分利用【已知角色及别名映射】中提供的角色描述信息（如果有），辅助判断该角色在当前对话中的语气、情绪以及可能的隐藏身份。
+
       【输出格式要求】
       要求返回的格式为严格的 JSON 对象（不要包装在 Markdown 代码块里，只有 JSON 字符串）。
       JSON 对象包含两个字段：
@@ -150,7 +155,7 @@ router.post("/parse", async (req, res) => {
         buffer += chunk.toString();
         const lines = buffer.split("\n");
         buffer = lines.pop(); // 最后一行可能不完整，留到下一次处理
-        log("接收到流式数据块:", lines);
+        // log("接收到流式数据块:", lines);
         for (const line of lines) {
           const trimmedLine = line.trim();
           if (trimmedLine === "") continue;
@@ -164,7 +169,7 @@ router.post("/parse", async (req, res) => {
               if (data.choices && data.choices.length > 0 && data.choices[0].delta && data.choices[0].delta.content) {
                 const content = data.choices[0].delta.content;
                 rawResult += content;
-                // process.stdout.write(content); // 在终端实时打印接收到的流式数据
+                process.stdout.write(content); // 在终端实时打印接收到的流式数据
               }
             } catch (e) {
               console.error("解析流式数据块失败:", e, trimmedLine);
@@ -172,7 +177,7 @@ router.post("/parse", async (req, res) => {
           }
         }
       });
-      
+
       response.data.on("end", () => {
         console.log("\n--- 流式接收完成 ---");
         resolve();
@@ -197,9 +202,7 @@ router.post("/parse", async (req, res) => {
     } else if (parsedData && typeof parsedData === "object") {
       // 新格式：{ dialogues: [...], detectedAliases: { "角色名": ["别名"] } }
       dialogueArray = Array.isArray(parsedData.dialogues) ? parsedData.dialogues : [];
-      detectedAliases = parsedData.detectedAliases && typeof parsedData.detectedAliases === "object"
-        ? parsedData.detectedAliases
-        : {};
+      detectedAliases = parsedData.detectedAliases && typeof parsedData.detectedAliases === "object" ? parsedData.detectedAliases : {};
       // 清理 detectedAliases 中的 "说明" 字段（LLM 可能照搬模板）
       delete detectedAliases["说明"];
     }
@@ -279,6 +282,129 @@ router.post("/parse", async (req, res) => {
     }
     console.error("  → 请求地址:", process.env.LLM_ENDPOINT || "https://api.deepseek.com/v1/chat/completions");
     res.status(500).json({ error: `大语言模型解析错误: ${error.message}` });
+  }
+});
+
+// 预扫描第一阶段
+router.post("/prescan-characters", async (req, res) => {
+  try {
+    const { combinedText, projectName } = req.body;
+    if (!combinedText || !projectName) {
+      return res.status(400).json({ error: "缺少 combinedText 或 projectName" });
+    }
+
+    const prescanModel = process.env.PRESCAN_LLM_MODEL || process.env.LLM_MODEL || "deepseek-chat";
+    const apiKey = process.env.LLM_API_KEY;
+    const aiEndpoint = process.env.LLM_ENDPOINT || "https://api.deepseek.com/v1/chat/completions";
+    const chapterCount = process.env.PRESCAN_CHAPTER_COUNT || 10;
+
+    const prescanPrompt = `
+  你是一个专业的小说角色分析与指代消解专家。
+  任务：阅读这篇小说的前 ${chapterCount} 章内容，提取所有核心角色的全局映射表。
+
+  【重点要求】
+  1. 发现真名：有些角色初期以特征代称（如"白裙姑娘", "丫头", "黑衣人"）出场，但在后续章节揭示了真名（如"陈艺"）。你需要将这些特征代称作为"别名"（aliases）绑定到她的真名下。
+  2. 提取主角：如果小说是第一人称（使用"我"），请务必从上下文中推断出"我"的真实姓名。如果找到了，把"我"加入该角色的别名中。
+  3. 无法确定真名的情况：如果在提供的文本中，该角色始终没有揭示真名，请为其创建一个具备辨识度的临时标准名（如"未命名_白裙姑娘"）。
+
+  【过滤规则 - 非常重要】
+  请忽略以下类型的“背景板角色”或“工具人”：
+  1. 仅被提及名字但从未出场互动的角色（如回忆中的路人）。
+  2. 仅执行单一功能性动作且没有后续剧情的龙套（如：服务员端茶、出租车司机开车、快递员送货），除非他们有持续的对话交流或对剧情产生重要影响。
+  3. 仅作为群体出现的角色（如：围观群众、一群学生）。
+  *判定标准：该角色是否至少有一句直接引语（对话），或者名字/代称在不同段落中重复出现超过3次。*
+
+  【输出格式】
+  必须返回严格的 JSON 格式（不要包含任何 Markdown 标记或代码块，纯 JSON）：
+  {
+    "characters": [
+      {
+        "standardName": "角色的真名或标准名（如：陈艺、江桥，如果实在没名字填：未命名_白裙姑娘）",
+        "gender": "male | female | unknown",
+        "aliases": ["文中所出现的所有对该角色的称呼、外号、特征代称", "小艺艺", "白裙姑娘", "丫头"],
+        "description": "简短描述该角色的身份或外貌特征，不超过30字"
+      }
+    ]
+  }
+`;
+    const response = await axios.post(
+      aiEndpoint,
+      {
+        model: prescanModel,
+        messages: [
+          { role: "system", content: prescanPrompt },
+          { role: "user", content: `小说前文内容如下：\n\n${combinedText}` },
+        ],
+        temperature: 0.1,
+        response_format: { type: "json_object" },
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+        },
+        timeout: 120000,
+      },
+    );
+
+    let prescanResult = response.data.choices[0].message.content;
+    prescanResult = prescanResult
+      .replace(/```json/g, "")
+      .replace(/```/g, "")
+      .trim();
+
+    let parsedData;
+    try {
+      parsedData = JSON.parse(prescanResult);
+    } catch (e) {
+      console.error("Failed to parse JSON:", prescanResult);
+      throw new Error("模型返回的数据不是有效的JSON格式");
+    }
+
+    const existingCharacters = getCharacters(projectName);
+    let charsUpdated = false;
+
+    if (parsedData.characters && Array.isArray(parsedData.characters)) {
+      parsedData.characters.forEach((char) => {
+        const stdName = char.standardName;
+        if (!stdName) return;
+
+        if (!existingCharacters[stdName]) {
+          existingCharacters[stdName] = {
+            name: stdName,
+            gender: char.gender || "unknown",
+            aliases: char.aliases || [],
+            description: char.description || "",
+            voice: "default_voice",
+          };
+          charsUpdated = true;
+        } else {
+          // 合并别名
+          const mergedAliases = new Set([...(existingCharacters[stdName].aliases || []), ...(char.aliases || [])]);
+          const mergedArray = Array.from(mergedAliases);
+          if (mergedArray.length !== (existingCharacters[stdName].aliases || []).length) {
+            existingCharacters[stdName].aliases = mergedArray;
+            charsUpdated = true;
+          }
+          if (!existingCharacters[stdName].description && char.description) {
+            existingCharacters[stdName].description = char.description;
+            charsUpdated = true;
+          }
+        }
+      });
+    }
+
+    if (charsUpdated) {
+      saveCharacters(projectName, existingCharacters);
+    }
+
+    res.json({ success: true, data: existingCharacters });
+  } catch (error) {
+    console.error("预扫描失败:", error.message);
+    if (error.response) {
+      console.error("  → 响应数据:", JSON.stringify(error.response.data));
+    }
+    res.status(500).json({ error: "预扫描失败: " + error.message });
   }
 });
 
