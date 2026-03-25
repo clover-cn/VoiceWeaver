@@ -23,12 +23,14 @@ const llmRoutes = require("./routes/llm");
 const ttsRoutes = require("./routes/tts");
 const audioRoutes = require("./routes/audio");
 const readerRoutes = require("./routes/reader");
+const listenBookRoutes = require("./routes/listenBook");
 
 app.use("/api/projects", projectRoutes);
 app.use("/api/llm", llmRoutes);
 app.use("/api/tts", ttsRoutes);
 app.use("/api/audio", audioRoutes);
 app.use("/api/reader", readerRoutes);
+app.use("/api/listen-book", listenBookRoutes);
 
 app.listen(port, () => {
   console.log(`服务器监听地址 http://localhost:${port}`);
