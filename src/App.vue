@@ -10,7 +10,22 @@
       </div>
       <span v-if="currentProject" class="text-sm text-indigo-500 ml-2 bg-indigo-50 px-2 py-1 rounded">当前项目: {{ currentProject }}</span>
       <div class="flex items-center gap-4 text-sm text-gray-500 font-medium">
-        <el-button v-if="currentProject" size="small" @click="currentProject = null" type="info" plain class="mr-2">切换项目</el-button>
+        <el-button v-if="currentProject && currentAppMode === 'project'" size="small" @click="currentProject = null" type="info" plain class="mr-2">切换项目</el-button>
+        <!-- 模式切换按钮 -->
+        <el-button
+          v-if="currentAppMode === 'project'"
+          size="small"
+          type="primary"
+          plain
+          @click="currentAppMode = 'reader'"
+        >📖 去阅读小说</el-button>
+        <el-button
+          v-else
+          size="small"
+          type="info"
+          plain
+          @click="currentAppMode = 'project'"
+        >🔧 返回项目管理</el-button>
         <div class="flex items-center gap-1">
           <el-icon :class="isBackendOnline ? 'text-green-500' : 'text-red-500'">
             <component :is="isBackendOnline ? CircleCheck : CircleClose" />
@@ -23,10 +38,16 @@
       </div>
     </header>
 
-    <!-- 主工作区(分屏视图) -->
+    <!-- 主工作区 -->
     <main class="flex-1 flex overflow-hidden lg:flex-row flex-col relative">
+
+      <!-- 阅读模式视图 -->
+      <div v-if="currentAppMode === 'reader'" class="absolute inset-0 z-40">
+        <NovelReader />
+      </div>
+
       <!-- 项目选择器叠加层 -->
-      <div v-if="!currentProject" class="absolute inset-0 z-50 bg-gray-50 flex flex-col items-center pt-20">
+      <div v-if="currentAppMode === 'project' && !currentProject" class="absolute inset-0 z-50 bg-gray-50 flex flex-col items-center pt-20">
         <div class="bg-white p-8 rounded-xl shadow-lg border border-gray-200 w-full max-w-2xl">
           <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">选择或新建小说项目</h2>
 
@@ -57,13 +78,13 @@
         </div>
       </div>
 
-      <!-- 左窗格：输入 -->
-      <section class="lg:w-[45%] w-full h-full" :class="{ 'opacity-20 pointer-events-none': !currentProject }">
+      <!-- 左窗格：输入（仅项目模式显示）-->
+      <section v-if="currentAppMode === 'project'" class="lg:w-[45%] w-full h-full" :class="{ 'opacity-20 pointer-events-none': !currentProject }">
         <NovelInput :projectName="currentProject" :initialText="currentNovelText" @onParsed="handleParsedData" @onTextChanged="handleTextChanged" @onPrescanSuccess="handlePrescanSuccess" />
       </section>
 
-      <!-- 右窗格：验证和仪表板 -->
-      <section class="lg:flex-1 w-full h-full relative shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.05)]" :class="{ 'opacity-20 pointer-events-none': !currentProject, 'z-0': currentProject }">
+      <!-- 右窗格：验证和仪表板（仅项目模式显示）-->
+      <section v-if="currentAppMode === 'project'" class="lg:flex-1 w-full h-full relative shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.05)]" :class="{ 'opacity-20 pointer-events-none': !currentProject, 'z-0': currentProject }">
         <RoleVerifyCard :projectName="currentProject" :initialCards="currentParsedList" :globalCharacters="globalChars" @onCardsChanged="handleCardsChanged" @onAliasesUpdated="handleAliasesUpdated" />
       </section>
     </main>
@@ -77,6 +98,10 @@ import { ElMessage, ElMessageBox } from "element-plus";
 import axios from "axios";
 import NovelInput from "./components/NovelInput.vue";
 import RoleVerifyCard from "./components/RoleVerifyCard.vue";
+import NovelReader from "./components/NovelReader.vue";
+
+// 应用模式：'project' | 'reader'
+const currentAppMode = ref('project');
 
 const currentParsedList = ref([]);
 const globalChars = ref({});
