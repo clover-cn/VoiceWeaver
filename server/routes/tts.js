@@ -22,8 +22,37 @@ function getCharacters(projectName) {
   return {};
 }
 
+function isAbortError(error) {
+  return Boolean(
+    error &&
+    (error.code === "ERR_CANCELED" ||
+      error.name === "CanceledError" ||
+      error.cancelled === true)
+  );
+}
+
 // 1. 生成单条音频
 router.post("/generate-single", async (req, res) => {
+  const abortController = new AbortController();
+  let requestClosed = false;
+  let tempFilename = null;
+  let responseFinished = false;
+  const handleClientAbort = () => {
+    requestClosed = true;
+    if (!abortController.signal.aborted) {
+      abortController.abort();
+      console.log("[tts/generate-single] 客户端已断开，取消当前 TTS");
+    }
+  };
+  req.on("aborted", handleClientAbort);
+  res.on("finish", () => {
+    responseFinished = true;
+  });
+  res.on("close", () => {
+    if (!responseFinished) {
+      handleClientAbort();
+    }
+  });
   try {
     const { dialogue, projectName } = req.body;
     const ttsProvider = process.env.TTS_DEFAULT_PROVIDER || "siliconflow";
@@ -41,7 +70,7 @@ router.post("/generate-single", async (req, res) => {
     }
 
     const fileName = `${uuidv4()}.mp3`;
-    const tempFilename = path.join(tempDir, fileName);
+    tempFilename = path.join(tempDir, fileName);
 
     // 将请求转发至 TTS 调度工厂
     await generateAudio(ttsProvider, {
@@ -49,7 +78,15 @@ router.post("/generate-single", async (req, res) => {
       projectName,
       tempFilename,
       localChars,
+      signal: abortController.signal,
     });
+
+    if (requestClosed) {
+      if (fs.existsSync(tempFilename)) {
+        fs.unlinkSync(tempFilename);
+      }
+      return;
+    }
 
     res.json({
       success: true,
@@ -58,8 +95,16 @@ router.post("/generate-single", async (req, res) => {
       audioUrl: `/api/tts/preview/${safeProjectName}/${fileName}`,
     });
   } catch (error) {
+    if (isAbortError(error) || requestClosed) {
+      if (tempFilename && fs.existsSync(tempFilename)) {
+        fs.unlinkSync(tempFilename);
+      }
+      return;
+    }
     console.error("TTS 生成单个错误:", error);
     res.status(500).json({ error: error.message || "生成过程中出现错误" });
+  } finally {
+    req.off("aborted", handleClientAbort);
   }
 });
 

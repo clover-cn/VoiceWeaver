@@ -1,1 +1,2010 @@
-{}
+{
+  "reader_我的郁金香小姐__0": {
+    "taskId": "af28f204-c3d8-4533-9f6f-eccfb4c3f272",
+    "phase": "done",
+    "segments": [
+      {
+        "index": 0,
+        "type": "narration",
+        "role": "旁白",
+        "emotion": "neutral",
+        "text": "这又是一个下了班后的傍晚，江桥乘着86路车回到了郁金香路，他家就住在站台50米之外的一个小弄堂里，环境虽算不上太好，但胜在清静，尤其在去年巷子里多了一间名为＂心情＂的咖啡店后，使得周边办公楼里许多厌恶了聒噪和快节奏生活的白领们都找到了这里，然后在夜晚来临前喝一杯咖啡，仿佛只是在这里听一首轻音乐、失神的待一会儿，便会丢掉一切在世俗里惹上的烦恼。",
+        "referenceAudio": {
+          "id": "f2c00789-01a1-474d-bfcd-c5f940006be9",
+          "mode": 1,
+          "emoWeight": 0.65
+        },
+        "autoAssignedVoiceActor": null,
+        "autoEmotionAudioMap": null,
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/2739eaf3-2df2-4355-9ad4-d9dd60bd76ac.mp3"
+      },
+      {
+        "index": 1,
+        "type": "narration",
+        "role": "旁白",
+        "emotion": "neutral",
+        "text": "进了弄堂，江桥便摘掉了脖子上的领带，将其挂在肩上向咖啡店走去，江桥约了陈艺下班后在这里谈合作的事情。",
+        "referenceAudio": {
+          "id": "f2c00789-01a1-474d-bfcd-c5f940006be9",
+          "mode": 1,
+          "emoWeight": 0.65
+        },
+        "autoAssignedVoiceActor": null,
+        "autoEmotionAudioMap": null,
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/05cf704a-794f-4374-af33-24cb1ff60f17.mp3"
+      },
+      {
+        "index": 2,
+        "type": "narration",
+        "role": "旁白",
+        "emotion": "neutral",
+        "text": "咖啡店很小，除了吧台旁边的一排长椅，仅有的几个座位全部靠着窗户，而正在里面消费的客人都很沉默，似乎没有人愿意对着一杯咖啡说破生活里的脆弱，久而久之这种氛围便成了这间咖啡店独特的标签，尽管巷子很深不易被发现，但它也靠着这个特色，竟然就这么一直生存了下来。",
+        "referenceAudio": {
+          "id": "f2c00789-01a1-474d-bfcd-c5f940006be9",
+          "mode": 1,
+          "emoWeight": 0.65
+        },
+        "autoAssignedVoiceActor": null,
+        "autoEmotionAudioMap": null,
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/44ee6b50-da5d-4a17-9d09-0d85303d8a2e.mp3"
+      },
+      {
+        "index": 3,
+        "type": "narration",
+        "role": "旁白",
+        "emotion": "neutral",
+        "text": "陈艺已经在我之前到了咖啡店，只见她的头发盘的很整齐，脸上的妆也没卸，身上则穿着一件很得体的白色气质女装，估计是刚下了节目，便来赴我的约了。",
+        "referenceAudio": {
+          "id": "f2c00789-01a1-474d-bfcd-c5f940006be9",
+          "mode": 1,
+          "emoWeight": 0.65
+        },
+        "autoAssignedVoiceActor": null,
+        "autoEmotionAudioMap": null,
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/965ebb73-87c3-48e7-883e-0cbaaa166613.mp3"
+      },
+      {
+        "index": 4,
+        "type": "narration",
+        "role": "旁白",
+        "emotion": "neutral",
+        "text": "江桥将公文包很随便的往桌子上一扔，在她的对面位置坐了下来，开口问道：",
+        "referenceAudio": {
+          "id": "f2c00789-01a1-474d-bfcd-c5f940006be9",
+          "mode": 1,
+          "emoWeight": 0.65
+        },
+        "autoAssignedVoiceActor": null,
+        "autoEmotionAudioMap": null,
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/9019eb24-5ce0-44e8-a176-1d5fc7f4cc76.mp3"
+      },
+      {
+        "index": 5,
+        "type": "dialogue",
+        "role": "江桥",
+        "emotion": "neutral",
+        "text": "＂你最近忙啥呢，我都好几天没见着你了。＂",
+        "referenceAudio": {
+          "id": "857e60db-4894-4c6b-9de3-f95d9e5ed8bf",
+          "mode": 1,
+          "emoWeight": 0.65
+        },
+        "autoAssignedVoiceActor": "钟离",
+        "autoEmotionAudioMap": {
+          "neutral": {
+            "id": "857e60db-4894-4c6b-9de3-f95d9e5ed8bf",
+            "mode": 1,
+            "emoWeight": 0.65
+          }
+        },
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/3429d1d7-8e52-44cd-9997-de9ee34b9875.mp3"
+      },
+      {
+        "index": 6,
+        "type": "dialogue",
+        "role": "陈艺",
+        "emotion": "neutral",
+        "text": "＂我们台有个真人秀节目在杭州那边拍摄，我过去出差了几天。＂",
+        "referenceAudio": {
+          "id": "4cea6ef9-cd75-4f90-afdb-4d1531e0a448",
+          "mode": 1,
+          "emoWeight": 0.65
+        },
+        "autoAssignedVoiceActor": "刻晴",
+        "autoEmotionAudioMap": {
+          "angry": {
+            "id": "d0fc651f-c4c3-4914-b7fe-8c898867423d",
+            "mode": 1,
+            "emoWeight": 0.65
+          },
+          "neutral": {
+            "id": "4cea6ef9-cd75-4f90-afdb-4d1531e0a448",
+            "mode": 1,
+            "emoWeight": 0.65
+          },
+          "melancholy": {
+            "id": "39a8e2ba-7220-42ea-84ae-1e01808c5c3d",
+            "mode": 1,
+            "emoWeight": 0.65
+          },
+          "happy": {
+            "id": "d1707117-4a36-48a7-b8ce-792b7a26c0b5",
+            "mode": 1,
+            "emoWeight": 0.65
+          },
+          "disgusted": {
+            "id": "b5ce78c8-acbd-4fba-a21c-914a295ccfce",
+            "mode": 1,
+            "emoWeight": 0.65
+          }
+        },
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/6f085eee-279e-4c8e-8ae8-df3caccdded6.mp3"
+      },
+      {
+        "index": 7,
+        "type": "dialogue",
+        "role": "江桥",
+        "emotion": "neutral",
+        "text": "＂哦。＂",
+        "referenceAudio": {
+          "id": "857e60db-4894-4c6b-9de3-f95d9e5ed8bf",
+          "mode": 1,
+          "emoWeight": 0.65
+        },
+        "autoAssignedVoiceActor": "钟离",
+        "autoEmotionAudioMap": {
+          "neutral": {
+            "id": "857e60db-4894-4c6b-9de3-f95d9e5ed8bf",
+            "mode": 1,
+            "emoWeight": 0.65
+          }
+        },
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/d0db55a0-86de-4dc8-96e8-6738f0555752.mp3"
+      },
+      {
+        "index": 8,
+        "type": "narration",
+        "role": "旁白",
+        "emotion": "neutral",
+        "text": "江桥应了一声，随即又喊来服务员要了一瓶啤酒。",
+        "referenceAudio": {
+          "id": "f2c00789-01a1-474d-bfcd-c5f940006be9",
+          "mode": 1,
+          "emoWeight": 0.65
+        },
+        "autoAssignedVoiceActor": null,
+        "autoEmotionAudioMap": null,
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/4ea08a31-30b7-4912-a7ca-b0d159c2eb7a.mp3"
+      },
+      {
+        "index": 9,
+        "type": "narration",
+        "role": "旁白",
+        "emotion": "neutral",
+        "text": "虽然今天江桥约陈艺是为了谈工作，可是这个世界上却没有比他们更熟悉的人了。他们都是南京雨花台区人，更是一起在这条弄堂里长大的青梅竹马，而在她没有去北京上中国传媒大学之前，他们每天过着抬头不见低头见的生活。后来，江桥进了一家婚庆公司做婚庆策划；她呢，比江桥要优秀太多了！大学毕业后，便进了本地电视台工作，现在已经是一个很有名气的主持人了。",
+        "referenceAudio": {
+          "id": "f2c00789-01a1-474d-bfcd-c5f940006be9",
+          "mode": 1,
+          "emoWeight": 0.65
+        },
+        "autoAssignedVoiceActor": null,
+        "autoEmotionAudioMap": null,
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/5f8e0e67-1ab6-487d-831d-0fdedd53222a.mp3"
+      },
+      {
+        "index": 10,
+        "type": "narration",
+        "role": "旁白",
+        "emotion": "neutral",
+        "text": "一瓶啤酒就这么被江桥当作解暑的饮料给喝完，却迟迟没有开口说起工作的事情，江桥就是想借机和陈艺多待会儿，这些年他们已经不像从前那么亲近了。",
+        "referenceAudio": {
+          "id": "f2c00789-01a1-474d-bfcd-c5f940006be9",
+          "mode": 1,
+          "emoWeight": 0.65
+        },
+        "autoAssignedVoiceActor": null,
+        "autoEmotionAudioMap": null,
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/22739488-f37b-4504-8fa3-224adafb3834.mp3"
+      },
+      {
+        "index": 11,
+        "type": "narration",
+        "role": "旁白",
+        "emotion": "neutral",
+        "text": "陈艺盯着江桥看了一会儿，终于带着好奇问道：",
+        "referenceAudio": {
+          "id": "f2c00789-01a1-474d-bfcd-c5f940006be9",
+          "mode": 1,
+          "emoWeight": 0.65
+        },
+        "autoAssignedVoiceActor": null,
+        "autoEmotionAudioMap": null,
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/f7cd5ca4-b31b-49d6-8085-5cdb7985f1d2.mp3"
+      },
+      {
+        "index": 12,
+        "type": "dialogue",
+        "role": "陈艺",
+        "emotion": "surprised",
+        "text": "＂江桥，你不是约我出来谈合作嘛，怎么一句话也不说了？＂",
+        "referenceAudio": null,
+        "autoAssignedVoiceActor": "刻晴",
+        "autoEmotionAudioMap": {
+          "angry": {
+            "id": "d0fc651f-c4c3-4914-b7fe-8c898867423d",
+            "mode": 1,
+            "emoWeight": 0.65
+          },
+          "neutral": {
+            "id": "4cea6ef9-cd75-4f90-afdb-4d1531e0a448",
+            "mode": 1,
+            "emoWeight": 0.65
+          },
+          "melancholy": {
+            "id": "39a8e2ba-7220-42ea-84ae-1e01808c5c3d",
+            "mode": 1,
+            "emoWeight": 0.65
+          },
+          "happy": {
+            "id": "d1707117-4a36-48a7-b8ce-792b7a26c0b5",
+            "mode": 1,
+            "emoWeight": 0.65
+          },
+          "disgusted": {
+            "id": "b5ce78c8-acbd-4fba-a21c-914a295ccfce",
+            "mode": 1,
+            "emoWeight": 0.65
+          }
+        },
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/c75fad55-5ac3-4021-acff-cd35537fda72.mp3"
+      },
+      {
+        "index": 13,
+        "type": "dialogue",
+        "role": "江桥",
+        "emotion": "neutral",
+        "text": "＂谈合作之前我想先问你一件事儿。＂",
+        "referenceAudio": {
+          "id": "857e60db-4894-4c6b-9de3-f95d9e5ed8bf",
+          "mode": 1,
+          "emoWeight": 0.65
+        },
+        "autoAssignedVoiceActor": "钟离",
+        "autoEmotionAudioMap": {
+          "neutral": {
+            "id": "857e60db-4894-4c6b-9de3-f95d9e5ed8bf",
+            "mode": 1,
+            "emoWeight": 0.65
+          }
+        },
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/48c34029-fa1c-4247-9c36-c17d3b63233f.mp3"
+      },
+      {
+        "index": 14,
+        "type": "dialogue",
+        "role": "陈艺",
+        "emotion": "neutral",
+        "text": "＂你问呗。＂",
+        "referenceAudio": {
+          "id": "4cea6ef9-cd75-4f90-afdb-4d1531e0a448",
+          "mode": 1,
+          "emoWeight": 0.65
+        },
+        "autoAssignedVoiceActor": "刻晴",
+        "autoEmotionAudioMap": {
+          "angry": {
+            "id": "d0fc651f-c4c3-4914-b7fe-8c898867423d",
+            "mode": 1,
+            "emoWeight": 0.65
+          },
+          "neutral": {
+            "id": "4cea6ef9-cd75-4f90-afdb-4d1531e0a448",
+            "mode": 1,
+            "emoWeight": 0.65
+          },
+          "melancholy": {
+            "id": "39a8e2ba-7220-42ea-84ae-1e01808c5c3d",
+            "mode": 1,
+            "emoWeight": 0.65
+          },
+          "happy": {
+            "id": "d1707117-4a36-48a7-b8ce-792b7a26c0b5",
+            "mode": 1,
+            "emoWeight": 0.65
+          },
+          "disgusted": {
+            "id": "b5ce78c8-acbd-4fba-a21c-914a295ccfce",
+            "mode": 1,
+            "emoWeight": 0.65
+          }
+        },
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/8e84c976-2230-4080-8089-1ca686e19ada.mp3"
+      },
+      {
+        "index": 15,
+        "type": "dialogue",
+        "role": "江桥",
+        "emotion": "happy",
+        "text": "＂想我江桥从小就阳光帅气，还乐于助人、三观向上、德智体美劳样样是标兵，深得老师们喜欢，更是年年被学校评为优秀红领巾，所以……我想问你：当这么多优点很不公平的集中在我一个人身上时，有没有那么一霎那让你心动过，然后偷偷暗恋我，把我当成你梦中的白马王子？＂",
+        "referenceAudio": null,
+        "autoAssignedVoiceActor": "钟离",
+        "autoEmotionAudioMap": {
+          "neutral": {
+            "id": "857e60db-4894-4c6b-9de3-f95d9e5ed8bf",
+            "mode": 1,
+            "emoWeight": 0.65
+          }
+        },
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/4fb5bb58-3b4d-4834-940c-dfc384804612.mp3"
+      },
+      {
+        "index": 16,
+        "type": "dialogue",
+        "role": "陈艺",
+        "emotion": "disgusted",
+        "text": "＂没有……你能不能别每次一见面就像和我说脱口秀似的，说好的谈合作呢？＂",
+        "referenceAudio": {
+          "id": "b5ce78c8-acbd-4fba-a21c-914a295ccfce",
+          "mode": 1,
+          "emoWeight": 0.65
+        },
+        "autoAssignedVoiceActor": "刻晴",
+        "autoEmotionAudioMap": {
+          "angry": {
+            "id": "d0fc651f-c4c3-4914-b7fe-8c898867423d",
+            "mode": 1,
+            "emoWeight": 0.65
+          },
+          "neutral": {
+            "id": "4cea6ef9-cd75-4f90-afdb-4d1531e0a448",
+            "mode": 1,
+            "emoWeight": 0.65
+          },
+          "melancholy": {
+            "id": "39a8e2ba-7220-42ea-84ae-1e01808c5c3d",
+            "mode": 1,
+            "emoWeight": 0.65
+          },
+          "happy": {
+            "id": "d1707117-4a36-48a7-b8ce-792b7a26c0b5",
+            "mode": 1,
+            "emoWeight": 0.65
+          },
+          "disgusted": {
+            "id": "b5ce78c8-acbd-4fba-a21c-914a295ccfce",
+            "mode": 1,
+            "emoWeight": 0.65
+          }
+        },
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/84a14d5b-2eff-49bc-aacc-a6f634237eba.mp3"
+      },
+      {
+        "index": 17,
+        "type": "dialogue",
+        "role": "江桥",
+        "emotion": "happy",
+        "text": "＂得了吧，那么多姑娘喜欢我，你肯定是淹没在她们非我不嫁的意念中感到自卑了。＂",
+        "referenceAudio": null,
+        "autoAssignedVoiceActor": "钟离",
+        "autoEmotionAudioMap": {
+          "neutral": {
+            "id": "857e60db-4894-4c6b-9de3-f95d9e5ed8bf",
+            "mode": 1,
+            "emoWeight": 0.65
+          }
+        },
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/6c2135c1-ea9d-47a0-a327-8eb02123829b.mp3"
+      },
+      {
+        "index": 18,
+        "type": "narration",
+        "role": "旁白",
+        "emotion": "neutral",
+        "text": "陈艺不愿意陪江桥无聊，又端起咖啡喝了一口，然后望着巷尾的那两棵很茂盛的梧桐树。",
+        "referenceAudio": {
+          "id": "f2c00789-01a1-474d-bfcd-c5f940006be9",
+          "mode": 1,
+          "emoWeight": 0.65
+        },
+        "autoAssignedVoiceActor": null,
+        "autoEmotionAudioMap": null,
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/8d02b4bf-da46-4ec3-af4c-dfe4ead12473.mp3"
+      },
+      {
+        "index": 19,
+        "type": "dialogue",
+        "role": "江桥",
+        "emotion": "neutral",
+        "text": "＂好、好、好……咱们谈合作还不行嘛。＂",
+        "referenceAudio": {
+          "id": "857e60db-4894-4c6b-9de3-f95d9e5ed8bf",
+          "mode": 1,
+          "emoWeight": 0.65
+        },
+        "autoAssignedVoiceActor": "钟离",
+        "autoEmotionAudioMap": {
+          "neutral": {
+            "id": "857e60db-4894-4c6b-9de3-f95d9e5ed8bf",
+            "mode": 1,
+            "emoWeight": 0.65
+          }
+        },
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/e6b5a480-0f58-457f-b160-eb60c23cfa56.mp3"
+      },
+      {
+        "index": 20,
+        "type": "narration",
+        "role": "旁白",
+        "emotion": "neutral",
+        "text": "陈艺没什么情绪的看着江桥，在她眼里江桥是基本上不会一本正经的带着工作精神和她聊天的。",
+        "referenceAudio": {
+          "id": "f2c00789-01a1-474d-bfcd-c5f940006be9",
+          "mode": 1,
+          "emoWeight": 0.65
+        },
+        "autoAssignedVoiceActor": null,
+        "autoEmotionAudioMap": null,
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/b258b0b1-4525-4e61-a22c-5f463adb7fff.mp3"
+      },
+      {
+        "index": 21,
+        "type": "narration",
+        "role": "旁白",
+        "emotion": "neutral",
+        "text": "江桥坐直了身子，终于正色说道：",
+        "referenceAudio": {
+          "id": "f2c00789-01a1-474d-bfcd-c5f940006be9",
+          "mode": 1,
+          "emoWeight": 0.65
+        },
+        "autoAssignedVoiceActor": null,
+        "autoEmotionAudioMap": null,
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/a453a86f-e8cd-4d9c-a933-5e8fa1ba164d.mp3"
+      },
+      {
+        "index": 22,
+        "type": "dialogue",
+        "role": "江桥",
+        "emotion": "happy",
+        "text": "＂我们公司昨天接了个大客户的婚礼，对方指明要你担任主持，出场费是6万，这是我帮你和老板争取的……呵呵，是不是我江桥偶尔也能做几次靠谱的事情？＂",
+        "referenceAudio": null,
+        "autoAssignedVoiceActor": "钟离",
+        "autoEmotionAudioMap": {
+          "neutral": {
+            "id": "857e60db-4894-4c6b-9de3-f95d9e5ed8bf",
+            "mode": 1,
+            "emoWeight": 0.65
+          }
+        },
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/8333d6d4-abaa-4d4e-94b4-3975c6e74fd3.mp3"
+      },
+      {
+        "index": 23,
+        "type": "narration",
+        "role": "旁白",
+        "emotion": "neutral",
+        "text": "说完这些，江桥心里很高兴，因为这些年江桥在她的世界里太没有存在感了，可是却没有能力为她做点儿什么，这次虽然也算不上是帮忙，但至少证明江桥还算是有点作用的，因为老板起初只愿意给出5万的出场费，而陈艺之前主持一场商业活动也差不多就是这个价格。",
+        "referenceAudio": {
+          "id": "f2c00789-01a1-474d-bfcd-c5f940006be9",
+          "mode": 1,
+          "emoWeight": 0.65
+        },
+        "autoAssignedVoiceActor": null,
+        "autoEmotionAudioMap": null,
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/e6f22d38-fe06-435f-ab71-3446de94b96a.mp3"
+      },
+      {
+        "index": 24,
+        "type": "dialogue",
+        "role": "陈艺",
+        "emotion": "neutral",
+        "text": "＂江桥，是这样的，最近台里下达了通知，要严整不正之风，严禁体制内的主持人出去接私活，我是签了承诺书的，所以这场婚礼的主持我不能接。＂",
+        "referenceAudio": {
+          "id": "4cea6ef9-cd75-4f90-afdb-4d1531e0a448",
+          "mode": 1,
+          "emoWeight": 0.65
+        },
+        "autoAssignedVoiceActor": "刻晴",
+        "autoEmotionAudioMap": {
+          "angry": {
+            "id": "d0fc651f-c4c3-4914-b7fe-8c898867423d",
+            "mode": 1,
+            "emoWeight": 0.65
+          },
+          "neutral": {
+            "id": "4cea6ef9-cd75-4f90-afdb-4d1531e0a448",
+            "mode": 1,
+            "emoWeight": 0.65
+          },
+          "melancholy": {
+            "id": "39a8e2ba-7220-42ea-84ae-1e01808c5c3d",
+            "mode": 1,
+            "emoWeight": 0.65
+          },
+          "happy": {
+            "id": "d1707117-4a36-48a7-b8ce-792b7a26c0b5",
+            "mode": 1,
+            "emoWeight": 0.65
+          },
+          "disgusted": {
+            "id": "b5ce78c8-acbd-4fba-a21c-914a295ccfce",
+            "mode": 1,
+            "emoWeight": 0.65
+          }
+        },
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/41c870b1-e75e-4d8a-a6be-d45a2e2eda8c.mp3"
+      },
+      {
+        "index": 25,
+        "type": "narration",
+        "role": "旁白",
+        "emotion": "neutral",
+        "text": "江桥心里顿时不高兴了起来，说道：",
+        "referenceAudio": {
+          "id": "f2c00789-01a1-474d-bfcd-c5f940006be9",
+          "mode": 1,
+          "emoWeight": 0.65
+        },
+        "autoAssignedVoiceActor": null,
+        "autoEmotionAudioMap": null,
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/f0b4305b-ae6a-4d28-b9c9-9c80591cc1d3.mp3"
+      },
+      {
+        "index": 26,
+        "type": "dialogue",
+        "role": "江桥",
+        "emotion": "angry",
+        "text": "＂这是公司的事情，也是我的任务指标，我的忙你也不帮吗？＂",
+        "referenceAudio": null,
+        "autoAssignedVoiceActor": "钟离",
+        "autoEmotionAudioMap": {
+          "neutral": {
+            "id": "857e60db-4894-4c6b-9de3-f95d9e5ed8bf",
+            "mode": 1,
+            "emoWeight": 0.65
+          }
+        },
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/c10b939b-24c0-4560-abad-1acf2f094d66.mp3"
+      },
+      {
+        "index": 27,
+        "type": "dialogue",
+        "role": "陈艺",
+        "emotion": "sad",
+        "text": "＂我不是不帮，是台里下达了这样的通知，我也没办法的呀。＂",
+        "referenceAudio": null,
+        "autoAssignedVoiceActor": "刻晴",
+        "autoEmotionAudioMap": {
+          "angry": {
+            "id": "d0fc651f-c4c3-4914-b7fe-8c898867423d",
+            "mode": 1,
+            "emoWeight": 0.65
+          },
+          "neutral": {
+            "id": "4cea6ef9-cd75-4f90-afdb-4d1531e0a448",
+            "mode": 1,
+            "emoWeight": 0.65
+          },
+          "melancholy": {
+            "id": "39a8e2ba-7220-42ea-84ae-1e01808c5c3d",
+            "mode": 1,
+            "emoWeight": 0.65
+          },
+          "happy": {
+            "id": "d1707117-4a36-48a7-b8ce-792b7a26c0b5",
+            "mode": 1,
+            "emoWeight": 0.65
+          },
+          "disgusted": {
+            "id": "b5ce78c8-acbd-4fba-a21c-914a295ccfce",
+            "mode": 1,
+            "emoWeight": 0.65
+          }
+        },
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/a2356841-522b-46e9-a2f2-19d6154c341d.mp3"
+      },
+      {
+        "index": 28,
+        "type": "narration",
+        "role": "旁白",
+        "emotion": "neutral",
+        "text": "江桥的自尊心忽然受挫，觉得自己的沾沾自喜有点可笑，语调也提高了几分：",
+        "referenceAudio": {
+          "id": "f2c00789-01a1-474d-bfcd-c5f940006be9",
+          "mode": 1,
+          "emoWeight": 0.65
+        },
+        "autoAssignedVoiceActor": null,
+        "autoEmotionAudioMap": null,
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/a58619dd-d6e0-477e-b870-a2fc220d94fe.mp3"
+      },
+      {
+        "index": 29,
+        "type": "dialogue",
+        "role": "江桥",
+        "emotion": "angry",
+        "text": "＂陈艺，别让我觉得你太没有人情味，行吗？＂",
+        "referenceAudio": null,
+        "autoAssignedVoiceActor": "钟离",
+        "autoEmotionAudioMap": {
+          "neutral": {
+            "id": "857e60db-4894-4c6b-9de3-f95d9e5ed8bf",
+            "mode": 1,
+            "emoWeight": 0.65
+          }
+        },
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/8ac6ec68-4596-43d3-bee9-64af13a1f889.mp3"
+      },
+      {
+        "index": 30,
+        "type": "narration",
+        "role": "旁白",
+        "emotion": "neutral",
+        "text": "陈艺看着江桥，没有言语，似乎用沉默再次告诉江桥，这个忙她就是不帮，没得商量。",
+        "referenceAudio": {
+          "id": "f2c00789-01a1-474d-bfcd-c5f940006be9",
+          "mode": 1,
+          "emoWeight": 0.65
+        },
+        "autoAssignedVoiceActor": null,
+        "autoEmotionAudioMap": null,
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/b4eacc92-d85b-4b92-b669-6ab1afcef344.mp3"
+      },
+      {
+        "index": 31,
+        "type": "narration",
+        "role": "旁白",
+        "emotion": "neutral",
+        "text": "江桥心中上火的厉害，又逼着问道：",
+        "referenceAudio": {
+          "id": "f2c00789-01a1-474d-bfcd-c5f940006be9",
+          "mode": 1,
+          "emoWeight": 0.65
+        },
+        "autoAssignedVoiceActor": null,
+        "autoEmotionAudioMap": null,
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/a0f8fd71-af8c-4deb-9d78-f3f283936b76.mp3"
+      },
+      {
+        "index": 32,
+        "type": "dialogue",
+        "role": "江桥",
+        "emotion": "angry",
+        "text": "＂我现在很不高兴，你给句痛快话，这场婚礼你到底能不能主持？＂",
+        "referenceAudio": null,
+        "autoAssignedVoiceActor": "钟离",
+        "autoEmotionAudioMap": {
+          "neutral": {
+            "id": "857e60db-4894-4c6b-9de3-f95d9e5ed8bf",
+            "mode": 1,
+            "emoWeight": 0.65
+          }
+        },
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/dbad221e-379a-4882-a6c5-e5324d7be642.mp3"
+      },
+      {
+        "index": 33,
+        "type": "dialogue",
+        "role": "陈艺",
+        "emotion": "neutral",
+        "text": "＂江桥，你能不能成熟一点，我既然和台里签了承诺书，那我就要有契约精神，而且工作上的事情，我们最好不要带着私人感情去聊，这样大家才都不会尴尬、为难。＂",
+        "referenceAudio": {
+          "id": "4cea6ef9-cd75-4f90-afdb-4d1531e0a448",
+          "mode": 1,
+          "emoWeight": 0.65
+        },
+        "autoAssignedVoiceActor": "刻晴",
+        "autoEmotionAudioMap": {
+          "angry": {
+            "id": "d0fc651f-c4c3-4914-b7fe-8c898867423d",
+            "mode": 1,
+            "emoWeight": 0.65
+          },
+          "neutral": {
+            "id": "4cea6ef9-cd75-4f90-afdb-4d1531e0a448",
+            "mode": 1,
+            "emoWeight": 0.65
+          },
+          "melancholy": {
+            "id": "39a8e2ba-7220-42ea-84ae-1e01808c5c3d",
+            "mode": 1,
+            "emoWeight": 0.65
+          },
+          "happy": {
+            "id": "d1707117-4a36-48a7-b8ce-792b7a26c0b5",
+            "mode": 1,
+            "emoWeight": 0.65
+          },
+          "disgusted": {
+            "id": "b5ce78c8-acbd-4fba-a21c-914a295ccfce",
+            "mode": 1,
+            "emoWeight": 0.65
+          }
+        },
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/ada9d899-b2d1-4414-b231-846d5b2b634d.mp3"
+      },
+      {
+        "index": 34,
+        "type": "dialogue",
+        "role": "江桥",
+        "emotion": "angry",
+        "text": "＂好、你字字珠玑、句句在理，我江桥就是个大草包，这事儿就算我不成熟、没有契约精神行了吧？＂",
+        "referenceAudio": null,
+        "autoAssignedVoiceActor": "钟离",
+        "autoEmotionAudioMap": {
+          "neutral": {
+            "id": "857e60db-4894-4c6b-9de3-f95d9e5ed8bf",
+            "mode": 1,
+            "emoWeight": 0.65
+          }
+        },
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/bc64068a-5f0c-480c-92c6-487d6466ee29.mp3"
+      },
+      {
+        "index": 35,
+        "type": "dialogue",
+        "role": "陈艺",
+        "emotion": "neutral",
+        "text": "＂反正我把我的难处都和你说了，你要和我置气、耍情绪，那我也没有办法。＂",
+        "referenceAudio": {
+          "id": "4cea6ef9-cd75-4f90-afdb-4d1531e0a448",
+          "mode": 1,
+          "emoWeight": 0.65
+        },
+        "autoAssignedVoiceActor": "刻晴",
+        "autoEmotionAudioMap": {
+          "angry": {
+            "id": "d0fc651f-c4c3-4914-b7fe-8c898867423d",
+            "mode": 1,
+            "emoWeight": 0.65
+          },
+          "neutral": {
+            "id": "4cea6ef9-cd75-4f90-afdb-4d1531e0a448",
+            "mode": 1,
+            "emoWeight": 0.65
+          },
+          "melancholy": {
+            "id": "39a8e2ba-7220-42ea-84ae-1e01808c5c3d",
+            "mode": 1,
+            "emoWeight": 0.65
+          },
+          "happy": {
+            "id": "d1707117-4a36-48a7-b8ce-792b7a26c0b5",
+            "mode": 1,
+            "emoWeight": 0.65
+          },
+          "disgusted": {
+            "id": "b5ce78c8-acbd-4fba-a21c-914a295ccfce",
+            "mode": 1,
+            "emoWeight": 0.65
+          }
+        },
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/b6388dc7-9286-469c-b956-788df28973e7.mp3"
+      },
+      {
+        "index": 36,
+        "type": "dialogue",
+        "role": "江桥",
+        "emotion": "angry",
+        "text": "＂陈艺你给我听好了，我江桥今天就和你说一句狂话，你不主持没关系，反正混出名声的主持人也不是你一个，这6万块钱我送的出去，我要再和你提这件事情，你就是我奶奶，我是你孙子！＂",
+        "referenceAudio": null,
+        "autoAssignedVoiceActor": "钟离",
+        "autoEmotionAudioMap": {
+          "neutral": {
+            "id": "857e60db-4894-4c6b-9de3-f95d9e5ed8bf",
+            "mode": 1,
+            "emoWeight": 0.65
+          }
+        },
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/2cf587d9-1398-498a-b82a-d7bc40d656fd.mp3"
+      },
+      {
+        "index": 37,
+        "type": "narration",
+        "role": "旁白",
+        "emotion": "neutral",
+        "text": "离开那间叫＂心情＂的咖啡店，江桥所有的心情都瞬间都没了，只剩下一肚子发泄不出去的憋屈，江桥很难过、真的很难过，更觉得自己傻逼到有些可笑，没有今晚这一幕之前，江桥还真把自己太当回事儿，以为在陈艺心中有着很重的分量，结果却抵不上一份签了字的承诺书。",
+        "referenceAudio": {
+          "id": "f2c00789-01a1-474d-bfcd-c5f940006be9",
+          "mode": 1,
+          "emoWeight": 0.65
+        },
+        "autoAssignedVoiceActor": null,
+        "autoEmotionAudioMap": null,
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/82719187-fd37-4a96-820f-ca0320d13cb0.mp3"
+      },
+      {
+        "index": 38,
+        "type": "narration",
+        "role": "旁白",
+        "emotion": "neutral",
+        "text": "江桥就这么站在弄堂里，看着陈艺的身影离开了咖啡店，她在青石铺成的小路上伴随着夜色一步步消失在了江桥的视线中，江桥有些恍惚，好似她的身影还弥留在巷子的深处，就像一个风华绝代的女人用穿着旗袍的背影惊艳着上个世纪30年代的老南京……",
+        "referenceAudio": {
+          "id": "f2c00789-01a1-474d-bfcd-c5f940006be9",
+          "mode": 1,
+          "emoWeight": 0.65
+        },
+        "autoAssignedVoiceActor": null,
+        "autoEmotionAudioMap": null,
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/5a809041-3bce-4d6e-bcb3-bb4b33d48cdc.mp3"
+      },
+      {
+        "index": 39,
+        "type": "narration",
+        "role": "旁白",
+        "emotion": "neutral",
+        "text": "陈艺就是这个样子，从小生活在知识分子家庭的她，学音乐、学舞蹈、学画画，学出了一身才艺，也学出了不动怒的大家闺秀性格，可这些都成了今天他们无法碰触的距离，因为江桥从来没有绅士过，江桥只知道：开心了就在她面前笑，不开心了就对她发脾气。",
+        "referenceAudio": {
+          "id": "f2c00789-01a1-474d-bfcd-c5f940006be9",
+          "mode": 1,
+          "emoWeight": 0.65
+        },
+        "autoAssignedVoiceActor": null,
+        "autoEmotionAudioMap": null,
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/ab60a622-0198-4fd8-9c24-fc27a459f1ff.mp3"
+      },
+      {
+        "index": 40,
+        "type": "narration",
+        "role": "旁白",
+        "emotion": "neutral",
+        "text": "夜晚的水汽已经弄湿了这条巷子，没有人再从这里路过，只剩下头顶上的老式路灯还散发着昏黄的光线，似乎它和这条弄堂就是一对被空间隔离的恋人，每天相对却不动声色，只有当夜风吹来时，它们才会有一次擦肩而过，然后如此重复……",
+        "referenceAudio": {
+          "id": "f2c00789-01a1-474d-bfcd-c5f940006be9",
+          "mode": 1,
+          "emoWeight": 0.65
+        },
+        "autoAssignedVoiceActor": null,
+        "autoEmotionAudioMap": null,
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/1385ade5-b70e-4086-967a-20aedcb9a082.mp3"
+      },
+      {
+        "index": 41,
+        "type": "narration",
+        "role": "旁白",
+        "emotion": "neutral",
+        "text": "而这些关于他们寂寞的秘密，在这条弄堂里只有江桥一个人懂！",
+        "referenceAudio": {
+          "id": "f2c00789-01a1-474d-bfcd-c5f940006be9",
+          "mode": 1,
+          "emoWeight": 0.65
+        },
+        "autoAssignedVoiceActor": null,
+        "autoEmotionAudioMap": null,
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/0dd362d0-dd7a-49f8-9fc7-a8bce48842fa.mp3"
+      },
+      {
+        "index": 42,
+        "type": "narration",
+        "role": "旁白",
+        "emotion": "neutral",
+        "text": "江桥终于回了家，木板门上挂着的铁锁用它的冰冷呼应着江桥心中的那些惆怅，连门口栽种的桂花树也不再散发芳香，只有露水依附在叶子上像个人似的仰望着清凉的月光，但空气里那些白天留下的燥热却还没有完全散去，江桥忽然发觉自己在这冷热交替的夜里有些病态了。",
+        "referenceAudio": {
+          "id": "f2c00789-01a1-474d-bfcd-c5f940006be9",
+          "mode": 1,
+          "emoWeight": 0.65
+        },
+        "autoAssignedVoiceActor": null,
+        "autoEmotionAudioMap": null,
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/93cc1074-f65e-42e0-9b98-1392f45caea4.mp3"
+      },
+      {
+        "index": 43,
+        "type": "narration",
+        "role": "旁白",
+        "emotion": "neutral",
+        "text": "江桥终于打开了门上的锁，推开了木板门，霎时惊得江桥呆立在原地……",
+        "referenceAudio": {
+          "id": "f2c00789-01a1-474d-bfcd-c5f940006be9",
+          "mode": 1,
+          "emoWeight": 0.65
+        },
+        "autoAssignedVoiceActor": null,
+        "autoEmotionAudioMap": null,
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/b9ee2dd3-83bc-463a-92d4-8149e8b361da.mp3"
+      },
+      {
+        "index": 44,
+        "type": "narration",
+        "role": "旁白",
+        "emotion": "neutral",
+        "text": "江桥看见了一个仿佛用画笔勾勒出的美丽到有些孤独的侧脸，她穿着白色的花边长裙，正拿着水壶，站在花池旁为江桥种植的那些花草浇着水，江桥不知道该怎么形容这个仿佛掉落在花前月下的身影，仅看见自己内心的寂寞只在一个星火闪过的瞬间便被点燃。",
+        "referenceAudio": {
+          "id": "f2c00789-01a1-474d-bfcd-c5f940006be9",
+          "mode": 1,
+          "emoWeight": 0.65
+        },
+        "autoAssignedVoiceActor": null,
+        "autoEmotionAudioMap": null,
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/4df5e7b6-ad34-441b-90fd-1a23a447c5bf.mp3"
+      },
+      {
+        "index": 45,
+        "type": "narration",
+        "role": "旁白",
+        "emotion": "neutral",
+        "text": "她发现了江桥，江桥也终于回过了神，几步冲刺着跑到她的面前，一把夺下了她手中的水壶，喊叫道：",
+        "referenceAudio": {
+          "id": "f2c00789-01a1-474d-bfcd-c5f940006be9",
+          "mode": 1,
+          "emoWeight": 0.65
+        },
+        "autoAssignedVoiceActor": null,
+        "autoEmotionAudioMap": null,
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/9eeccdcc-ea64-4878-bb80-fe476c771b30.mp3"
+      },
+      {
+        "index": 46,
+        "type": "dialogue",
+        "role": "江桥",
+        "emotion": "angry",
+        "text": "＂stop，stop……这是芦荟，你这么浇水会把它给淹死的！＂",
+        "referenceAudio": null,
+        "autoAssignedVoiceActor": "钟离",
+        "autoEmotionAudioMap": {
+          "neutral": {
+            "id": "857e60db-4894-4c6b-9de3-f95d9e5ed8bf",
+            "mode": 1,
+            "emoWeight": 0.65
+          }
+        },
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/30bce36c-67ab-45c1-8d9e-1d5d811a9e6b.mp3"
+      },
+      {
+        "index": 47,
+        "type": "narration",
+        "role": "旁白",
+        "emotion": "neutral",
+        "text": "她赶忙缩了手……",
+        "referenceAudio": {
+          "id": "f2c00789-01a1-474d-bfcd-c5f940006be9",
+          "mode": 1,
+          "emoWeight": 0.65
+        },
+        "autoAssignedVoiceActor": null,
+        "autoEmotionAudioMap": null,
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/4f02b455-073e-4002-b1f9-2e6f9b253b28.mp3"
+      },
+      {
+        "index": 48,
+        "type": "narration",
+        "role": "旁白",
+        "emotion": "neutral",
+        "text": "江桥皱着眉头看着她，这确实就是一个很真实的姑娘，应该是丫头，她的年纪不过20刚出头的样子，可是长得真的很漂亮，才让江桥在刚刚那花前月下的情境中产生错觉，误以为一个仙女来21世纪的凡间接地气了，实际上连她身上的那套长裙也不是古代的绫罗绸缎，反而是一件充满现代气息的今夏新款女装。",
+        "referenceAudio": {
+          "id": "f2c00789-01a1-474d-bfcd-c5f940006be9",
+          "mode": 1,
+          "emoWeight": 0.65
+        },
+        "autoAssignedVoiceActor": null,
+        "autoEmotionAudioMap": null,
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/0191ffc9-f488-4726-bef0-071debfea68a.mp3"
+      },
+      {
+        "index": 49,
+        "type": "narration",
+        "role": "旁白",
+        "emotion": "neutral",
+        "text": "她嘴里嚼着的口香糖，更让她看上去并不那么安分……",
+        "referenceAudio": {
+          "id": "f2c00789-01a1-474d-bfcd-c5f940006be9",
+          "mode": 1,
+          "emoWeight": 0.65
+        },
+        "autoAssignedVoiceActor": null,
+        "autoEmotionAudioMap": null,
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/aa0080fb-4054-4d60-8820-318c32bde0dd.mp3"
+      },
+      {
+        "index": 50,
+        "type": "narration",
+        "role": "旁白",
+        "emotion": "neutral",
+        "text": "江桥拉长着脸向她问道：",
+        "referenceAudio": {
+          "id": "f2c00789-01a1-474d-bfcd-c5f940006be9",
+          "mode": 1,
+          "emoWeight": 0.65
+        },
+        "autoAssignedVoiceActor": null,
+        "autoEmotionAudioMap": null,
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/36796cca-7125-4f32-bce4-07cf2dcca8f7.mp3"
+      },
+      {
+        "index": 51,
+        "type": "dialogue",
+        "role": "江桥",
+        "emotion": "angry",
+        "text": "＂你谁啊，怎么进的我家院子？＂",
+        "referenceAudio": null,
+        "autoAssignedVoiceActor": "钟离",
+        "autoEmotionAudioMap": {
+          "neutral": {
+            "id": "857e60db-4894-4c6b-9de3-f95d9e5ed8bf",
+            "mode": 1,
+            "emoWeight": 0.65
+          }
+        },
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/cbca4f55-ae23-4e29-8016-8facdf1c409a.mp3"
+      },
+      {
+        "index": 52,
+        "type": "dialogue",
+        "role": "未命名_白裙姑娘",
+        "emotion": "neutral",
+        "text": "＂你别和我打岔……＂",
+        "referenceAudio": null,
+        "autoAssignedVoiceActor": null,
+        "autoEmotionAudioMap": null,
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/e4175b73-d2d4-4ac8-b9db-86a942e64bd9.mp3"
+      },
+      {
+        "index": 53,
+        "type": "narration",
+        "role": "旁白",
+        "emotion": "neutral",
+        "text": "她没让江桥说下去，用一副烂漫的笑容回道：",
+        "referenceAudio": {
+          "id": "f2c00789-01a1-474d-bfcd-c5f940006be9",
+          "mode": 1,
+          "emoWeight": 0.65
+        },
+        "autoAssignedVoiceActor": null,
+        "autoEmotionAudioMap": null,
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/572fb808-a189-47d3-8ea9-ac950afe9854.mp3"
+      },
+      {
+        "index": 54,
+        "type": "dialogue",
+        "role": "未命名_白裙姑娘",
+        "emotion": "happy",
+        "text": "＂我知道你叫江桥够不够？……你不是说过嘛，人和人之间就是一场游戏，今天我来找你就是一场游戏的开始……反正我是不会无缘无故找你的，毕竟天上不会掉个仙女让你白捡便宜，南京城整天跑着来来往往的汽车火车、房价高的离谱，它也明显不是一个制造童话的地方，对不对，江桥？＂",
+        "referenceAudio": null,
+        "autoAssignedVoiceActor": null,
+        "autoEmotionAudioMap": null,
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/f895aa10-3c49-49ac-927b-6c1cf24e9df7.mp3"
+      },
+      {
+        "index": 55,
+        "type": "narration",
+        "role": "旁白",
+        "emotion": "neutral",
+        "text": "她的回答让江桥有一种完全暴露了的感觉，可是江桥一点也想不起来她是谁，但江桥确实喜欢把人和人之间的关系比喻成一场游戏，她竟然连这么小的细节都清楚，而江桥却完全没有办法解释此刻发生的一切。",
+        "referenceAudio": {
+          "id": "f2c00789-01a1-474d-bfcd-c5f940006be9",
+          "mode": 1,
+          "emoWeight": 0.65
+        },
+        "autoAssignedVoiceActor": null,
+        "autoEmotionAudioMap": null,
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/67978296-d6ad-45c7-9248-3b7ffad4a8fc.mp3"
+      }
+    ],
+    "createdAt": "2026-03-26T05:48:52.296Z"
+  },
+  "reader_我的郁金香小姐__1": {
+    "taskId": "b9b6e38a-0997-4671-b8ca-93b204b90fc8",
+    "phase": "done",
+    "segments": [
+      {
+        "index": 0,
+        "type": "narration",
+        "role": "旁白",
+        "emotion": "neutral",
+        "text": "我还在云里雾里搞不清楚时，这个在我没有一丝防备中出现的丫头已经准备离开，我挡在门口不让她走，又一次问道：",
+        "referenceAudio": {
+          "id": "f2c00789-01a1-474d-bfcd-c5f940006be9",
+          "mode": 1,
+          "emoWeight": 0.65
+        },
+        "autoAssignedVoiceActor": null,
+        "autoEmotionAudioMap": null,
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/39d82287-ff7b-44e5-82be-1196e2cca213.mp3"
+      },
+      {
+        "index": 1,
+        "type": "dialogue",
+        "role": "江桥",
+        "emotion": "surprised",
+        "text": "我门锁了，你是怎么进我家院子的？",
+        "referenceAudio": null,
+        "autoAssignedVoiceActor": "钟离",
+        "autoEmotionAudioMap": {
+          "neutral": {
+            "id": "857e60db-4894-4c6b-9de3-f95d9e5ed8bf",
+            "mode": 1,
+            "emoWeight": 0.65
+          }
+        },
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/8b303afd-46ca-4425-a428-8a8b8d08075a.mp3"
+      },
+      {
+        "index": 2,
+        "type": "dialogue",
+        "role": "未命名_白裙姑娘",
+        "emotion": "happy",
+        "text": "你在门口装个监控不就知道了，反正我还会再来的。",
+        "referenceAudio": null,
+        "autoAssignedVoiceActor": null,
+        "autoEmotionAudioMap": null,
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/41cb08e0-35ee-452b-ae52-dfe6171253a7.mp3"
+      },
+      {
+        "index": 3,
+        "type": "narration",
+        "role": "旁白",
+        "emotion": "neutral",
+        "text": "说完也不畏惧和我的身体接触伸手推开了我，走出院落后，沿着陈艺刚刚走过的路也离开了这条弄堂。",
+        "referenceAudio": {
+          "id": "f2c00789-01a1-474d-bfcd-c5f940006be9",
+          "mode": 1,
+          "emoWeight": 0.65
+        },
+        "autoAssignedVoiceActor": null,
+        "autoEmotionAudioMap": null,
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/c97a8ce3-ddd4-48de-aa22-905d14a63eb1.mp3"
+      },
+      {
+        "index": 4,
+        "type": "narration",
+        "role": "旁白",
+        "emotion": "neutral",
+        "text": "我有点儿恍惚，从口袋里摸出一支烟点燃，然后在一丝难得的缝隙中看见了在远处矗立的高楼，霓虹将城市的上空映出了一片红亮，我没有做梦，南京依旧是这个南京，我也依旧是我，一切都很真实。",
+        "referenceAudio": {
+          "id": "f2c00789-01a1-474d-bfcd-c5f940006be9",
+          "mode": 1,
+          "emoWeight": 0.65
+        },
+        "autoAssignedVoiceActor": null,
+        "autoEmotionAudioMap": null,
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/fe58e40c-e043-4b0e-aedc-e28dcf94837f.mp3"
+      },
+      {
+        "index": 5,
+        "type": "narration",
+        "role": "旁白",
+        "emotion": "neutral",
+        "text": "次日，早晨的阳光选了个最好的角度落在我的床上，我睁开了眼睛，也意味着三点一线的生活又这么重复着开始了。",
+        "referenceAudio": {
+          "id": "f2c00789-01a1-474d-bfcd-c5f940006be9",
+          "mode": 1,
+          "emoWeight": 0.65
+        },
+        "autoAssignedVoiceActor": null,
+        "autoEmotionAudioMap": null,
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/7cd007d5-de2f-4378-8253-affa3a393220.mp3"
+      },
+      {
+        "index": 6,
+        "type": "narration",
+        "role": "旁白",
+        "emotion": "neutral",
+        "text": "洗漱之后，我简单吃了个早餐便又乘坐86路车去了公司，在那摇摆不定，人群密集的车厢里，我一直反复想着昨天晚上陈艺拒绝我去主持婚礼的事情，直到此时我心里仍有那么一点儿气愤，反正我是不愿意再和她提这件事情了，毕竟狠话已经撂了出去，我是个很在意脸面的男人。",
+        "referenceAudio": {
+          "id": "f2c00789-01a1-474d-bfcd-c5f940006be9",
+          "mode": 1,
+          "emoWeight": 0.65
+        },
+        "autoAssignedVoiceActor": null,
+        "autoEmotionAudioMap": null,
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/bcc6ee53-9970-43ba-9743-b42cd61f2c57.mp3"
+      },
+      {
+        "index": 7,
+        "type": "narration",
+        "role": "旁白",
+        "emotion": "neutral",
+        "text": "到了公司后，我便陷入到了忙碌中，最近我正在策划的婚礼还有另外两场，我先是去设计部那边跟进了婚礼场景的设计情况，然后又将填好的《婚礼资源移交表格》交给了营销部，办完这两件事情之后，老板金志强也从外面跑完业务回到了公司，第一时间将我叫到了他的办公室。",
+        "referenceAudio": {
+          "id": "f2c00789-01a1-474d-bfcd-c5f940006be9",
+          "mode": 1,
+          "emoWeight": 0.65
+        },
+        "autoAssignedVoiceActor": null,
+        "autoEmotionAudioMap": null,
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/ff400606-e2d1-4603-b795-b98937beab25.mp3"
+      },
+      {
+        "index": 8,
+        "type": "narration",
+        "role": "旁白",
+        "emotion": "neutral",
+        "text": "老金泡了一壶普洱茶，亲自给我倒了一杯，我受宠若惊的从他手中接过，定了定神，向他汇报道：",
+        "referenceAudio": {
+          "id": "f2c00789-01a1-474d-bfcd-c5f940006be9",
+          "mode": 1,
+          "emoWeight": 0.65
+        },
+        "autoAssignedVoiceActor": null,
+        "autoEmotionAudioMap": null,
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/80c28168-2a99-4161-9359-5e19e31525f6.mp3"
+      },
+      {
+        "index": 9,
+        "type": "dialogue",
+        "role": "江桥",
+        "emotion": "neutral",
+        "text": "金总，昨天我找陈艺很认真的聊了一下，价码也告诉她了，可是她们电视台最近在严整不正之风，所以金鼎置业肖总的婚礼她实在没办法主持，要不咱们和肖总沟通一下，换个主持人呗。",
+        "referenceAudio": {
+          "id": "857e60db-4894-4c6b-9de3-f95d9e5ed8bf",
+          "mode": 1,
+          "emoWeight": 0.65
+        },
+        "autoAssignedVoiceActor": "钟离",
+        "autoEmotionAudioMap": {
+          "neutral": {
+            "id": "857e60db-4894-4c6b-9de3-f95d9e5ed8bf",
+            "mode": 1,
+            "emoWeight": 0.65
+          }
+        },
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/4076f04c-3b54-4212-998a-91b8a739b91f.mp3"
+      },
+      {
+        "index": 10,
+        "type": "dialogue",
+        "role": "金志强",
+        "emotion": "angry",
+        "text": "你给我把茶杯放下，事儿没办成还敢喝我泡的茶，把你给美的！",
+        "referenceAudio": null,
+        "autoAssignedVoiceActor": "那维莱特",
+        "autoEmotionAudioMap": {
+          "neutral": {
+            "id": "350dc131-c232-4986-a145-d851608e411e",
+            "mode": 1,
+            "emoWeight": 0.65
+          }
+        },
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/43889c76-c22d-490e-b3b2-0301adec2773.mp3"
+      },
+      {
+        "index": 11,
+        "type": "dialogue",
+        "role": "江桥",
+        "emotion": "angry",
+        "text": "不是金总，你能不能别说翻脸就翻脸？",
+        "referenceAudio": null,
+        "autoAssignedVoiceActor": "钟离",
+        "autoEmotionAudioMap": {
+          "neutral": {
+            "id": "857e60db-4894-4c6b-9de3-f95d9e5ed8bf",
+            "mode": 1,
+            "emoWeight": 0.65
+          }
+        },
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/91e5f83a-d984-4022-8a76-257377f13aaf.mp3"
+      },
+      {
+        "index": 12,
+        "type": "dialogue",
+        "role": "金志强",
+        "emotion": "angry",
+        "text": "我这一天天尽在外面装孙子，回公司还不能冲你们发点脾气了？",
+        "referenceAudio": null,
+        "autoAssignedVoiceActor": "那维莱特",
+        "autoEmotionAudioMap": {
+          "neutral": {
+            "id": "350dc131-c232-4986-a145-d851608e411e",
+            "mode": 1,
+            "emoWeight": 0.65
+          }
+        },
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/3d62a345-e004-4b0a-8805-1b796a5a623b.mp3"
+      },
+      {
+        "index": 13,
+        "type": "dialogue",
+        "role": "江桥",
+        "emotion": "sad",
+        "text": "可这事儿我也不是没有尽力啊……",
+        "referenceAudio": null,
+        "autoAssignedVoiceActor": "钟离",
+        "autoEmotionAudioMap": {
+          "neutral": {
+            "id": "857e60db-4894-4c6b-9de3-f95d9e5ed8bf",
+            "mode": 1,
+            "emoWeight": 0.65
+          }
+        },
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/787e9c89-1991-4ed6-a19e-8f67a6707067.mp3"
+      },
+      {
+        "index": 14,
+        "type": "dialogue",
+        "role": "金志强",
+        "emotion": "angry",
+        "text": "别动不动就把尽力两个字挂在嘴上，你这就是无能的表现！",
+        "referenceAudio": null,
+        "autoAssignedVoiceActor": "那维莱特",
+        "autoEmotionAudioMap": {
+          "neutral": {
+            "id": "350dc131-c232-4986-a145-d851608e411e",
+            "mode": 1,
+            "emoWeight": 0.65
+          }
+        },
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/81b48cff-4b58-4595-8f14-227677828a3b.mp3"
+      },
+      {
+        "index": 15,
+        "type": "narration",
+        "role": "旁白",
+        "emotion": "neutral",
+        "text": "被老金骂无能，我心中已经有火，但还是强忍在心里没有发作……",
+        "referenceAudio": {
+          "id": "f2c00789-01a1-474d-bfcd-c5f940006be9",
+          "mode": 1,
+          "emoWeight": 0.65
+        },
+        "autoAssignedVoiceActor": null,
+        "autoEmotionAudioMap": null,
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/5f4bd46f-fc2f-4e04-875e-7612e9155e26.mp3"
+      },
+      {
+        "index": 16,
+        "type": "dialogue",
+        "role": "金志强",
+        "emotion": "angry",
+        "text": "江桥，这次我们接的可是300万婚礼预算的大单子，哪家婚庆公司不眼红的滴血，但是肖总最后为什么会选择我们？……那是因为我和肖总保证了，只要是他提的条件，我们公司绝对有能力办到，其中就包括让陈艺担任这次的婚礼主持，你告诉我，我现在能跑去告诉肖总，我们请不动那个主持人，再另外换一个吗？……你这叫其他客户和同行怎么看我，我还要不要在这个行业里混了？",
+        "referenceAudio": null,
+        "autoAssignedVoiceActor": "那维莱特",
+        "autoEmotionAudioMap": {
+          "neutral": {
+            "id": "350dc131-c232-4986-a145-d851608e411e",
+            "mode": 1,
+            "emoWeight": 0.65
+          }
+        },
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/26c037e5-dd03-44f4-8cd5-25f0cc417c1e.mp3"
+      },
+      {
+        "index": 17,
+        "type": "dialogue",
+        "role": "江桥",
+        "emotion": "angry",
+        "text": "我算是听明白了，你这就是典型的见钱眼开，最后搬石头砸自己脚了。",
+        "referenceAudio": null,
+        "autoAssignedVoiceActor": "钟离",
+        "autoEmotionAudioMap": {
+          "neutral": {
+            "id": "857e60db-4894-4c6b-9de3-f95d9e5ed8bf",
+            "mode": 1,
+            "emoWeight": 0.65
+          }
+        },
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/eff3566e-fcc1-40eb-8185-1036069baccd.mp3"
+      },
+      {
+        "index": 18,
+        "type": "dialogue",
+        "role": "金志强",
+        "emotion": "angry",
+        "text": "合着就你清高是吧……江桥你给我听好了，这事儿你要是办不成，你就给我卷铺盖儿滚蛋，这些年就算我老金白供着你这个白眼儿狼了……我倒要看看就你这高中文化的水平，哪家婚庆公司愿意供着你。",
+        "referenceAudio": null,
+        "autoAssignedVoiceActor": "那维莱特",
+        "autoEmotionAudioMap": {
+          "neutral": {
+            "id": "350dc131-c232-4986-a145-d851608e411e",
+            "mode": 1,
+            "emoWeight": 0.65
+          }
+        },
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/d7763650-2b4d-4f88-a7b8-132d9f44991c.mp3"
+      },
+      {
+        "index": 19,
+        "type": "dialogue",
+        "role": "江桥",
+        "emotion": "angry",
+        "text": "我操你大爷……说的你好像是哈弗剑桥毕业似的，不他妈也就个初中毕业嘛……牛逼个啥，啊，你牛逼个啥？我江桥就是比你多上两年学，比你有文化多了……",
+        "referenceAudio": null,
+        "autoAssignedVoiceActor": "钟离",
+        "autoEmotionAudioMap": {
+          "neutral": {
+            "id": "857e60db-4894-4c6b-9de3-f95d9e5ed8bf",
+            "mode": 1,
+            "emoWeight": 0.65
+          }
+        },
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/e7d1f0c0-332f-4a17-ad86-9683b9acfa08.mp3"
+      },
+      {
+        "index": 20,
+        "type": "narration",
+        "role": "旁白",
+        "emotion": "neutral",
+        "text": "我图心中痛快，就这么把老金给骂了，可后来却被老金用更下流的脏话骂出了他的办公室，我和老金都不是文化人，所以5年多前，没有文化的他收留了同样没有文化的我，给了我一份还算正经体面的工作，然后教我怎么去面对这个用利益去衡量一切的社会，他是我走上社会后第一个老板。",
+        "referenceAudio": {
+          "id": "f2c00789-01a1-474d-bfcd-c5f940006be9",
+          "mode": 1,
+          "emoWeight": 0.65
+        },
+        "autoAssignedVoiceActor": null,
+        "autoEmotionAudioMap": null,
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/d9a6ad89-66fe-423a-a855-805713ef67fb.mp3"
+      },
+      {
+        "index": 21,
+        "type": "narration",
+        "role": "旁白",
+        "emotion": "melancholy",
+        "text": "转眼入行快6年了，我策划过无数场婚礼，司机不够用时，我当过婚车司机，司仪临时来不了了，我客串过司仪紧急救过场，甚至穿上过厚厚的道具服，在婚礼现场扮演了吉祥物，可如今我自己也到了结婚的年纪，身边却没有一个女朋友，更不用谈结婚的对象，也许这个世界上从来就没有一个人懂过：我在面对着那些带着婚戒洋溢着幸福的笑脸时，是一种怎样孤独的心情……我忽然有些厌倦了这个行业，也厌倦了老金这个吊人，更不想再去求陈艺什么……她要懂我这些年的心酸，就不会拒绝的那么彻底了。",
+        "referenceAudio": {
+          "id": "f2c00789-01a1-474d-bfcd-c5f940006be9",
+          "mode": 1,
+          "emoWeight": 0.65
+        },
+        "autoAssignedVoiceActor": null,
+        "autoEmotionAudioMap": null,
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/a187a47b-5c18-4a3a-914c-b8e65703c57f.mp3"
+      },
+      {
+        "index": 22,
+        "type": "narration",
+        "role": "旁白",
+        "emotion": "melancholy",
+        "text": "下了班回到家，我一个人坐在小院落里的台阶上抽着烟，身边只有那些花草还算有生命，可我并不害怕孤独，却又如此孤独……我总是想起陈艺，如果她不拒绝，现在又是个什么情景呢？也许我已经迫不及待的开始想着帮她设计主持脚本了，反正不会像现在这样，对自己的工作产生质疑，也不会和老金翻脸，把一份做了快6年的工作混到岌岌可危的地步。",
+        "referenceAudio": {
+          "id": "f2c00789-01a1-474d-bfcd-c5f940006be9",
+          "mode": 1,
+          "emoWeight": 0.65
+        },
+        "autoAssignedVoiceActor": null,
+        "autoEmotionAudioMap": null,
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/0982f9b4-4af3-4eb9-bd4d-d61cd0e6af15.mp3"
+      },
+      {
+        "index": 23,
+        "type": "narration",
+        "role": "旁白",
+        "emotion": "neutral",
+        "text": "掐灭掉手中的烟蒂，夕阳也在不察觉中掉落到高楼的后面，夜晚就要来临了。",
+        "referenceAudio": {
+          "id": "f2c00789-01a1-474d-bfcd-c5f940006be9",
+          "mode": 1,
+          "emoWeight": 0.65
+        },
+        "autoAssignedVoiceActor": null,
+        "autoEmotionAudioMap": null,
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/ce57313b-aced-43a3-b246-9161559b6b48.mp3"
+      },
+      {
+        "index": 24,
+        "type": "narration",
+        "role": "旁白",
+        "emotion": "neutral",
+        "text": "下一刻，院子的木板门被推开，昨天那个忽然闯进我生活中的丫头就这么出现在了我的面前，她趴在门框上，冲我挥了挥手：",
+        "referenceAudio": {
+          "id": "f2c00789-01a1-474d-bfcd-c5f940006be9",
+          "mode": 1,
+          "emoWeight": 0.65
+        },
+        "autoAssignedVoiceActor": null,
+        "autoEmotionAudioMap": null,
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/debdbf35-11a1-434a-91cb-2ed1af07662f.mp3"
+      },
+      {
+        "index": 25,
+        "type": "dialogue",
+        "role": "未命名_白裙姑娘",
+        "emotion": "happy",
+        "text": "嗨，江桥同学，你在干嘛呢？",
+        "referenceAudio": null,
+        "autoAssignedVoiceActor": null,
+        "autoEmotionAudioMap": null,
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/8b50bbbc-4b55-45d9-bc2a-e5c4cc7b8d58.mp3"
+      },
+      {
+        "index": 26,
+        "type": "dialogue",
+        "role": "江桥",
+        "emotion": "neutral",
+        "text": "你又来干嘛？",
+        "referenceAudio": {
+          "id": "857e60db-4894-4c6b-9de3-f95d9e5ed8bf",
+          "mode": 1,
+          "emoWeight": 0.65
+        },
+        "autoAssignedVoiceActor": "钟离",
+        "autoEmotionAudioMap": {
+          "neutral": {
+            "id": "857e60db-4894-4c6b-9de3-f95d9e5ed8bf",
+            "mode": 1,
+            "emoWeight": 0.65
+          }
+        },
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/56907ecb-fb73-476f-a396-24e637d06fa7.mp3"
+      },
+      {
+        "index": 27,
+        "type": "narration",
+        "role": "旁白",
+        "emotion": "neutral",
+        "text": "她没有回答我，反而很不客气的在我身边坐了下来，然后左顾右盼，仿佛对这个院子里的一切仍有很强烈的好奇，她又打开自己的单肩包，从里面拿出一罐啤酒递到我面前，问道：",
+        "referenceAudio": {
+          "id": "f2c00789-01a1-474d-bfcd-c5f940006be9",
+          "mode": 1,
+          "emoWeight": 0.65
+        },
+        "autoAssignedVoiceActor": null,
+        "autoEmotionAudioMap": null,
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/e0fb85f0-ac5b-4084-b6f8-3c47205d91b8.mp3"
+      },
+      {
+        "index": 28,
+        "type": "dialogue",
+        "role": "未命名_白裙姑娘",
+        "emotion": "happy",
+        "text": "啤酒喝吗？……我包里还有花生米、牛肉干。",
+        "referenceAudio": null,
+        "autoAssignedVoiceActor": null,
+        "autoEmotionAudioMap": null,
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/322d9c77-6e56-4017-a1c5-06d03db42942.mp3"
+      },
+      {
+        "index": 29,
+        "type": "dialogue",
+        "role": "江桥",
+        "emotion": "neutral",
+        "text": "你不喝吗？",
+        "referenceAudio": {
+          "id": "857e60db-4894-4c6b-9de3-f95d9e5ed8bf",
+          "mode": 1,
+          "emoWeight": 0.65
+        },
+        "autoAssignedVoiceActor": "钟离",
+        "autoEmotionAudioMap": {
+          "neutral": {
+            "id": "857e60db-4894-4c6b-9de3-f95d9e5ed8bf",
+            "mode": 1,
+            "emoWeight": 0.65
+          }
+        },
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/5f31aa69-fe35-4723-a2d2-445a941e8e01.mp3"
+      },
+      {
+        "index": 30,
+        "type": "dialogue",
+        "role": "未命名_白裙姑娘",
+        "emotion": "neutral",
+        "text": "我不想喝。",
+        "referenceAudio": null,
+        "autoAssignedVoiceActor": null,
+        "autoEmotionAudioMap": null,
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/ed986152-1be8-4a5a-b814-dbccecbdfefe.mp3"
+      },
+      {
+        "index": 31,
+        "type": "dialogue",
+        "role": "江桥",
+        "emotion": "sad",
+        "text": "陪我喝点，一个人喝没情绪。",
+        "referenceAudio": null,
+        "autoAssignedVoiceActor": "钟离",
+        "autoEmotionAudioMap": {
+          "neutral": {
+            "id": "857e60db-4894-4c6b-9de3-f95d9e5ed8bf",
+            "mode": 1,
+            "emoWeight": 0.65
+          }
+        },
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/7c4e47f9-c3c3-494f-9f54-2df70a0624aa.mp3"
+      },
+      {
+        "index": 32,
+        "type": "dialogue",
+        "role": "未命名_白裙姑娘",
+        "emotion": "melancholy",
+        "text": "你说人为什么一定要有情绪呢？就像你院子里的这些花花草草不好么？和我们一样享受着一年四季，阳光雨水，却没有孤独和痛苦。",
+        "referenceAudio": null,
+        "autoAssignedVoiceActor": null,
+        "autoEmotionAudioMap": null,
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/895cf543-ca06-4882-b0fd-d51e4ef869d5.mp3"
+      },
+      {
+        "index": 33,
+        "type": "dialogue",
+        "role": "江桥",
+        "emotion": "neutral",
+        "text": "谁告诉你它们没有痛苦了。",
+        "referenceAudio": {
+          "id": "857e60db-4894-4c6b-9de3-f95d9e5ed8bf",
+          "mode": 1,
+          "emoWeight": 0.65
+        },
+        "autoAssignedVoiceActor": "钟离",
+        "autoEmotionAudioMap": {
+          "neutral": {
+            "id": "857e60db-4894-4c6b-9de3-f95d9e5ed8bf",
+            "mode": 1,
+            "emoWeight": 0.65
+          }
+        },
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/3132ea44-0237-4ef7-a040-daed1ed42a15.mp3"
+      },
+      {
+        "index": 34,
+        "type": "dialogue",
+        "role": "未命名_白裙姑娘",
+        "emotion": "surprised",
+        "text": "有吗？",
+        "referenceAudio": null,
+        "autoAssignedVoiceActor": null,
+        "autoEmotionAudioMap": null,
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/f4908c1c-715d-473f-b74d-4ea5ac7cc043.mp3"
+      },
+      {
+        "index": 35,
+        "type": "dialogue",
+        "role": "江桥",
+        "emotion": "melancholy",
+        "text": "有，枯萎的时候，没人给它们浇水的时候。",
+        "referenceAudio": null,
+        "autoAssignedVoiceActor": "钟离",
+        "autoEmotionAudioMap": {
+          "neutral": {
+            "id": "857e60db-4894-4c6b-9de3-f95d9e5ed8bf",
+            "mode": 1,
+            "emoWeight": 0.65
+          }
+        },
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/e64a6bbe-7c4e-4183-a6be-1141e21941f5.mp3"
+      },
+      {
+        "index": 36,
+        "type": "dialogue",
+        "role": "未命名_白裙姑娘",
+        "emotion": "neutral",
+        "text": "哦，好像是那么回事。",
+        "referenceAudio": null,
+        "autoAssignedVoiceActor": null,
+        "autoEmotionAudioMap": null,
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/03881a89-4e81-4916-b20d-53bf7b0488ee.mp3"
+      },
+      {
+        "index": 37,
+        "type": "dialogue",
+        "role": "江桥",
+        "emotion": "angry",
+        "text": "你还陪不陪我喝酒了？",
+        "referenceAudio": null,
+        "autoAssignedVoiceActor": "钟离",
+        "autoEmotionAudioMap": {
+          "neutral": {
+            "id": "857e60db-4894-4c6b-9de3-f95d9e5ed8bf",
+            "mode": 1,
+            "emoWeight": 0.65
+          }
+        },
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/7122fa83-a6a9-4b05-9a06-ec49c1f15df3.mp3"
+      },
+      {
+        "index": 38,
+        "type": "dialogue",
+        "role": "未命名_白裙姑娘",
+        "emotion": "happy",
+        "text": "如果你很有喝酒的兴致，咱们可以去1912酒吧街喝去。",
+        "referenceAudio": null,
+        "autoAssignedVoiceActor": null,
+        "autoEmotionAudioMap": null,
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/32c68b66-2252-4064-a1fc-e4862ccd5f56.mp3"
+      },
+      {
+        "index": 39,
+        "type": "dialogue",
+        "role": "江桥",
+        "emotion": "surprised",
+        "text": "吓我啊？",
+        "referenceAudio": null,
+        "autoAssignedVoiceActor": "钟离",
+        "autoEmotionAudioMap": {
+          "neutral": {
+            "id": "857e60db-4894-4c6b-9de3-f95d9e5ed8bf",
+            "mode": 1,
+            "emoWeight": 0.65
+          }
+        },
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/099fb963-7422-4646-b58a-253461edbebf.mp3"
+      },
+      {
+        "index": 40,
+        "type": "dialogue",
+        "role": "未命名_白裙姑娘",
+        "emotion": "happy",
+        "text": "没有吓你，是在和你开玩笑，因为我没时间……哈哈。",
+        "referenceAudio": null,
+        "autoAssignedVoiceActor": null,
+        "autoEmotionAudioMap": null,
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/fcf22b3f-7878-42e8-83cb-75ddf344241d.mp3"
+      },
+      {
+        "index": 41,
+        "type": "narration",
+        "role": "旁白",
+        "emotion": "neutral",
+        "text": "说着便将那只红色的单肩包背在了身上，又说道：",
+        "referenceAudio": {
+          "id": "f2c00789-01a1-474d-bfcd-c5f940006be9",
+          "mode": 1,
+          "emoWeight": 0.65
+        },
+        "autoAssignedVoiceActor": null,
+        "autoEmotionAudioMap": null,
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/30497e93-b025-4bfb-92e6-eb9ff8d52a4d.mp3"
+      },
+      {
+        "index": 42,
+        "type": "dialogue",
+        "role": "未命名_白裙姑娘",
+        "emotion": "happy",
+        "text": "我得回学校了，过两天再来找你玩儿。",
+        "referenceAudio": null,
+        "autoAssignedVoiceActor": null,
+        "autoEmotionAudioMap": null,
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/9ce45629-1f58-4ddb-91c6-763a63b3d3fd.mp3"
+      },
+      {
+        "index": 43,
+        "type": "dialogue",
+        "role": "江桥",
+        "emotion": "surprised",
+        "text": "原来还是个学生！",
+        "referenceAudio": null,
+        "autoAssignedVoiceActor": "钟离",
+        "autoEmotionAudioMap": {
+          "neutral": {
+            "id": "857e60db-4894-4c6b-9de3-f95d9e5ed8bf",
+            "mode": 1,
+            "emoWeight": 0.65
+          }
+        },
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/1eed2dc8-1689-4198-a90e-263b4b36d2bd.mp3"
+      },
+      {
+        "index": 44,
+        "type": "narration",
+        "role": "旁白",
+        "emotion": "neutral",
+        "text": "我暗自感叹了一句，也随她起了身走到院外，追着问道：",
+        "referenceAudio": {
+          "id": "f2c00789-01a1-474d-bfcd-c5f940006be9",
+          "mode": 1,
+          "emoWeight": 0.65
+        },
+        "autoAssignedVoiceActor": null,
+        "autoEmotionAudioMap": null,
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/f70a5d90-7ac7-4778-885e-e21557674d81.mp3"
+      },
+      {
+        "index": 45,
+        "type": "dialogue",
+        "role": "江桥",
+        "emotion": "neutral",
+        "text": "你到底叫什么名字？接近我到底有什么企图？",
+        "referenceAudio": {
+          "id": "857e60db-4894-4c6b-9de3-f95d9e5ed8bf",
+          "mode": 1,
+          "emoWeight": 0.65
+        },
+        "autoAssignedVoiceActor": "钟离",
+        "autoEmotionAudioMap": {
+          "neutral": {
+            "id": "857e60db-4894-4c6b-9de3-f95d9e5ed8bf",
+            "mode": 1,
+            "emoWeight": 0.65
+          }
+        },
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/2be0fae0-8668-4fac-8b16-9fcc3ab7d705.mp3"
+      },
+      {
+        "index": 46,
+        "type": "dialogue",
+        "role": "未命名_白裙姑娘",
+        "emotion": "happy",
+        "text": "看，对面有个美女哎！",
+        "referenceAudio": null,
+        "autoAssignedVoiceActor": null,
+        "autoEmotionAudioMap": null,
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/cbcc92ad-479d-4117-a90b-603b2d78a6ec.mp3"
+      },
+      {
+        "index": 47,
+        "type": "narration",
+        "role": "旁白",
+        "emotion": "neutral",
+        "text": "我下意识的看着她所指的方向，蓦然看到了穿着一身藕紫色收腰雪纺裙的陈艺，她正在向我和这个丫头的身边走来，眼看就要打上一个照面。",
+        "referenceAudio": {
+          "id": "f2c00789-01a1-474d-bfcd-c5f940006be9",
+          "mode": 1,
+          "emoWeight": 0.65
+        },
+        "autoAssignedVoiceActor": null,
+        "autoEmotionAudioMap": null,
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/1b4a5add-0708-48c3-be2c-30317d1d3c4a.mp3"
+      },
+      {
+        "index": 48,
+        "type": "narration",
+        "role": "旁白",
+        "emotion": "neutral",
+        "text": "弄堂很窄，我和这个丫头靠的很紧，走过来的陈艺主动侧过身子礼让我们先过，我正和她生着气，没准备和她说话，打算直接走过，却不想身边的丫头停下了脚步，指着陈艺说道：",
+        "referenceAudio": {
+          "id": "f2c00789-01a1-474d-bfcd-c5f940006be9",
+          "mode": 1,
+          "emoWeight": 0.65
+        },
+        "autoAssignedVoiceActor": null,
+        "autoEmotionAudioMap": null,
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/d9b743df-7ddc-410c-bd21-409d2f4908b8.mp3"
+      },
+      {
+        "index": 49,
+        "type": "dialogue",
+        "role": "未命名_白裙姑娘",
+        "emotion": "surprised",
+        "text": "我看你好眼熟啊，你是那个、那个……主持人陈艺对吧？",
+        "referenceAudio": null,
+        "autoAssignedVoiceActor": null,
+        "autoEmotionAudioMap": null,
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/a6b6e71a-93ec-49b5-ad84-aeb92f9a9f21.mp3"
+      },
+      {
+        "index": 50,
+        "type": "narration",
+        "role": "旁白",
+        "emotion": "neutral",
+        "text": "陈艺看了看这个丫头，又看了看我，没有回答。",
+        "referenceAudio": {
+          "id": "f2c00789-01a1-474d-bfcd-c5f940006be9",
+          "mode": 1,
+          "emoWeight": 0.65
+        },
+        "autoAssignedVoiceActor": null,
+        "autoEmotionAudioMap": null,
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/5bc09b2b-b61b-470e-948c-f72abe538744.mp3"
+      },
+      {
+        "index": 51,
+        "type": "dialogue",
+        "role": "江桥",
+        "emotion": "angry",
+        "text": "你别见到个美女就说是陈艺，陈艺多好的一个姑娘啊，不是谁都能对号入座的。",
+        "referenceAudio": null,
+        "autoAssignedVoiceActor": "钟离",
+        "autoEmotionAudioMap": {
+          "neutral": {
+            "id": "857e60db-4894-4c6b-9de3-f95d9e5ed8bf",
+            "mode": 1,
+            "emoWeight": 0.65
+          }
+        },
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/97ec6ffd-b8be-412c-b906-77bdd34d5b95.mp3"
+      },
+      {
+        "index": 52,
+        "type": "dialogue",
+        "role": "未命名_白裙姑娘",
+        "emotion": "neutral",
+        "text": "她就是陈艺啊，我不会看错的。",
+        "referenceAudio": null,
+        "autoAssignedVoiceActor": null,
+        "autoEmotionAudioMap": null,
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/97496f81-fdae-4359-b8c6-99771b404358.mp3"
+      },
+      {
+        "index": 53,
+        "type": "narration",
+        "role": "旁白",
+        "emotion": "neutral",
+        "text": "陈艺当然明白我是在讽刺她昨天晚上的无情无义，可她却没有反驳什么，只是对着我身边的丫头笑了笑，继续向巷尾走去，她的身影在刚刚亮起的路灯下忽长忽短，我也跟着那个丫头继续向巷口走去。",
+        "referenceAudio": {
+          "id": "f2c00789-01a1-474d-bfcd-c5f940006be9",
+          "mode": 1,
+          "emoWeight": 0.65
+        },
+        "autoAssignedVoiceActor": null,
+        "autoEmotionAudioMap": null,
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/067a8ca0-5c04-46e0-912b-15b9c11b6c95.mp3"
+      },
+      {
+        "index": 54,
+        "type": "narration",
+        "role": "旁白",
+        "emotion": "neutral",
+        "text": "出了弄堂就是郁金香路，这个丫头伸手拦了一辆出租车，我拉住了她：",
+        "referenceAudio": {
+          "id": "f2c00789-01a1-474d-bfcd-c5f940006be9",
+          "mode": 1,
+          "emoWeight": 0.65
+        },
+        "autoAssignedVoiceActor": null,
+        "autoEmotionAudioMap": null,
+        "audioUrl": null
+      },
+      {
+        "index": 55,
+        "type": "dialogue",
+        "role": "江桥",
+        "emotion": "neutral",
+        "text": "如果你觉得这样很好玩，我也不反对，但你至少得告诉我名字吧，要不然我和你说话特别扭。",
+        "referenceAudio": {
+          "id": "857e60db-4894-4c6b-9de3-f95d9e5ed8bf",
+          "mode": 1,
+          "emoWeight": 0.65
+        },
+        "autoAssignedVoiceActor": "钟离",
+        "autoEmotionAudioMap": {
+          "neutral": {
+            "id": "857e60db-4894-4c6b-9de3-f95d9e5ed8bf",
+            "mode": 1,
+            "emoWeight": 0.65
+          }
+        },
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/b84ad811-408e-4988-a0c8-0f059b7d0eb7.mp3"
+      },
+      {
+        "index": 56,
+        "type": "dialogue",
+        "role": "未命名_白裙姑娘",
+        "emotion": "happy",
+        "text": "我在南艺上学，有本事你就自己去打听呗，或者等我哪天心情好就告诉你了。",
+        "referenceAudio": null,
+        "autoAssignedVoiceActor": null,
+        "autoEmotionAudioMap": null,
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/405bd69e-3b8e-41dc-92eb-499754204fb6.mp3"
+      },
+      {
+        "index": 57,
+        "type": "narration",
+        "role": "旁白",
+        "emotion": "neutral",
+        "text": "说着拿掉了我抓住她胳膊的手，转身上了出租车，不一会儿便融入到了仿佛在远方的城市中。",
+        "referenceAudio": {
+          "id": "f2c00789-01a1-474d-bfcd-c5f940006be9",
+          "mode": 1,
+          "emoWeight": 0.65
+        },
+        "autoAssignedVoiceActor": null,
+        "autoEmotionAudioMap": null,
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/fe385478-b6d3-4928-b2c2-3d5e8f8d10af.mp3"
+      },
+      {
+        "index": 58,
+        "type": "dialogue",
+        "role": "江桥",
+        "emotion": "neutral",
+        "text": "我哭笑不得，难怪这丫头的出现像是一场行为艺术，原来是个学艺术的，看样子真不能用常人的思维去看待她。",
+        "referenceAudio": {
+          "id": "857e60db-4894-4c6b-9de3-f95d9e5ed8bf",
+          "mode": 1,
+          "emoWeight": 0.65
+        },
+        "autoAssignedVoiceActor": "钟离",
+        "autoEmotionAudioMap": {
+          "neutral": {
+            "id": "857e60db-4894-4c6b-9de3-f95d9e5ed8bf",
+            "mode": 1,
+            "emoWeight": 0.65
+          }
+        },
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/8be2edd2-e182-4d57-b1d2-eb456bd5369c.mp3"
+      },
+      {
+        "index": 59,
+        "type": "narration",
+        "role": "旁白",
+        "emotion": "melancholy",
+        "text": "我又顺着原路返回，再次路过那间\"心情咖啡\"店，想起昨天发生的事情心中又是一阵烦闷，我已经不知道该怎么解决眼前的这些麻烦了，但却知道，如果我搞定不定陈艺做主持人这件事情，老金这个吊人是肯定不会放过我的。",
+        "referenceAudio": {
+          "id": "f2c00789-01a1-474d-bfcd-c5f940006be9",
+          "mode": 1,
+          "emoWeight": 0.65
+        },
+        "autoAssignedVoiceActor": null,
+        "autoEmotionAudioMap": null,
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/d813307f-1c35-4de4-8906-70eff9ed741d.mp3"
+      }
+    ],
+    "createdAt": "2026-03-26T05:54:11.911Z"
+  }
+}

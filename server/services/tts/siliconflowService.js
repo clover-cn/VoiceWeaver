@@ -29,7 +29,7 @@ function saveAudioRecords(records) {
   fs.writeFileSync(audioRecordsPath, JSON.stringify(records, null, 2), "utf8");
 }
 
-async function generate({ dialogue, projectName, tempFilename, localChars }) {
+async function generate({ dialogue, projectName, tempFilename, localChars, signal }) {
   let targetVoice = "fnlp/MOSS-TTSD-v0.5:alex";
   const API_KEY = process.env.SILICONFLOW_API_KEY;
 
@@ -148,15 +148,32 @@ async function generate({ dialogue, projectName, tempFilename, localChars }) {
       stream: true,
     },
     responseType: "stream",
+    signal,
   });
 
   const writer = fs.createWriteStream(tempFilename);
+  const cleanup = () => {
+    response.data.destroy();
+    writer.destroy();
+    if (fs.existsSync(tempFilename)) {
+      fs.unlinkSync(tempFilename);
+    }
+  };
+  if (signal) {
+    signal.addEventListener("abort", cleanup, { once: true });
+  }
+
   response.data.pipe(writer);
 
   await new Promise((resolve, reject) => {
     writer.on("finish", resolve);
     writer.on("error", reject);
+    response.data.on("error", reject);
   });
+
+  if (signal) {
+    signal.removeEventListener("abort", cleanup);
+  }
 }
 
 module.exports = {

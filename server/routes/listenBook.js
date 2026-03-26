@@ -20,6 +20,12 @@ if (!fs.existsSync(cacheFilePath)) {
 // ─────────────────────────────────────────────
 const tasks = {};
 
+function createCancelledError(message = "CANCELLED") {
+  const err = new Error(message);
+  err.cancelled = true;
+  return err;
+}
+
 // ─────────────────────────────────────────────
 // 工具函数
 // ─────────────────────────────────────────────
@@ -45,24 +51,43 @@ function baseUrl() {
   return `http://localhost:${process.env.PORT || 3000}`;
 }
 
+function isCancelledError(err) {
+  return Boolean(
+    err &&
+    (err.cancelled || err.code === "ERR_CANCELED" || err.name === "CanceledError")
+  );
+}
+
+function cancelTask(task) {
+  if (!task || task.phase === "done" || task.phase === "error" || task.phase === "cancelled") {
+    return false;
+  }
+  task.cancelled = true;
+  if (task.controller && !task.controller.signal.aborted) {
+    task.controller.abort(createCancelledError());
+  }
+  return true;
+}
+
+function clearRunningCache(projectName, chapterIndex) {
+  const cache = readCache();
+  const key = cacheKey(projectName, chapterIndex);
+  if (cache[key] && cache[key].phase !== "done") {
+    delete cache[key];
+    writeCache(cache);
+  }
+}
+
 // ─────────────────────────────────────────────
 // 核心 Pipeline（调用现有接口，异步后台执行）
 // ─────────────────────────────────────────────
 
 // 取消检查：若任务已被标记取消，清理 cache 并抛出中止错误
 function checkCancelled(task, taskId, projectName, chapterIndex) {
-  if (task.cancelled) {
+  if (task.cancelled || task.controller?.signal?.aborted) {
     console.log(`[listenBook][${taskId}] 任务已取消，中止 Pipeline`);
-    // 清理 cache 中的进行中记录，允许下次重新触发
-    const cache = readCache();
-    const key = cacheKey(projectName, chapterIndex);
-    if (cache[key] && cache[key].phase !== "done") {
-      delete cache[key];
-      writeCache(cache);
-    }
-    const err = new Error("CANCELLED");
-    err.cancelled = true;
-    throw err;
+    clearRunningCache(projectName, chapterIndex);
+    throw createCancelledError();
   }
 }
 
@@ -70,6 +95,7 @@ async function runPipeline(taskId, { projectName, chapterIndex, chapterUrl, chap
 
   const task = tasks[taskId];
   const BASE = baseUrl();
+  const signal = task.controller.signal;
 
   try {
     // ── 阶段 1: 预扫描（调用现有 /api/llm/prescan-characters）──
@@ -86,6 +112,7 @@ async function runPipeline(taskId, { projectName, chapterIndex, chapterUrl, chap
         axios.get(`${BASE}/api/reader/getBookContent`, {
           params: { url: chap.bookUrl, index: chapterIndex + i },
           timeout: 30000,
+          signal,
         })
           .then((r) => (r.data.isSuccess ? r.data.data || "" : ""))
           .catch(() => "")
@@ -98,7 +125,8 @@ async function runPipeline(taskId, { projectName, chapterIndex, chapterUrl, chap
       await axios.post(`${BASE}/api/llm/prescan-characters`, {
         combinedText,
         projectName,
-      }, { timeout: 120000 }).catch((e) => {
+      }, { timeout: 120000, signal }).catch((e) => {
+        if (isCancelledError(e)) throw createCancelledError();
         console.warn(`[listenBook][${taskId}] 预扫描失败，继续: ${e.message}`);
       });
       checkCancelled(task, taskId, projectName, chapterIndex); // 取消检查点
@@ -112,6 +140,7 @@ async function runPipeline(taskId, { projectName, chapterIndex, chapterUrl, chap
     const contentResp = await axios.get(`${BASE}/api/reader/getBookContent`, {
       params: { url: chapterUrl, index: chapterIndex },
       timeout: 30000,
+      signal,
     });
     if (!contentResp.data.isSuccess) throw new Error("获取章节正文失败");
     const chapterText = contentResp.data.data || "";
@@ -122,7 +151,7 @@ async function runPipeline(taskId, { projectName, chapterIndex, chapterUrl, chap
     const parseResp = await axios.post(`${BASE}/api/llm/parse`, {
       text: chapterText,
       projectName,
-    }, { timeout: 180000 });
+    }, { timeout: 180000, signal });
     checkCancelled(task, taskId, projectName, chapterIndex); // 取消检查点
 
     if (!parseResp.data.success) throw new Error("LLM 解析失败");
@@ -142,7 +171,7 @@ async function runPipeline(taskId, { projectName, chapterIndex, chapterUrl, chap
         const ttsResp = await axios.post(`${BASE}/api/tts/generate-single`, {
           dialogue: card,
           projectName,
-        }, { timeout: 60000 });
+        }, { timeout: 60000, signal });
 
         task.segments.push({
           index: i,
@@ -150,6 +179,9 @@ async function runPipeline(taskId, { projectName, chapterIndex, chapterUrl, chap
           role: card.role || "旁白",
           emotion: card.emotion || "neutral",
           text: card.text || "",
+          referenceAudio: card.referenceAudio || null,
+          autoAssignedVoiceActor: card.autoAssignedVoiceActor || null,
+          autoEmotionAudioMap: card.autoEmotionAudioMap || null,
           audioUrl: ttsResp.data.audioUrl || null,
         });
       } catch (e) {
@@ -161,6 +193,9 @@ async function runPipeline(taskId, { projectName, chapterIndex, chapterUrl, chap
           role: card.role || "旁白",
           emotion: card.emotion || "neutral",
           text: card.text || "",
+          referenceAudio: card.referenceAudio || null,
+          autoAssignedVoiceActor: card.autoAssignedVoiceActor || null,
+          autoEmotionAudioMap: card.autoEmotionAudioMap || null,
           audioUrl: null,
         });
       }
@@ -185,8 +220,8 @@ async function runPipeline(taskId, { projectName, chapterIndex, chapterUrl, chap
     };
     writeCache(cache);
   } catch (err) {
-    if (err.cancelled) {
-      // 取消不算错误，已在 checkCancelled 中清理了 cache
+    if (isCancelledError(err)) {
+      clearRunningCache(projectName, chapterIndex);
       task.phase = "cancelled";
       return;
     }
@@ -194,12 +229,7 @@ async function runPipeline(taskId, { projectName, chapterIndex, chapterUrl, chap
     task.phase = "error";
     task.error = err.message;
 
-    const cache = readCache();
-    const key = cacheKey(projectName, chapterIndex);
-    if (cache[key] && cache[key].phase !== "done") {
-      delete cache[key];
-      writeCache(cache);
-    }
+    clearRunningCache(projectName, chapterIndex);
   }
 }
 
@@ -241,9 +271,10 @@ router.post("/check", (req, res) => {
   // 正在进行中
   if (cache[key] && cache[key].taskId) {
     const t = tasks[cache[key].taskId];
-    if (t && t.phase !== "error" && t.phase !== "done") {
+    if (t && t.phase !== "error" && t.phase !== "done" && t.phase !== "cancelled") {
       return res.json({ exists: false, taskId: cache[key].taskId, inProgress: true });
     }
+    clearRunningCache(projectName, chapterIndex);
   }
 
   res.json({ exists: false });
@@ -271,14 +302,25 @@ router.post("/generate", (req, res) => {
   // 正在进行中 → 返回已有 taskId
   if (cache[key] && cache[key].taskId) {
     const t = tasks[cache[key].taskId];
-    if (t && t.phase !== "error" && t.phase !== "done") {
+    if (t && t.phase !== "error" && t.phase !== "done" && t.phase !== "cancelled") {
       return res.json({ taskId: cache[key].taskId, inProgress: true });
     }
+    clearRunningCache(projectName, chapterIndex);
   }
 
   // 新建任务
   const taskId = uuidv4();
-  tasks[taskId] = { taskId, phase: "waiting", progress: 0, segments: null, error: null };
+  tasks[taskId] = {
+    taskId,
+    projectName,
+    chapterIndex,
+    phase: "waiting",
+    progress: 0,
+    segments: null,
+    error: null,
+    cancelled: false,
+    controller: new AbortController(),
+  };
 
   // 写入 cache 标记进行中（防并发重复触发）
   cache[key] = { taskId, phase: "running", createdAt: new Date().toISOString() };
@@ -327,11 +369,27 @@ router.get("/status/:taskId", (req, res) => {
 router.post("/cancel/:taskId", (req, res) => {
   const { taskId } = req.params;
   const task = tasks[taskId];
-  if (task && task.phase !== "done" && task.phase !== "error" && task.phase !== "cancelled") {
-    task.cancelled = true;
+  if (cancelTask(task)) {
     console.log(`[listenBook][${taskId}] 收到取消请求，将在下一检查点中止`);
   }
   res.json({ success: true });
+});
+
+router.post("/cancel", (req, res) => {
+  const { projectName } = req.body || {};
+  if (!projectName) {
+    return res.status(400).json({ error: "缺少 projectName" });
+  }
+
+  const cancelledTaskIds = [];
+  Object.values(tasks).forEach((task) => {
+    if (task.projectName === projectName && cancelTask(task)) {
+      cancelledTaskIds.push(task.taskId);
+      console.log(`[listenBook][${task.taskId}] 收到按项目取消请求，将在下一检查点中止`);
+    }
+  });
+
+  res.json({ success: true, cancelledTaskIds });
 });
 
 module.exports = router;

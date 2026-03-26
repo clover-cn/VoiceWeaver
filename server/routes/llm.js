@@ -33,6 +33,15 @@ function saveCharacters(projectName, chars) {
   fs.writeFileSync(filePath, JSON.stringify(chars, null, 2), "utf8");
 }
 
+function isAbortError(error) {
+  return Boolean(
+    error &&
+    (error.code === "ERR_CANCELED" ||
+      error.name === "CanceledError" ||
+      error.cancelled === true)
+  );
+}
+
 // 构建角色别名上下文信息
 function buildCharacterContext(localChars) {
   const charNames = Object.keys(localChars).filter((name) => name !== "旁白");
@@ -76,6 +85,25 @@ function buildCharacterContext(localChars) {
 
 // 大语言模型路由
 router.post("/parse", async (req, res) => {
+  const abortController = new AbortController();
+  let requestClosed = false;
+  let responseFinished = false;
+  const handleClientAbort = () => {
+    requestClosed = true;
+    if (!abortController.signal.aborted) {
+      abortController.abort();
+      console.log("[llm/parse] 客户端已断开，取消上游流式解析");
+    }
+  };
+  req.on("aborted", handleClientAbort);
+  res.on("finish", () => {
+    responseFinished = true;
+  });
+  res.on("close", () => {
+    if (!responseFinished) {
+      handleClientAbort();
+    }
+  });
   try {
     const { text, projectName } = req.body;
     if (!text) {
@@ -145,12 +173,18 @@ router.post("/parse", async (req, res) => {
       },
       responseType: "stream", // 接收流式响应
       timeout: 120000, // 设置超时时间为 120 秒 (120000 毫秒)
+      signal: abortController.signal,
     });
 
     let rawResult = "";
     // 处理流式数据
     await new Promise((resolve, reject) => {
       let buffer = "";
+      const handleAbort = () => {
+        response.data.destroy();
+        reject(Object.assign(new Error("客户端已断开"), { cancelled: true }));
+      };
+      abortController.signal.addEventListener("abort", handleAbort, { once: true });
       response.data.on("data", (chunk) => {
         buffer += chunk.toString();
         const lines = buffer.split("\n");
@@ -184,6 +218,10 @@ router.post("/parse", async (req, res) => {
       });
       response.data.on("error", reject);
     });
+
+    if (requestClosed) {
+      return;
+    }
 
     // 清理可能附带的 Markdown json 标签
     rawResult = rawResult
@@ -275,6 +313,9 @@ router.post("/parse", async (req, res) => {
       autoCasting,
     });
   } catch (error) {
+    if (isAbortError(error) || requestClosed) {
+      return;
+    }
     console.error("大语言模型解析错误:", error.message);
     if (error.response) {
       console.error("  → 响应状态码:", error.response.status);
@@ -282,6 +323,8 @@ router.post("/parse", async (req, res) => {
     }
     console.error("  → 请求地址:", process.env.LLM_ENDPOINT || "https://api.deepseek.com/v1/chat/completions");
     res.status(500).json({ error: `大语言模型解析错误: ${error.message}` });
+  } finally {
+    req.off("aborted", handleClientAbort);
   }
 });
 

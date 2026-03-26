@@ -64,7 +64,7 @@
     <div v-else-if="viewState === 'chapters'" class="flex-1 flex flex-col overflow-hidden">
       <!-- 顶部导航 -->
       <div class="flex items-center gap-4 px-5 py-3.5 bg-[#12122a] border-b border-[#2a2a4a] shrink-0">
-        <button class="bg-[rgba(124,111,247,0.15)] border border-[rgba(124,111,247,0.3)] text-[#a09ef5] px-4 py-2 rounded-lg cursor-pointer text-sm transition-colors duration-200 hover:bg-[rgba(124,111,247,0.28)] whitespace-nowrap" @click="viewState = 'search'">← 返回搜索</button>
+        <button class="bg-[rgba(124,111,247,0.15)] border border-[rgba(124,111,247,0.3)] text-[#a09ef5] px-4 py-2 rounded-lg cursor-pointer text-sm transition-colors duration-200 hover:bg-[rgba(124,111,247,0.28)] whitespace-nowrap" @click="backToSearch">← 返回搜索</button>
         <div class="flex items-center gap-2.5 flex-1 min-w-0">
           <span class="font-semibold text-base text-[#ddddf5] whitespace-nowrap overflow-hidden text-ellipsis">{{ selectedBook?.name }}</span>
           <span class="text-[13px] text-[#8888bb] whitespace-nowrap">{{ selectedBook?.author }}</span>
@@ -104,7 +104,7 @@
     <div v-else-if="viewState === 'reading'" class="flex-1 flex flex-col overflow-hidden">
       <!-- 顶部导航 -->
       <div class="flex items-center gap-3.5 px-5 py-3 bg-[rgba(18,18,42,0.95)] border-b border-[#2a2a4a] shrink-0 backdrop-blur-md">
-        <button class="bg-[rgba(124,111,247,0.15)] border border-[rgba(124,111,247,0.3)] text-[#a09ef5] px-4 py-2 rounded-lg cursor-pointer text-sm transition-colors duration-200 hover:bg-[rgba(124,111,247,0.28)] whitespace-nowrap" @click="viewState = 'chapters'">← 章节列表</button>
+        <button class="bg-[rgba(124,111,247,0.15)] border border-[rgba(124,111,247,0.3)] text-[#a09ef5] px-4 py-2 rounded-lg cursor-pointer text-sm transition-colors duration-200 hover:bg-[rgba(124,111,247,0.28)] whitespace-nowrap" @click="backToChapters">← 章节列表</button>
         <div class="flex-1 text-center text-[15px] font-semibold text-[#c0c0e0] whitespace-nowrap overflow-hidden text-ellipsis">{{ selectedChapter?.title }}</div>
         <div class="flex gap-2 items-center">
           <!-- 听书控制区 -->
@@ -160,7 +160,7 @@
               v-for="(seg, i) in segments"
               :key="i"
               :ref="el => { if (el) segRefs[i] = el }"
-              class="mb-4 rounded-lg px-3 py-1 transition-all duration-300"
+              class="mb-4 rounded-lg px-3 py-2 transition-all duration-300"
               :class="[
                 seg.type === 'narration'
                   ? 'text-[17px] leading-loose text-[#c8c8e8] indent-8 tracking-wide break-all italic'
@@ -170,8 +170,23 @@
                   : ''
               ]"
             >
-              <span v-if="seg.type === 'dialogue'" class="text-[12px] text-[#8866cc] mr-1.5 font-semibold not-italic">{{ seg.role }}：</span>
-              {{ seg.text }}
+              <div v-if="seg.type === 'dialogue' || getReferenceAudioLabel(seg)" class="mb-1 not-italic">
+                <div class="flex flex-wrap items-center gap-2">
+                  <span v-if="seg.type === 'dialogue'" class="text-[12px] text-[#8866cc] font-semibold">{{ seg.role }}</span>
+                  <span v-if="getReferenceAudioLabel(seg)" class="inline-flex items-center gap-1 rounded-full border border-[rgba(124,111,247,0.35)] bg-[rgba(124,111,247,0.14)] px-2 py-0.5 text-[11px] text-[#cfc4ff]">
+                    <span class="text-[#9f8df2]">参考音频</span>
+                    <span class="text-[#f1ecff]">{{ getReferenceAudioLabel(seg) }}</span>
+                  </span>
+                  <span v-if="seg.autoAssignedVoiceActor" class="inline-flex items-center gap-1 rounded-full border border-[rgba(208,136,255,0.28)] bg-[rgba(208,136,255,0.1)] px-2 py-0.5 text-[11px] text-[#efccff]">
+                    <span class="text-[#d088ff]">声线</span>
+                    <span>{{ seg.autoAssignedVoiceActor }}</span>
+                  </span>
+                </div>
+              </div>
+              <div>
+                <span v-if="seg.type === 'dialogue'" class="sr-only">{{ seg.role }}：</span>
+                {{ seg.text }}
+              </div>
             </div>
             <!-- 生成中占位提示 -->
             <div v-if="listenState === 'loading'" class="flex items-center gap-2 text-[#555577] text-sm py-4">
@@ -203,7 +218,7 @@
 </template>
 
 <script setup>
-import { ref, computed, nextTick, onBeforeUnmount } from 'vue'
+import { ref, computed, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import axios from 'axios'
 
 const API = 'http://localhost:3000'
@@ -318,6 +333,16 @@ const handleImgError = (e) => {
   e.target.nextElementSibling && (e.target.nextElementSibling.style.display = 'flex')
 }
 
+const backToSearch = async () => {
+  await resetListen()
+  viewState.value = 'search'
+}
+
+const backToChapters = async () => {
+  await resetListen()
+  viewState.value = 'chapters'
+}
+
 // ════════════════════════════════════════════════════════════
 // 听书功能
 // ════════════════════════════════════════════════════════════
@@ -333,6 +358,8 @@ const currentSegIdx = ref(-1)       // 当前播放的 segment 索引
 const isPlaying     = ref(false)
 const segRefs       = ref([])       // DOM 引用，用于自动滚动
 const listenTaskId = ref(null)
+const prefetchTaskIds = ref([])
+const audioRecordMap = ref({})
 // 轮询定时器
 let pollTimer = null
 // 当前播放的 Audio 对象
@@ -353,17 +380,48 @@ const phaseTextMap = {
 }
 const listenPhaseText = computed(() => phaseTextMap[listenPhase.value] || '处理中…')
 
+async function fetchAudioRecords() {
+  try {
+    const res = await axios.get(`${API}/api/audio/list`)
+    if (!res.data?.success || !Array.isArray(res.data.list)) return
+    audioRecordMap.value = res.data.list.reduce((acc, item) => {
+      if (item?.id) acc[item.id] = item
+      return acc
+    }, {})
+  } catch (e) {
+    console.warn('获取参考音频列表失败', e.message)
+  }
+}
+
+function getReferenceAudioConfig(seg) {
+  if (!seg?.referenceAudio) return null
+  if (typeof seg.referenceAudio === 'string') {
+    return { id: seg.referenceAudio }
+  }
+  return seg.referenceAudio
+}
+
+function getReferenceAudioLabel(seg) {
+  const config = getReferenceAudioConfig(seg)
+  if (!config) return ''
+  const record = config.id ? audioRecordMap.value[config.id] : null
+  if (record?.name) return record.name
+  if (config.id) return `ID: ${config.id.slice(0, 8)}`
+  if (config.mode === 3) return '向量控制'
+  return ''
+}
+
 // ── 重置听书状态（并发通知后端取消任务）──
-function resetListen(skipCancel = false) {
+async function resetListen(skipCancel = false, useBeacon = false) {
   forceStop = true
   stopPolling()
   if (currentAudio) { currentAudio.pause(); currentAudio = null }
   forceStop = false
-  // 通知后端取消正在进行中的任务
-  if (!skipCancel && listenTaskId.value) {
-    axios.post(`${API}/api/listen-book/cancel/${listenTaskId.value}`).catch(() => {})
+  if (!skipCancel) {
+    await cancelListenTasks({ useBeacon })
   }
   listenTaskId.value        = null
+  prefetchTaskIds.value     = []
   listenState.value         = 'idle'
   listenPhase.value         = ''
   segments.value            = []
@@ -371,6 +429,35 @@ function resetListen(skipCancel = false) {
   isPlaying.value           = false
   segRefs.value             = []
   isGenerationComplete.value = false
+}
+
+async function cancelListenTasks({ useBeacon = false } = {}) {
+  const projectName = listenProjectName.value
+  if (!projectName || projectName === 'reader_unknown') return
+
+  const url = `${API}/api/listen-book/cancel`
+  const payload = { projectName }
+
+  if (useBeacon && typeof navigator !== 'undefined' && typeof navigator.sendBeacon === 'function') {
+    try {
+      const sent = navigator.sendBeacon(url, new Blob([JSON.stringify(payload)], { type: 'application/json' }))
+      if (sent) return
+    } catch {}
+  }
+
+  if (typeof fetch === 'function') {
+    try {
+      await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+        keepalive: useBeacon,
+      })
+      return
+    } catch {}
+  }
+
+  await axios.post(url, payload).catch(() => {})
 }
 
 // ── 检查缓存（进入阅读视图时自动调用）──
@@ -579,6 +666,11 @@ async function triggerPrefetch() {
         chapterIndex: nextIdx,
         chapterUrl: nextChap.bookUrl,
         chapterList: chapterList.value,
+      }).then((res) => {
+        const taskId = res.data?.taskId
+        if (taskId && !prefetchTaskIds.value.includes(taskId)) {
+          prefetchTaskIds.value.push(taskId)
+        }
       }).catch(() => {})
     }
   } catch {
@@ -586,9 +678,22 @@ async function triggerPrefetch() {
   }
 }
 
-// 组件卸载时清理并取消后台任务
+const handlePageLeave = () => {
+  if (viewState.value === 'reading' || listenTaskId.value) {
+    resetListen(false, true)
+  }
+}
+
+onMounted(() => {
+  fetchAudioRecords()
+  window.addEventListener('pagehide', handlePageLeave)
+  window.addEventListener('beforeunload', handlePageLeave)
+})
+
 onBeforeUnmount(() => {
-  resetListen()
+  window.removeEventListener('pagehide', handlePageLeave)
+  window.removeEventListener('beforeunload', handlePageLeave)
+  resetListen(false, true)
 })
 </script>
 

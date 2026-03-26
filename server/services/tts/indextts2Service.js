@@ -37,7 +37,7 @@ const EMOTION_MAP = {
   neutral: 7,
 };
 
-async function generate({ dialogue, projectName, tempFilename, localChars }) {
+async function generate({ dialogue, projectName, tempFilename, localChars, signal }) {
   console.log("正在使用 IndexTTS2 模式生成音频:", dialogue.text);
 
   const UPLOAD_URL = process.env.TTS_ENDPOINT || "http://127.0.0.1:8000/api/tts/upload";
@@ -136,15 +136,31 @@ async function generate({ dialogue, projectName, tempFilename, localChars }) {
         ...formData.getHeaders(),
       },
       responseType: "stream",
+      signal,
     });
 
     const writer = fs.createWriteStream(tempFilename);
+    const cleanup = () => {
+      response.data.destroy();
+      writer.destroy();
+      if (fs.existsSync(tempFilename)) {
+        fs.unlinkSync(tempFilename);
+      }
+    };
+    if (signal) {
+      signal.addEventListener("abort", cleanup, { once: true });
+    }
     response.data.pipe(writer);
 
     await new Promise((resolve, reject) => {
       writer.on("finish", resolve);
       writer.on("error", reject);
+      response.data.on("error", reject);
     });
+
+    if (signal) {
+      signal.removeEventListener("abort", cleanup);
+    }
 
     console.log("IndexTTS2 音频片段请求完成。");
   } catch (error) {
