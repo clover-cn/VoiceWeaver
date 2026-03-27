@@ -46,16 +46,83 @@ function cacheKey(projectName, chapterIndex) {
   return `${projectName}__${chapterIndex}`;
 }
 
+function getProjectDir(projectName) {
+  const safeProjectName = String(projectName || "")
+    .trim()
+    .replace(/[\\/:*?"<>|]/g, "");
+  const projectDir = path.join(dataDir, "projects", safeProjectName);
+  if (!fs.existsSync(projectDir)) {
+    fs.mkdirSync(projectDir, { recursive: true });
+  }
+  return projectDir;
+}
+
+function getChapterEditsPath(projectName) {
+  return path.join(getProjectDir(projectName), "reader_edits.json");
+}
+
+function readChapterEdits(projectName) {
+  try {
+    const fp = getChapterEditsPath(projectName);
+    if (!fs.existsSync(fp)) return {};
+    const raw = fs.readFileSync(fp, "utf8").trim();
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+
+function writeChapterEdits(projectName, edits) {
+  const fp = getChapterEditsPath(projectName);
+  fs.writeFileSync(fp, JSON.stringify(edits, null, 2), "utf8");
+}
+
+function applyChapterOverrides(cards, projectName, chapterIndex) {
+  const chapterEdits = readChapterEdits(projectName);
+  const current = chapterEdits[String(chapterIndex)];
+  if (!current || !Array.isArray(current.segments)) {
+    return cards || [];
+  }
+
+  return (cards || []).map((card, index) => {
+    const override = current.segments[index];
+    if (!override || typeof override !== "object") return card;
+    const nextCard = { ...card };
+
+    if (override.type) nextCard.type = override.type;
+    if (override.role) nextCard.role = override.role;
+    if (override.emotion) nextCard.emotion = override.emotion;
+    if (typeof override.text === "string") nextCard.text = override.text;
+
+    if (override.referenceAudio && typeof override.referenceAudio === "object") {
+      nextCard.referenceAudio = override.referenceAudio;
+    } else if (override.referenceAudio === null) {
+      delete nextCard.referenceAudio;
+    }
+
+    if (override.autoEmotionAudioMap && typeof override.autoEmotionAudioMap === "object") {
+      nextCard.autoEmotionAudioMap = override.autoEmotionAudioMap;
+    }
+
+    if (override.autoAssignedVoiceActor !== undefined) {
+      nextCard.autoAssignedVoiceActor = override.autoAssignedVoiceActor;
+    }
+
+    if (override.manualAssigned !== undefined) {
+      nextCard.manualAssigned = override.manualAssigned;
+    }
+
+    return nextCard;
+  });
+}
+
 // 本地服务基地址
 function baseUrl() {
   return `http://localhost:${process.env.PORT || 3000}`;
 }
 
 function isCancelledError(err) {
-  return Boolean(
-    err &&
-    (err.cancelled || err.code === "ERR_CANCELED" || err.name === "CanceledError")
-  );
+  return Boolean(err && (err.cancelled || err.code === "ERR_CANCELED" || err.name === "CanceledError"));
 }
 
 function cancelTask(task) {
@@ -78,6 +145,23 @@ function clearRunningCache(projectName, chapterIndex) {
   }
 }
 
+function clearProjectCacheFromChapter(projectName, fromChapterIndex = 0) {
+  const cache = readCache();
+  let changed = false;
+  Object.keys(cache).forEach((key) => {
+    const [cachedProjectName, cachedChapterIndex] = key.split("__");
+    if (cachedProjectName !== projectName) return;
+    const idx = Number(cachedChapterIndex);
+    if (!Number.isFinite(idx) || idx < fromChapterIndex) return;
+    delete cache[key];
+    changed = true;
+  });
+  if (changed) {
+    writeCache(cache);
+  }
+  return changed;
+}
+
 // ─────────────────────────────────────────────
 // 核心 Pipeline（调用现有接口，异步后台执行）
 // ─────────────────────────────────────────────
@@ -92,7 +176,6 @@ function checkCancelled(task, taskId, projectName, chapterIndex) {
 }
 
 async function runPipeline(taskId, { projectName, chapterIndex, chapterUrl, chapterList }) {
-
   const task = tasks[taskId];
   const BASE = baseUrl();
   const signal = task.controller.signal;
@@ -109,26 +192,33 @@ async function runPipeline(taskId, { projectName, chapterIndex, chapterUrl, chap
     // 并发获取预扫描章节正文
     const contentTexts = await Promise.all(
       scanChapters.map((chap, i) =>
-        axios.get(`${BASE}/api/reader/getBookContent`, {
-          params: { url: chap.bookUrl, index: chapterIndex + i },
-          timeout: 30000,
-          signal,
-        })
+        axios
+          .get(`${BASE}/api/reader/getBookContent`, {
+            params: { url: chap.bookUrl, index: chapterIndex + i },
+            timeout: 30000,
+            signal,
+          })
           .then((r) => (r.data.isSuccess ? r.data.data || "" : ""))
-          .catch(() => "")
-      )
+          .catch(() => ""),
+      ),
     );
     const combinedText = contentTexts.join("\n\n").trim();
     checkCancelled(task, taskId, projectName, chapterIndex); // 取消检查点
 
     if (combinedText) {
-      await axios.post(`${BASE}/api/llm/prescan-characters`, {
-        combinedText,
-        projectName,
-      }, { timeout: 120000, signal }).catch((e) => {
-        if (isCancelledError(e)) throw createCancelledError();
-        console.warn(`[listenBook][${taskId}] 预扫描失败，继续: ${e.message}`);
-      });
+      await axios
+        .post(
+          `${BASE}/api/llm/prescan-characters`,
+          {
+            combinedText,
+            projectName,
+          },
+          { timeout: 120000, signal },
+        )
+        .catch((e) => {
+          if (isCancelledError(e)) throw createCancelledError();
+          console.warn(`[listenBook][${taskId}] 预扫描失败，继续: ${e.message}`);
+        });
       checkCancelled(task, taskId, projectName, chapterIndex); // 取消检查点
     }
 
@@ -148,14 +238,18 @@ async function runPipeline(taskId, { projectName, chapterIndex, chapterUrl, chap
 
     task.phase = "assign";
     task.progress = 20;
-    const parseResp = await axios.post(`${BASE}/api/llm/parse`, {
-      text: chapterText,
-      projectName,
-    }, { timeout: 180000, signal });
+    const parseResp = await axios.post(
+      `${BASE}/api/llm/parse`,
+      {
+        text: chapterText,
+        projectName,
+      },
+      { timeout: 180000, signal },
+    );
     checkCancelled(task, taskId, projectName, chapterIndex); // 取消检查点
 
     if (!parseResp.data.success) throw new Error("LLM 解析失败");
-    const cards = parseResp.data.data || [];
+    const cards = applyChapterOverrides(parseResp.data.data || [], projectName, chapterIndex);
     console.log(`[listenBook][${taskId}] 解析完成，共 ${cards.length} 条`);
 
     // ── 阶段 4: TTS 逐条生成（调用现有 /api/tts/generate-single）──
@@ -168,10 +262,14 @@ async function runPipeline(taskId, { projectName, chapterIndex, chapterUrl, chap
       checkCancelled(task, taskId, projectName, chapterIndex); // 每条生成前检查取消
       const card = cards[i];
       try {
-        const ttsResp = await axios.post(`${BASE}/api/tts/generate-single`, {
-          dialogue: card,
-          projectName,
-        }, { timeout: 60000, signal });
+        const ttsResp = await axios.post(
+          `${BASE}/api/tts/generate-single`,
+          {
+            dialogue: card,
+            projectName,
+          },
+          { timeout: 60000, signal },
+        );
 
         task.segments.push({
           index: i,
@@ -199,16 +297,14 @@ async function runPipeline(taskId, { projectName, chapterIndex, chapterUrl, chap
           audioUrl: null,
         });
       }
-      task.progress = 35 + Math.round((i + 1) / cards.length * 60);
+      task.progress = 35 + Math.round(((i + 1) / cards.length) * 60);
       task.ttsProgress = { current: i + 1, total: cards.length };
     }
 
     // ── 阶段 5: 完成 ──
     task.phase = "done";
     task.progress = 100;
-    console.log(
-      `[listenBook][${taskId}] 完成，成功生成 ${task.segments.filter((s) => s.audioUrl).length}/${cards.length} 条`
-    );
+    console.log(`[listenBook][${taskId}] 完成，成功生成 ${task.segments.filter((s) => s.audioUrl).length}/${cards.length} 条`);
 
     // 全部完成后写入 cache（前端检测到 done 再触发后续章节预缓存）
     const cache = readCache();
@@ -390,6 +486,66 @@ router.post("/cancel", (req, res) => {
   });
 
   res.json({ success: true, cancelledTaskIds });
+});
+
+router.post("/invalidate-cache", (req, res) => {
+  const { projectName, fromChapterIndex = 0 } = req.body || {};
+  if (!projectName) {
+    return res.status(400).json({ error: "缺少 projectName" });
+  }
+
+  const cancelledTaskIds = [];
+  Object.values(tasks).forEach((task) => {
+    if (task.projectName !== projectName) return;
+    if (Number(task.chapterIndex) < Number(fromChapterIndex)) return;
+    if (cancelTask(task)) {
+      cancelledTaskIds.push(task.taskId);
+    }
+  });
+
+  clearProjectCacheFromChapter(projectName, Number(fromChapterIndex) || 0);
+
+  res.json({ success: true, cancelledTaskIds });
+});
+
+router.get("/chapter-edits", (req, res) => {
+  const { projectName, chapterIndex } = req.query || {};
+  if (!projectName || chapterIndex === undefined) {
+    return res.status(400).json({ error: "缺少 projectName 或 chapterIndex" });
+  }
+
+  const chapterEdits = readChapterEdits(projectName);
+  const current = chapterEdits[String(chapterIndex)] || null;
+  res.json({
+    success: true,
+    data: current,
+  });
+});
+
+router.post("/chapter-edits", (req, res) => {
+  const { projectName, chapterIndex, segments } = req.body || {};
+  if (!projectName || chapterIndex === undefined || !Array.isArray(segments)) {
+    return res.status(400).json({ error: "缺少 projectName / chapterIndex / segments" });
+  }
+
+  const chapterEdits = readChapterEdits(projectName);
+  chapterEdits[String(chapterIndex)] = {
+    updatedAt: new Date().toISOString(),
+    segments: segments.map((segment) => ({
+      type: segment.type || null,
+      role: segment.role || null,
+      emotion: segment.emotion || "neutral",
+      text: typeof segment.text === "string" ? segment.text : "",
+      referenceAudio: segment.referenceAudio || null,
+      autoEmotionAudioMap: segment.autoEmotionAudioMap || null,
+      autoAssignedVoiceActor: segment.autoAssignedVoiceActor || null,
+      manualAssigned: Boolean(segment.manualAssigned),
+    })),
+  };
+  writeChapterEdits(projectName, chapterEdits);
+  clearProjectCacheFromChapter(projectName, Number(chapterIndex) || 0);
+
+  res.json({ success: true });
 });
 
 module.exports = router;

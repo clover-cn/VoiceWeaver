@@ -4,6 +4,9 @@ const path = require("path");
 const dataDir = path.join(__dirname, "../data");
 const projectsDir = path.join(dataDir, "projects");
 const audioRecordsPath = path.join(dataDir, "audio_records.json");
+const DEFAULT_READER_SETTINGS = {
+  missingEmotionPolicy: "strict",
+};
 
 const SUPPORTED_PROVIDERS = new Set(["indextts2", "siliconflow"]);
 
@@ -71,7 +74,10 @@ function parseAudioRecordName(recordName) {
   const name = String(recordName || "").trim();
   if (!name) return null;
 
-  const segs = name.split("-").map((s) => s.trim()).filter(Boolean);
+  const segs = name
+    .split("-")
+    .map((s) => s.trim())
+    .filter(Boolean);
   if (segs.length < 2) return null;
 
   const voiceActor = segs[0];
@@ -129,6 +135,33 @@ function getProjectCastingPath(projectName) {
     fs.mkdirSync(projectDir, { recursive: true });
   }
   return path.join(projectDir, "voice_casting.json");
+}
+
+function getProjectReaderSettingsPath(projectName) {
+  const safe = sanitizeProjectName(projectName);
+  const projectDir = path.join(projectsDir, safe);
+  if (!fs.existsSync(projectDir)) {
+    fs.mkdirSync(projectDir, { recursive: true });
+  }
+  return path.join(projectDir, "reader_settings.json");
+}
+
+function loadProjectReaderSettings(projectName) {
+  const fp = getProjectReaderSettingsPath(projectName);
+  const data = readJson(fp, {});
+  return {
+    ...DEFAULT_READER_SETTINGS,
+    ...(data && typeof data === "object" ? data : {}),
+  };
+}
+
+function saveProjectReaderSettings(projectName, settings) {
+  const fp = getProjectReaderSettingsPath(projectName);
+  writeJson(fp, {
+    ...DEFAULT_READER_SETTINGS,
+    ...(settings && typeof settings === "object" ? settings : {}),
+    updatedAt: new Date().toISOString(),
+  });
 }
 
 function loadProjectCasting(projectName) {
@@ -197,7 +230,7 @@ function pickNewActor(roleGender, actorPool, usedActors) {
   return candidates[0];
 }
 
-function attachAutoCastingToCards(cards, casting, actorPool) {
+function attachAutoCastingToCards(cards, casting, actorPool, readerSettings = DEFAULT_READER_SETTINGS) {
   const output = [];
 
   for (const item of cards || []) {
@@ -218,7 +251,13 @@ function attachAutoCastingToCards(cards, casting, actorPool) {
     }
 
     const roleCasting = casting.roleAssignments[card.role];
-    if (!roleCasting || !roleCasting.voiceActor) {
+    if (!roleCasting) {
+      delete card.referenceAudio;
+      output.push(card);
+      continue;
+    }
+
+    if (!roleCasting.voiceActor) {
       delete card.referenceAudio;
       output.push(card);
       continue;
@@ -232,9 +271,13 @@ function attachAutoCastingToCards(cards, casting, actorPool) {
     }
 
     const emo = normalizeEmotion(card.emotion);
-    const audioId = actor.emotions[emo];
+    const allowNeutralFallback = readerSettings.missingEmotionPolicy === "fallback_neutral";
+    const audioId = actor.emotions[emo] || (allowNeutralFallback ? actor.emotions.neutral || null : null);
     card.autoAssignedVoiceActor = roleCasting.voiceActor;
     card.autoEmotionAudioMap = {};
+    card.manualAssigned = Boolean(roleCasting.manualOverride);
+    card.missingEmotionPolicy = readerSettings.missingEmotionPolicy;
+    card.referenceAudioFallback = !actor.emotions[emo] && Boolean(audioId) && allowNeutralFallback ? "neutral" : null;
 
     Object.keys(actor.emotions).forEach((k) => {
       card.autoEmotionAudioMap[k] = {
@@ -275,6 +318,7 @@ function autoAssignReferenceAudios({ parsedCards, projectName, provider }) {
   const { actorPool, narratorCandidates } = buildVoicePool(records);
   const roleGenderStats = getRoleGenderStats(parsedCards);
   const roleGenders = decideRoleGender(roleGenderStats);
+  const readerSettings = loadProjectReaderSettings(projectName);
 
   const casting = loadProjectCasting(projectName);
   const usedActors = new Set();
@@ -282,15 +326,17 @@ function autoAssignReferenceAudios({ parsedCards, projectName, provider }) {
 
   Object.keys(casting.roleAssignments || {}).forEach((role) => {
     const conf = casting.roleAssignments[role];
-    if (!conf || !conf.voiceActor) return;
+    if (!conf) return;
+    if (!conf.voiceActor) return;
     const actor = actorPool[conf.voiceActor];
     if (!actor) return;
     const expectedGender = roleGenders[role];
-    if (expectedGender && expectedGender !== "unknown" && actor.gender !== expectedGender) return;
-    if (usedActors.has(conf.voiceActor)) return;
+    if (!conf.manualOverride && expectedGender && expectedGender !== "unknown" && actor.gender !== expectedGender) return;
+    if (!conf.manualOverride && usedActors.has(conf.voiceActor)) return;
     validatedRoleAssignments[role] = {
       voiceActor: conf.voiceActor,
       gender: actor.gender,
+      manualOverride: Boolean(conf.manualOverride),
     };
     usedActors.add(conf.voiceActor);
   });
@@ -326,13 +372,14 @@ function autoAssignReferenceAudios({ parsedCards, projectName, provider }) {
   saveProjectCasting(projectName, finalCasting);
 
   return {
-    cards: attachAutoCastingToCards(parsedCards, finalCasting, actorPool),
+    cards: attachAutoCastingToCards(parsedCards, finalCasting, actorPool, readerSettings),
     autoCasting: {
       enabled: true,
       narratorAudioId: finalCasting.narratorAudioId,
       roleAssignments: finalCasting.roleAssignments,
       roleGenders,
       availableVoiceActors: Object.keys(actorPool).length,
+      missingEmotionPolicy: readerSettings.missingEmotionPolicy,
     },
   };
 }
@@ -340,5 +387,9 @@ function autoAssignReferenceAudios({ parsedCards, projectName, provider }) {
 module.exports = {
   autoAssignReferenceAudios,
   normalizeGender,
+  loadProjectCasting,
+  saveProjectCasting,
+  parseAudioRecordName,
+  loadProjectReaderSettings,
+  saveProjectReaderSettings,
 };
-

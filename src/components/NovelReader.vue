@@ -1,12 +1,11 @@
 <template>
   <div class="h-full w-full flex flex-col bg-[#0f0f1a] text-[#e2e2f0] font-sans overflow-hidden">
-
     <!-- ===================== 搜索视图 ===================== -->
     <div v-if="viewState === 'search'" class="flex-1 overflow-y-auto pb-10 custom-scrollbar">
       <!-- 顶部品牌区 -->
       <div class="flex flex-col items-center px-6 pt-14 pb-9 bg-[radial-gradient(ellipse_at_top,_#1a1a3e_0%,_#0f0f1a_60%)]">
         <div class="text-[52px] mb-3">📖</div>
-        <h2 class="text-[32px] font-bold bg-gradient-to-br from-[#a09ef5] to-[#e087ff] bg-clip-text text-transparent m-0 mb-2">书海漫游</h2>
+        <h2 class="text-[32px] font-bold bg-gradient-to-br from-[#a09ef5] to-[#e087ff] bg-clip-text text-transparent m-0 mb-2">织音小说</h2>
         <p class="text-[#7777aa] text-[15px] m-0 mb-8">搜索你想阅读的小说，开启沉浸阅读旅程</p>
 
         <!-- 搜索框 -->
@@ -17,9 +16,15 @@
             placeholder="输入书名或作者..."
             @keyup.enter="doSearch"
           />
-          <button class="px-6 py-3.5 bg-gradient-to-br from-[#7c6ff7] to-[#c44dff] rounded-xl text-white text-[15px] font-semibold flex items-center gap-1.5 whitespace-nowrap transition-all duration-200 hover:-translate-y-[1px] hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none" :disabled="isSearching" @click="doSearch">
+          <button
+            class="px-6 py-3.5 bg-gradient-to-br from-[#7c6ff7] to-[#c44dff] rounded-xl text-white text-[15px] font-semibold flex items-center gap-1.5 whitespace-nowrap transition-all duration-200 hover:-translate-y-[1px] hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+            :disabled="isSearching"
+            @click="doSearch"
+          >
             <span v-if="isSearching" class="inline-block w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin"></span>
-            <span v-else>🔍 搜索</span>
+            <div class="flex items-center gap-1.5" v-else>
+              <el-icon><Search /></el-icon>搜索
+            </div>
           </button>
         </div>
       </div>
@@ -55,7 +60,9 @@
 
       <!-- 搜索为空提示 -->
       <div v-else-if="hasSearched && !isSearching" class="flex flex-col items-center justify-center py-20 px-5 text-[#666699] gap-3">
-        <div class="text-5xl">🔎</div>
+        <div class="text-5xl">
+          <el-icon><Search /></el-icon>
+        </div>
         <p>未找到相关作品，换个关键词试试？</p>
       </div>
     </div>
@@ -64,7 +71,12 @@
     <div v-else-if="viewState === 'chapters'" class="flex-1 flex flex-col overflow-hidden">
       <!-- 顶部导航 -->
       <div class="flex items-center gap-4 px-5 py-3.5 bg-[#12122a] border-b border-[#2a2a4a] shrink-0">
-        <button class="bg-[rgba(124,111,247,0.15)] border border-[rgba(124,111,247,0.3)] text-[#a09ef5] px-4 py-2 rounded-lg cursor-pointer text-sm transition-colors duration-200 hover:bg-[rgba(124,111,247,0.28)] whitespace-nowrap" @click="backToSearch">← 返回搜索</button>
+        <button
+          class="bg-[rgba(124,111,247,0.15)] border border-[rgba(124,111,247,0.3)] text-[#a09ef5] px-4 py-2 rounded-lg cursor-pointer text-sm transition-colors duration-200 hover:bg-[rgba(124,111,247,0.28)] whitespace-nowrap"
+          @click="backToSearch"
+        >
+          ← 返回搜索
+        </button>
         <div class="flex items-center gap-2.5 flex-1 min-w-0">
           <span class="font-semibold text-base text-[#ddddf5] whitespace-nowrap overflow-hidden text-ellipsis">{{ selectedBook?.name }}</span>
           <span class="text-[13px] text-[#8888bb] whitespace-nowrap">{{ selectedBook?.author }}</span>
@@ -86,7 +98,11 @@
             v-for="(chap, idx) in chapterList"
             :key="idx"
             class="px-3.5 py-2.5 bg-[#15152a] border border-[#2a2a4a] rounded-lg text-[13px] text-[#c0c0e0] cursor-pointer transition-colors duration-200 whitespace-nowrap overflow-hidden text-ellipsis"
-            :class="chap.isVolume ? 'bg-[rgba(196,77,255,0.08)] border-[rgba(196,77,255,0.25)] text-[#c44dff] pointer-events-none font-semibold' : 'hover:bg-[rgba(124,111,247,0.15)] hover:border-[#7c6ff7] hover:text-[#e0e0ff]'"
+            :class="
+              chap.isVolume
+                ? 'bg-[rgba(196,77,255,0.08)] border-[rgba(196,77,255,0.25)] text-[#c44dff] pointer-events-none font-semibold'
+                : 'hover:bg-[rgba(124,111,247,0.15)] hover:border-[#7c6ff7] hover:text-[#e0e0ff]'
+            "
             @click="selectChapter(chap, idx)"
           >
             {{ chap.title }}
@@ -104,9 +120,34 @@
     <div v-else-if="viewState === 'reading'" class="flex-1 flex flex-col overflow-hidden">
       <!-- 顶部导航 -->
       <div class="flex items-center gap-3.5 px-5 py-3 bg-[rgba(18,18,42,0.95)] border-b border-[#2a2a4a] shrink-0 backdrop-blur-md">
-        <button class="bg-[rgba(124,111,247,0.15)] border border-[rgba(124,111,247,0.3)] text-[#a09ef5] px-4 py-2 rounded-lg cursor-pointer text-sm transition-colors duration-200 hover:bg-[rgba(124,111,247,0.28)] whitespace-nowrap" @click="backToChapters">← 章节列表</button>
+        <button
+          class="bg-[rgba(124,111,247,0.15)] border border-[rgba(124,111,247,0.3)] text-[#a09ef5] px-4 py-2 rounded-lg cursor-pointer text-sm transition-colors duration-200 hover:bg-[rgba(124,111,247,0.28)] whitespace-nowrap"
+          @click="backToChapters"
+        >
+          ← 章节列表
+        </button>
         <div class="flex-1 text-center text-[15px] font-semibold text-[#c0c0e0] whitespace-nowrap overflow-hidden text-ellipsis">{{ selectedChapter?.title }}</div>
         <div class="flex gap-2 items-center">
+          <div class="flex items-center gap-3 rounded-lg border border-[rgba(124,111,247,0.2)] bg-[rgba(124,111,247,0.08)] px-3 py-2">
+            <div class="flex flex-col leading-tight">
+              <span class="text-[12px] text-[#f1ecff] whitespace-nowrap">缺失情绪音频时</span>
+            </div>
+            <select
+              v-model="missingEmotionPolicy"
+              class="min-w-[220px] rounded-md border border-[rgba(124,111,247,0.28)] bg-[rgba(15,15,26,0.75)] px-2.5 py-1.5 text-[12px] text-[#f1ecff] outline-none"
+              @change="saveGenerationSettings"
+            >
+              <option value="strict" class="text-black">严格模式：没有对应情绪音频时，直接显示未配置</option>
+              <option value="fallback_neutral" class="text-black">回退模式：没有对应情绪音频时，自动使用平静音频</option>
+            </select>
+          </div>
+          <button
+            v-if="segments.length"
+            class="px-3.5 py-1.5 bg-[rgba(255,191,94,0.12)] border border-[rgba(255,191,94,0.28)] rounded-lg text-[#ffd480] text-[13px] cursor-pointer transition-colors duration-200 whitespace-nowrap hover:bg-[rgba(255,191,94,0.22)]"
+            @click="openRoleSetup"
+          >
+            统一音频配置
+          </button>
           <!-- 听书控制区 -->
           <div class="flex items-center gap-2">
             <!-- idle: 显示听书按钮 -->
@@ -114,7 +155,9 @@
               v-if="listenState === 'idle'"
               class="px-3.5 py-1.5 bg-gradient-to-br from-[#7c6ff7] to-[#c44dff] rounded-lg text-white text-[13px] font-semibold cursor-pointer transition-all duration-200 hover:opacity-90 hover:-translate-y-[1px] whitespace-nowrap"
               @click="startListening"
-            >🎧 听书</button>
+            >
+              🎧 听书
+            </button>
 
             <!-- loading: 转圈 + 阶段文字 -->
             <div v-else-if="listenState === 'loading'" class="flex items-center gap-2 px-3 py-1.5 bg-[rgba(124,111,247,0.12)] border border-[rgba(124,111,247,0.3)] rounded-lg">
@@ -127,7 +170,9 @@
               <button
                 class="px-3.5 py-1.5 bg-[rgba(124,111,247,0.15)] border border-[rgba(124,111,247,0.3)] rounded-lg text-[#a09ef5] text-[13px] cursor-pointer transition-all duration-200 hover:bg-[rgba(124,111,247,0.28)] whitespace-nowrap"
                 @click="togglePlayPause"
-              >{{ isPlaying ? '⏸ 暂停' : '▶ 播放' }}</button>
+              >
+                {{ isPlaying ? "⏸ 暂停" : "▶ 播放" }}
+              </button>
               <span class="text-[11px] text-[#6666aa] whitespace-nowrap">{{ currentSegIdx + 1 }} / {{ segments.length }}</span>
             </div>
 
@@ -136,11 +181,25 @@
               v-else-if="listenState === 'error'"
               class="px-3.5 py-1.5 bg-[rgba(255,80,80,0.12)] border border-[rgba(255,80,80,0.3)] rounded-lg text-[#ff8080] text-[13px] cursor-pointer whitespace-nowrap hover:bg-[rgba(255,80,80,0.22)]"
               @click="startListening"
-            >⚠ 重试</button>
+            >
+              <el-icon size="12" color="#ffffff"><WarnTriangleFilled /></el-icon>重试
+            </button>
           </div>
 
-          <button class="px-3.5 py-1.5 bg-[rgba(124,111,247,0.1)] border border-[rgba(124,111,247,0.25)] rounded-lg text-[#a09ef5] text-[13px] cursor-pointer transition-colors duration-200 whitespace-nowrap hover:bg-[rgba(124,111,247,0.25)] disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-[rgba(124,111,247,0.1)]" :disabled="currentChapterIndex <= 0" @click="goPrevChapter">‹ 上一章</button>
-          <button class="px-3.5 py-1.5 bg-[rgba(124,111,247,0.1)] border border-[rgba(124,111,247,0.25)] rounded-lg text-[#a09ef5] text-[13px] cursor-pointer transition-colors duration-200 whitespace-nowrap hover:bg-[rgba(124,111,247,0.25)] disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-[rgba(124,111,247,0.1)]" :disabled="currentChapterIndex >= chapterList.length - 1" @click="goNextChapter">下一章 ›</button>
+          <button
+            class="flex items-center gap-1 px-3.5 py-1.5 bg-[rgba(124,111,247,0.1)] border border-[rgba(124,111,247,0.25)] rounded-lg text-[#a09ef5] text-[13px] cursor-pointer transition-colors duration-200 whitespace-nowrap hover:bg-[rgba(124,111,247,0.25)] disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-[rgba(124,111,247,0.1)]"
+            :disabled="currentChapterIndex <= 0"
+            @click="goPrevChapter"
+          >
+            <el-icon><ArrowLeft /></el-icon> 上一章
+          </button>
+          <button
+            class="flex items-center gap-1 px-3.5 py-1.5 bg-[rgba(124,111,247,0.1)] border border-[rgba(124,111,247,0.25)] rounded-lg text-[#a09ef5] text-[13px] cursor-pointer transition-colors duration-200 whitespace-nowrap hover:bg-[rgba(124,111,247,0.25)] disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-[rgba(124,111,247,0.1)]"
+            :disabled="currentChapterIndex >= chapterList.length - 1"
+            @click="goNextChapter"
+          >
+            下一章 <el-icon><ArrowRight /></el-icon>
+          </button>
         </div>
       </div>
 
@@ -155,32 +214,76 @@
           <h2 class="text-[22px] font-bold text-[#e0e0ff] m-0 mb-9 text-center pb-5 border-b border-[#2a2a4a]">{{ selectedChapter?.title }}</h2>
 
           <!-- 听书模式：渲染 segments（支持高亮） -->
-          <template v-if="listenState === 'ready' || listenState === 'loading'">
+          <template v-if="segments.length > 0 || listenState === 'loading'">
             <div
               v-for="(seg, i) in segments"
               :key="i"
-              :ref="el => { if (el) segRefs[i] = el }"
+              :ref="
+                (el) => {
+                  if (el) segRefs[i] = el;
+                }
+              "
               class="mb-4 rounded-lg px-3 py-2 transition-all duration-300"
               :class="[
-                seg.type === 'narration'
-                  ? 'text-[17px] leading-loose text-[#c8c8e8] indent-8 tracking-wide break-all italic'
-                  : 'text-[17px] leading-loose text-[#dde0ff] tracking-wide break-all',
-                i === currentSegIdx
-                  ? 'bg-[rgba(124,111,247,0.18)] border-l-[3px] border-[#7c6ff7] pl-4 indent-0'
-                  : ''
+                seg.type === 'narration' ? 'text-[17px] leading-loose text-[#c8c8e8] indent-8 tracking-wide break-all italic' : 'text-[17px] leading-loose text-[#dde0ff] tracking-wide break-all',
+                i === currentSegIdx ? 'bg-[rgba(124,111,247,0.18)] border-l-[3px] border-[#7c6ff7] pl-4 indent-0' : '',
               ]"
             >
               <div v-if="seg.type === 'dialogue' || getReferenceAudioLabel(seg)" class="mb-1 not-italic">
                 <div class="flex flex-wrap items-center gap-2">
                   <span v-if="seg.type === 'dialogue'" class="text-[12px] text-[#8866cc] font-semibold">{{ seg.role }}</span>
-                  <span v-if="getReferenceAudioLabel(seg)" class="inline-flex items-center gap-1 rounded-full border border-[rgba(124,111,247,0.35)] bg-[rgba(124,111,247,0.14)] px-2 py-0.5 text-[11px] text-[#cfc4ff]">
+                  <button
+                    v-if="getReferenceAudioLabel(seg)"
+                    type="button"
+                    class="inline-flex items-center gap-1 rounded-full border border-[rgba(124,111,247,0.35)] bg-[rgba(124,111,247,0.14)] px-2 py-0.5 text-[11px] text-[#cfc4ff] cursor-pointer transition-colors duration-200 hover:bg-[rgba(124,111,247,0.24)]"
+                    @click="openSegmentEditor(seg, i)"
+                  >
                     <span class="text-[#9f8df2]">参考音频</span>
                     <span class="text-[#f1ecff]">{{ getReferenceAudioLabel(seg) }}</span>
+                  </button>
+                  <button
+                    v-else
+                    type="button"
+                    class="inline-flex items-center gap-1 rounded-full border border-[rgba(124,111,247,0.25)] bg-[rgba(124,111,247,0.08)] px-2 py-0.5 text-[11px] text-[#aeb0de] cursor-pointer transition-colors duration-200 hover:bg-[rgba(124,111,247,0.16)]"
+                    @click="openSegmentEditor(seg, i)"
+                  >
+                    <span>设置参考音频</span>
+                  </button>
+                  <span
+                    v-if="seg.manualAssigned"
+                    class="inline-flex items-center gap-1 rounded-full border border-[rgba(68,211,166,0.3)] bg-[rgba(68,211,166,0.12)] px-2 py-0.5 text-[11px] text-[#b6f7e1]"
+                  >
+                    <span class="text-[#5eead4]">手动覆盖</span>
+                    <span>后续优先</span>
                   </span>
-                  <span v-if="seg.autoAssignedVoiceActor" class="inline-flex items-center gap-1 rounded-full border border-[rgba(208,136,255,0.28)] bg-[rgba(208,136,255,0.1)] px-2 py-0.5 text-[11px] text-[#efccff]">
+                  <span
+                    v-if="seg.autoAssignedVoiceActor"
+                    class="inline-flex items-center gap-1 rounded-full border border-[rgba(208,136,255,0.28)] bg-[rgba(208,136,255,0.1)] px-2 py-0.5 text-[11px] text-[#efccff]"
+                  >
                     <span class="text-[#d088ff]">声线</span>
                     <span>{{ seg.autoAssignedVoiceActor }}</span>
                   </span>
+                  <span
+                    v-if="seg.referenceAudioFallback === 'neutral'"
+                    class="inline-flex items-center gap-1 rounded-full border border-[rgba(255,181,71,0.28)] bg-[rgba(255,181,71,0.1)] px-2 py-0.5 text-[11px] text-[#ffd79a]"
+                  >
+                    <span class="text-[#ffbe55]">已回退</span>
+                    <span>平静</span>
+                  </span>
+                  <span
+                    v-else-if="seg.emotion && !getReferenceAudioLabel(seg) && seg.type === 'dialogue'"
+                    class="inline-flex items-center gap-1 rounded-full border border-[rgba(255,120,120,0.28)] bg-[rgba(255,120,120,0.1)] px-2 py-0.5 text-[11px] text-[#ffb8b8]"
+                  >
+                    <span class="text-[#ff8b8b]">未配置</span>
+                    <span>{{ emotionLabelMap[seg.emotion] || seg.emotion }}</span>
+                  </span>
+                  <button
+                    type="button"
+                    class="inline-flex items-center gap-1 rounded-full border border-[rgba(255,255,255,0.12)] bg-[rgba(255,255,255,0.05)] px-2 py-0.5 text-[11px] text-[#d8d9f7] cursor-pointer transition-colors duration-200 hover:bg-[rgba(255,255,255,0.12)]"
+                    @click="openSegmentEditor(seg, i)"
+                  >
+                    <span>编辑片段</span>
+                  </button>
                 </div>
               </div>
               <div>
@@ -197,267 +300,627 @@
 
           <!-- 普通阅读模式：渲染原始段落 -->
           <template v-else>
-            <div
-              v-for="(para, i) in contentParagraphs"
-              :key="i"
-              class="text-[17px] leading-loose text-[#c8c8e8] mb-4 indent-8 tracking-wide break-all"
-            >{{ para }}</div>
+            <div v-for="(para, i) in contentParagraphs" :key="i" class="text-[17px] leading-loose text-[#c8c8e8] mb-4 indent-8 tracking-wide break-all">{{ para }}</div>
           </template>
         </div>
       </div>
 
       <!-- 底部操作 -->
       <div class="flex items-center justify-between px-6 py-3.5 bg-[rgba(12,12,28,0.98)] border-t border-[#2a2a4a] shrink-0">
-        <button class="px-7 py-2.5 bg-[rgba(124,111,247,0.12)] border border-[rgba(124,111,247,0.3)] rounded-xl text-[#a09ef5] text-[15px] cursor-pointer transition-all duration-200 hover:-translate-y-[1px] hover:bg-[rgba(124,111,247,0.28)] disabled:opacity-30 disabled:cursor-not-allowed disabled:transform-none" :disabled="currentChapterIndex <= 0" @click="goPrevChapter">‹ 上一章</button>
+        <button
+          class="flex items-center gap-1 px-7 py-2.5 bg-[rgba(124,111,247,0.12)] border border-[rgba(124,111,247,0.3)] rounded-xl text-[#a09ef5] text-[15px] cursor-pointer transition-all duration-200 hover:-translate-y-[1px] hover:bg-[rgba(124,111,247,0.28)] disabled:opacity-30 disabled:cursor-not-allowed disabled:transform-none"
+          :disabled="currentChapterIndex <= 0"
+          @click="goPrevChapter"
+        >
+          <el-icon><ArrowLeft /></el-icon> 上一章
+        </button>
         <span class="text-[#6666aa] text-[14px]">{{ currentChapterIndex + 1 }} / {{ chapterList.length }}</span>
-        <button class="px-7 py-2.5 bg-[rgba(124,111,247,0.12)] border border-[rgba(124,111,247,0.3)] rounded-xl text-[#a09ef5] text-[15px] cursor-pointer transition-all duration-200 hover:-translate-y-[1px] hover:bg-[rgba(124,111,247,0.28)] disabled:opacity-30 disabled:cursor-not-allowed disabled:transform-none" :disabled="currentChapterIndex >= chapterList.length - 1" @click="goNextChapter">下一章 ›</button>
+        <button
+          class="flex items-center gap-1 px-7 py-2.5 bg-[rgba(124,111,247,0.12)] border border-[rgba(124,111,247,0.3)] rounded-xl text-[#a09ef5] text-[15px] cursor-pointer transition-all duration-200 hover:-translate-y-[1px] hover:bg-[rgba(124,111,247,0.28)] disabled:opacity-30 disabled:cursor-not-allowed disabled:transform-none"
+          :disabled="currentChapterIndex >= chapterList.length - 1"
+          @click="goNextChapter"
+        >
+          下一章 <el-icon><ArrowRight /></el-icon>
+        </button>
       </div>
     </div>
-
   </div>
+
+  <el-dialog v-model="segmentEditorVisible" :title="segmentEditForm.role ? `编辑片段 · ${segmentEditForm.role}` : '编辑片段'" width="560px" destroy-on-close>
+    <div class="flex flex-col gap-4">
+      <div class="rounded-xl border border-[rgba(124,111,247,0.2)] bg-[rgba(124,111,247,0.08)] px-4 py-3 text-[13px] leading-6 text-[#d9d7f6]">
+        这里可以像调度台一样修改当前片段的角色、情绪和参考音频。保存后仅覆盖当前章节这个片段，并让当前章重新生成听书。
+      </div>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div class="flex flex-col gap-2">
+          <div class="text-sm text-[#bfbfe6]">角色</div>
+          <el-select v-model="segmentEditForm.role" filterable allow-create default-first-option @change="handleSegmentRoleChange">
+            <el-option label="旁白" value="旁白" />
+            <el-option v-for="roleName in availableSegmentRoles" :key="roleName" :label="roleName" :value="roleName" />
+          </el-select>
+        </div>
+
+        <div class="flex flex-col gap-2">
+          <div class="text-sm text-[#bfbfe6]">情绪</div>
+          <el-select v-model="segmentEditForm.emotion" @change="handleSegmentEmotionChange">
+            <el-option label="高兴" value="happy" />
+            <el-option label="愤怒" value="angry" />
+            <el-option label="悲伤" value="sad" />
+            <el-option label="害怕" value="fearful" />
+            <el-option label="厌恶" value="disgusted" />
+            <el-option label="忧郁" value="melancholy" />
+            <el-option label="惊讶" value="surprised" />
+            <el-option label="平静" value="neutral" />
+          </el-select>
+        </div>
+      </div>
+
+      <div class="flex flex-col gap-2">
+        <div class="text-sm text-[#bfbfe6]">参考音频</div>
+        <el-select v-model="selectedSegmentAudioId" placeholder="选择新的参考音频" filterable clearable class="w-full">
+          <el-option v-for="audio in audioOptions" :key="audio.id" :label="audio.name" :value="audio.id" />
+        </el-select>
+        <div class="text-[12px] text-[#7f7fa8]">改情绪时会先按调度台规则自动重算参考音频；你也可以在这里手动改成别的参考音频。</div>
+      </div>
+
+      <audio v-if="selectedSegmentAudioPreviewUrl" :src="selectedSegmentAudioPreviewUrl" controls class="w-full h-10"></audio>
+    </div>
+
+    <template #footer>
+      <div class="flex justify-end gap-3">
+        <el-button @click="segmentEditorVisible = false">取消</el-button>
+        <el-button @click="openRoleSetup">编辑该角色全局情绪音频</el-button>
+        <el-button type="primary" :loading="isSavingSegmentEdit" @click="saveSegmentEdit">保存片段修改</el-button>
+      </div>
+    </template>
+  </el-dialog>
+
+  <RoleAudioSetupDialog ref="roleAudioSetupDialogRef" @saved="handleAudioSetupSaved" />
 </template>
 
 <script setup>
-import { ref, computed, nextTick, onMounted, onBeforeUnmount } from 'vue'
-import axios from 'axios'
-
-const API = 'http://localhost:3000'
+import { ref, computed, nextTick, onMounted, onBeforeUnmount } from "vue";
+import axios from "axios";
+import { ElMessage } from "element-plus";
+import RoleAudioSetupDialog from "./RoleAudioSetupDialog.vue";
+import { Search, ArrowLeft, ArrowRight, WarnTriangleFilled } from "@element-plus/icons-vue";
+const API = "http://localhost:3000";
 
 // ── 状态机 ──
-const viewState = ref('search') // 'search' | 'chapters' | 'reading'
+const viewState = ref("search"); // 'search' | 'chapters' | 'reading'
 
 // ── 搜索 ──
-const searchKeyword = ref('')
-const isSearching    = ref(false)
-const hasSearched    = ref(false)
-const searchResults  = ref([])
+const searchKeyword = ref("");
+const isSearching = ref(false);
+const hasSearched = ref(false);
+const searchResults = ref([]);
 
 const doSearch = async () => {
-  const key = searchKeyword.value.trim()
-  if (!key) return
-  isSearching.value  = true
-  hasSearched.value  = false
-  searchResults.value = []
+  const key = searchKeyword.value.trim();
+  if (!key) return;
+  isSearching.value = true;
+  hasSearched.value = false;
+  searchResults.value = [];
   try {
     const res = await axios.get(`${API}/api/reader/searchBookMultiSSE`, {
-      params: { key, concurrentCount: 4 }
-    })
-    searchResults.value = res.data.data || []
+      params: { key, concurrentCount: 4 },
+    });
+    searchResults.value = res.data.data || [];
   } catch (e) {
-    console.error('搜索失败', e)
-    searchResults.value = []
+    console.error("搜索失败", e);
+    searchResults.value = [];
   } finally {
-    isSearching.value = false
-    hasSearched.value = true
+    isSearching.value = false;
+    hasSearched.value = true;
   }
-}
+};
 
 // ── 选书 → 章节 ──
-const selectedBook      = ref(null)
-const chapterList       = ref([])
-const isLoadingChapters = ref(false)
+const selectedBook = ref(null);
+const chapterList = ref([]);
+const isLoadingChapters = ref(false);
 
 const selectBook = async (book) => {
-  selectedBook.value = book
-  viewState.value    = 'chapters'
-  chapterList.value  = []
-  isLoadingChapters.value = true
+  selectedBook.value = book;
+  viewState.value = "chapters";
+  chapterList.value = [];
+  isLoadingChapters.value = true;
   try {
     const res = await axios.get(`${API}/api/reader/getChapterList`, {
-      params: { url: book.bookUrl, bookSourceUrl: book.origin }
-    })
+      params: { url: book.bookUrl, bookSourceUrl: book.origin },
+    });
     if (res.data.isSuccess) {
-      chapterList.value = res.data.data || []
+      chapterList.value = res.data.data || [];
     }
   } catch (e) {
-    console.error('获取章节列表失败', e)
+    console.error("获取章节列表失败", e);
   } finally {
-    isLoadingChapters.value = false
+    isLoadingChapters.value = false;
   }
-}
+};
 
 // ── 选章 → 阅读 ──
-const selectedChapter    = ref(null)
-const currentChapterIndex = ref(0)
-const contentParagraphs  = ref([])
-const isLoadingContent   = ref(false)
-const readingBody        = ref(null)
+const selectedChapter = ref(null);
+const currentChapterIndex = ref(0);
+const contentParagraphs = ref([]);
+const isLoadingContent = ref(false);
+const readingBody = ref(null);
 
 const selectChapter = async (chap, idx) => {
-  resetListen()
-  selectedChapter.value    = chap
-  currentChapterIndex.value = idx
-  viewState.value          = 'reading'
-  await fetchContent(chap, idx)
+  resetListen();
+  selectedChapter.value = chap;
+  currentChapterIndex.value = idx;
+  viewState.value = "reading";
+  await fetchGenerationSettings();
+  await fetchContent(chap, idx);
   // 进入阅读视图后自动检查是否已有听书缓存
-  await checkListenCache()
-}
+  await checkListenCache();
+};
 
 const fetchContent = async (chap, idx) => {
-  contentParagraphs.value = []
-  isLoadingContent.value  = true
-  await nextTick()
-  if (readingBody.value) readingBody.value.scrollTop = 0
+  contentParagraphs.value = [];
+  isLoadingContent.value = true;
+  await nextTick();
+  if (readingBody.value) readingBody.value.scrollTop = 0;
   try {
     const res = await axios.get(`${API}/api/reader/getBookContent`, {
-      params: { url: chap.bookUrl, index: idx }
-    })
+      params: { url: chap.bookUrl, index: idx },
+    });
     if (res.data.isSuccess) {
-      contentParagraphs.value = (res.data.data || '')
-        .split('\n')
-        .map(p => p.trim())
-        .filter(p => p.length > 0)
+      contentParagraphs.value = (res.data.data || "")
+        .split("\n")
+        .map((p) => p.trim())
+        .filter((p) => p.length > 0);
     }
   } catch (e) {
-    console.error('获取正文失败', e)
+    console.error("获取正文失败", e);
   } finally {
-    isLoadingContent.value = false
+    isLoadingContent.value = false;
   }
-}
+};
 
 // 上 / 下章
 const goPrevChapter = () => {
-  const idx = currentChapterIndex.value - 1
-  if (idx < 0) return
-  selectChapter(chapterList.value[idx], idx)
-}
+  const idx = currentChapterIndex.value - 1;
+  if (idx < 0) return;
+  selectChapter(chapterList.value[idx], idx);
+};
 const goNextChapter = () => {
-  const idx = currentChapterIndex.value + 1
-  if (idx >= chapterList.value.length) return
-  selectChapter(chapterList.value[idx], idx)
-}
+  const idx = currentChapterIndex.value + 1;
+  if (idx >= chapterList.value.length) return;
+  selectChapter(chapterList.value[idx], idx);
+};
 
 // 图片加载失败回退
 const handleImgError = (e) => {
-  e.target.style.display = 'none'
-  e.target.nextElementSibling && (e.target.nextElementSibling.style.display = 'flex')
-}
+  e.target.style.display = "none";
+  e.target.nextElementSibling && (e.target.nextElementSibling.style.display = "flex");
+};
 
 const backToSearch = async () => {
-  await resetListen()
-  viewState.value = 'search'
-}
+  await resetListen();
+  viewState.value = "search";
+};
 
 const backToChapters = async () => {
-  await resetListen()
-  viewState.value = 'chapters'
-}
+  await resetListen();
+  viewState.value = "chapters";
+};
 
 // ════════════════════════════════════════════════════════════
 // 听书功能
 // ════════════════════════════════════════════════════════════
 
 // 项目名以书名命名（避免与手动项目冲突）
-const listenProjectName = computed(() => `reader_${selectedBook.value?.name || 'unknown'}`)
+const listenProjectName = computed(() => `reader_${selectedBook.value?.name || "unknown"}`);
 
 // 状态
-const listenState   = ref('idle')   // idle | loading | ready | error
-const listenPhase   = ref('')       // prescan | parse | assign | tts | done
-const segments      = ref([])       // { index, type, role, emotion, text, audioUrl }
-const currentSegIdx = ref(-1)       // 当前播放的 segment 索引
-const isPlaying     = ref(false)
-const segRefs       = ref([])       // DOM 引用，用于自动滚动
-const listenTaskId = ref(null)
-const prefetchTaskIds = ref([])
-const audioRecordMap = ref({})
+const listenState = ref("idle"); // idle | loading | ready | error
+const listenPhase = ref(""); // prescan | parse | assign | tts | done
+const segments = ref([]); // { index, type, role, emotion, text, audioUrl }
+const currentSegIdx = ref(-1); // 当前播放的 segment 索引
+const isPlaying = ref(false);
+const segRefs = ref([]); // DOM 引用，用于自动滚动
+const listenTaskId = ref(null);
+const prefetchTaskIds = ref([]);
+const audioRecordMap = ref({});
+const audioOptions = ref([]);
+const globalAudioBindings = ref({});
+const roleAudioSetupDialogRef = ref(null);
+const segmentEditorVisible = ref(false);
+const isSavingSegmentEdit = ref(false);
+const editingSegmentIndex = ref(-1);
+const selectedSegmentAudioId = ref(null);
+const segmentEditForm = ref({
+  type: "dialogue",
+  role: "",
+  emotion: "neutral",
+  text: "",
+  referenceAudio: null,
+  autoEmotionAudioMap: null,
+  autoAssignedVoiceActor: null,
+  manualAssigned: false,
+});
+const missingEmotionPolicy = ref("strict");
+const emotionLabelMap = {
+  happy: "高兴",
+  angry: "愤怒",
+  sad: "悲伤",
+  fearful: "害怕",
+  disgusted: "厌恶",
+  melancholy: "忧郁",
+  surprised: "惊讶",
+  neutral: "平静",
+};
 // 轮询定时器
-let pollTimer = null
+let pollTimer = null;
 // 当前播放的 Audio 对象
-let currentAudio = null
+let currentAudio = null;
 // 是否强制停止（切章、重置时）
-let forceStop = false
+let forceStop = false;
 // 当前章节的 TTS 生成是否已全部完成
-const isGenerationComplete = ref(false)
+const isGenerationComplete = ref(false);
 
 // 阶段文案
 const phaseTextMap = {
-  waiting:  '准备中…',
-  prescan:  '正在预扫描章节角色…',
-  parse:    '正在分析剧情对话…',
-  assign:   '正在分配参考音频…',
-  tts:      '正在生成语音…',
-  done:     '',
-}
-const listenPhaseText = computed(() => phaseTextMap[listenPhase.value] || '处理中…')
+  waiting: "准备中…",
+  prescan: "正在预扫描章节角色…",
+  parse: "正在分析剧情对话…",
+  assign: "正在分配参考音频…",
+  tts: "正在生成语音…",
+  done: "",
+};
+const listenPhaseText = computed(() => phaseTextMap[listenPhase.value] || "处理中…");
 
 async function fetchAudioRecords() {
   try {
-    const res = await axios.get(`${API}/api/audio/list`)
-    if (!res.data?.success || !Array.isArray(res.data.list)) return
+    const res = await axios.get(`${API}/api/audio/list`);
+    if (!res.data?.success || !Array.isArray(res.data.list)) return;
+    audioOptions.value = res.data.list;
     audioRecordMap.value = res.data.list.reduce((acc, item) => {
-      if (item?.id) acc[item.id] = item
-      return acc
-    }, {})
+      if (item?.id) acc[item.id] = item;
+      return acc;
+    }, {});
   } catch (e) {
-    console.warn('获取参考音频列表失败', e.message)
+    console.warn("获取参考音频列表失败", e.message);
+  }
+}
+
+async function fetchGlobalBindings() {
+  try {
+    const globalRes = await axios.get(`${API}/api/audio/global-roles`);
+    if (globalRes.data?.success) {
+      globalAudioBindings.value = globalRes.data.roles || {};
+      return globalAudioBindings.value;
+    }
+  } catch (e) {
+    console.warn("获取全局角色绑定失败", e.message);
+  }
+  return {};
+}
+
+async function fetchGenerationSettings() {
+  const projectName = listenProjectName.value;
+  if (!projectName || projectName === "reader_unknown") return;
+  try {
+    const res = await axios.get(`${API}/api/reader/generation-settings`, {
+      params: { projectName },
+    });
+    if (res.data?.success && res.data?.settings?.missingEmotionPolicy) {
+      missingEmotionPolicy.value = res.data.settings.missingEmotionPolicy;
+    }
+  } catch (e) {
+    console.warn("获取阅读生成策略失败", e.message);
+  }
+}
+
+async function saveGenerationSettings() {
+  const projectName = listenProjectName.value;
+  if (!projectName || projectName === "reader_unknown") return;
+  try {
+    await axios.post(`${API}/api/reader/generation-settings`, {
+      projectName,
+      missingEmotionPolicy: missingEmotionPolicy.value,
+    });
+    ElMessage.success(missingEmotionPolicy.value === "strict" ? "后续生成已改为严格匹配情绪" : "后续生成已改为缺失时回退平静");
+  } catch (e) {
+    console.error("保存阅读生成策略失败", e);
+    ElMessage.error("保存生成策略失败");
   }
 }
 
 function getReferenceAudioConfig(seg) {
-  if (!seg?.referenceAudio) return null
-  if (typeof seg.referenceAudio === 'string') {
-    return { id: seg.referenceAudio }
+  if (!seg?.referenceAudio) return null;
+  if (typeof seg.referenceAudio === "string") {
+    return { id: seg.referenceAudio };
   }
-  return seg.referenceAudio
+  return seg.referenceAudio;
 }
 
 function getReferenceAudioLabel(seg) {
-  const config = getReferenceAudioConfig(seg)
-  if (!config) return ''
-  const record = config.id ? audioRecordMap.value[config.id] : null
-  if (record?.name) return record.name
-  if (config.id) return `ID: ${config.id.slice(0, 8)}`
-  if (config.mode === 3) return '向量控制'
-  return ''
+  const config = getReferenceAudioConfig(seg);
+  if (!config) return "";
+  const record = config.id ? audioRecordMap.value[config.id] : null;
+  if (record?.name) return record.name;
+  if (config.id) return `ID: ${config.id.slice(0, 8)}`;
+  if (config.mode === 3) return "向量控制";
+  return "";
+}
+
+const selectedSegmentAudioPreviewUrl = computed(() => {
+  if (!selectedSegmentAudioId.value) return "";
+  const audio = audioRecordMap.value[selectedSegmentAudioId.value];
+  return audio?.url ? `${API}${audio.url}` : "";
+});
+
+const availableSegmentRoles = computed(() => {
+  const roleSet = new Set();
+  segments.value.forEach((seg) => {
+    if (seg?.role && seg.role !== "旁白") {
+      roleSet.add(seg.role);
+    }
+  });
+  return Array.from(roleSet);
+});
+
+function cloneConfig(data) {
+  return data ? JSON.parse(JSON.stringify(data)) : data;
+}
+
+function applyEmotionToSegment(segment) {
+  const currentEmotion = segment.emotion || "neutral";
+
+  if (segment.autoEmotionAudioMap && segment.autoEmotionAudioMap[currentEmotion]) {
+    segment.referenceAudio = cloneConfig(segment.autoEmotionAudioMap[currentEmotion]);
+    return;
+  }
+
+  if (segment.role && globalAudioBindings.value[segment.role]) {
+    const roleData = globalAudioBindings.value[segment.role];
+    if (roleData[currentEmotion]) {
+      segment.referenceAudio = cloneConfig(roleData[currentEmotion]);
+      return;
+    }
+  }
+
+  if (segment.role === "旁白" && segment.referenceAudio) {
+    return;
+  }
+
+  segment.referenceAudio = null;
+}
+
+function applyRoleToSegment(segment) {
+  if (segment.role === "旁白") {
+    segment.type = "narration";
+  } else {
+    segment.type = "dialogue";
+  }
+
+  delete segment.referenceAudio;
+  delete segment.autoEmotionAudioMap;
+  delete segment.autoAssignedVoiceActor;
+
+  if (segment.role === "旁白") {
+    const sameRoleSeg = segments.value.find((item) => item !== segments.value[editingSegmentIndex.value] && item.role === "旁白" && item.referenceAudio);
+    if (sameRoleSeg) {
+      segment.referenceAudio = cloneConfig(sameRoleSeg.referenceAudio);
+    }
+  } else if (segment.role) {
+    const sameRoleSeg = segments.value.find((item) => item !== segments.value[editingSegmentIndex.value] && item.role === segment.role && item.autoEmotionAudioMap);
+    if (sameRoleSeg) {
+      segment.autoEmotionAudioMap = cloneConfig(sameRoleSeg.autoEmotionAudioMap);
+      segment.autoAssignedVoiceActor = sameRoleSeg.autoAssignedVoiceActor || null;
+    }
+  }
+
+  applyEmotionToSegment(segment);
+}
+
+function handleSegmentRoleChange() {
+  applyRoleToSegment(segmentEditForm.value);
+  selectedSegmentAudioId.value = getReferenceAudioConfig(segmentEditForm.value)?.id || null;
+}
+
+function handleSegmentEmotionChange() {
+  applyEmotionToSegment(segmentEditForm.value);
+  selectedSegmentAudioId.value = getReferenceAudioConfig(segmentEditForm.value)?.id || null;
+}
+
+async function openSegmentEditor(seg, index) {
+  if (!audioOptions.value.length) {
+    await fetchAudioRecords();
+  }
+  if (!Object.keys(globalAudioBindings.value).length) {
+    await fetchGlobalBindings();
+  }
+
+  editingSegmentIndex.value = index;
+  segmentEditForm.value = {
+    type: seg.type || (seg.role === "旁白" ? "narration" : "dialogue"),
+    role: seg.role || "旁白",
+    emotion: seg.emotion || "neutral",
+    text: seg.text || "",
+    referenceAudio: cloneConfig(seg.referenceAudio),
+    autoEmotionAudioMap: cloneConfig(seg.autoEmotionAudioMap),
+    autoAssignedVoiceActor: seg.autoAssignedVoiceActor || null,
+    manualAssigned: Boolean(seg.manualAssigned),
+  };
+  selectedSegmentAudioId.value = getReferenceAudioConfig(seg)?.id || null;
+  segmentEditorVisible.value = true;
+}
+
+async function persistChapterEdits() {
+  await axios.post(`${API}/api/listen-book/chapter-edits`, {
+    projectName: listenProjectName.value,
+    chapterIndex: currentChapterIndex.value,
+    segments: segments.value.map((seg) => ({
+      type: seg.type,
+      role: seg.role,
+      emotion: seg.emotion || "neutral",
+      text: seg.text || "",
+      referenceAudio: seg.referenceAudio || null,
+      autoEmotionAudioMap: seg.autoEmotionAudioMap || null,
+      autoAssignedVoiceActor: seg.autoAssignedVoiceActor || null,
+      manualAssigned: Boolean(seg.manualAssigned),
+    })),
+  });
+}
+
+async function markListenDirty() {
+  forceStop = true;
+  stopPolling();
+  if (currentAudio) {
+    currentAudio.pause();
+    currentAudio = null;
+  }
+  forceStop = false;
+  await cancelListenTasks().catch(() => {});
+  listenTaskId.value = null;
+  prefetchTaskIds.value = [];
+  listenState.value = "idle";
+  listenPhase.value = "";
+  currentSegIdx.value = -1;
+  isPlaying.value = false;
+  isGenerationComplete.value = false;
+}
+
+async function saveSegmentEdit() {
+  if (editingSegmentIndex.value < 0) return;
+  isSavingSegmentEdit.value = true;
+  try {
+    const nextSegment = cloneConfig(segmentEditForm.value);
+    nextSegment.referenceAudio = selectedSegmentAudioId.value ? { id: selectedSegmentAudioId.value, mode: 1, emoWeight: 0.65 } : null;
+    nextSegment.manualAssigned = true;
+    nextSegment.audioUrl = null;
+    segments.value.splice(editingSegmentIndex.value, 1, nextSegment);
+
+    await axios
+      .post(`${API}/api/listen-book/invalidate-cache`, {
+        projectName: listenProjectName.value,
+        fromChapterIndex: currentChapterIndex.value,
+      })
+      .catch(() => {});
+    await persistChapterEdits();
+    await markListenDirty();
+    segmentEditorVisible.value = false;
+    ElMessage.success("片段修改已保存，当前章节需重新生成听书");
+  } catch (e) {
+    console.error("保存片段修改失败", e);
+    ElMessage.error("保存失败，请稍后重试");
+  } finally {
+    isSavingSegmentEdit.value = false;
+  }
+}
+
+function openRoleSetup() {
+  if (!segments.value.length || !roleAudioSetupDialogRef.value) return;
+  const roles = [...new Set(segments.value.filter((seg) => seg.role).map((seg) => seg.role))];
+  const autoPrefill = {};
+
+  segments.value.forEach((seg) => {
+    if (!seg) return;
+    const roleKey = seg.role || (seg.type === "narration" ? "旁白" : "");
+    if (!roleKey) return;
+    if (!autoPrefill[roleKey]) autoPrefill[roleKey] = {};
+
+    if (seg.autoEmotionAudioMap && typeof seg.autoEmotionAudioMap === "object") {
+      Object.keys(seg.autoEmotionAudioMap).forEach((emotion) => {
+        const conf = seg.autoEmotionAudioMap[emotion];
+        if (conf && conf.id && !autoPrefill[roleKey][emotion]) {
+          autoPrefill[roleKey][emotion] = { id: conf.id, mode: conf.mode || 1, emoWeight: conf.emoWeight ?? 0.65 };
+        }
+      });
+    }
+
+    if ((seg.type === "narration" || roleKey === "旁白") && seg.referenceAudio && seg.referenceAudio.id && !autoPrefill[roleKey].neutral) {
+      autoPrefill[roleKey].neutral = {
+        id: seg.referenceAudio.id,
+        mode: seg.referenceAudio.mode || 1,
+        emoWeight: seg.referenceAudio.emoWeight ?? 0.65,
+      };
+    }
+  });
+
+  roleAudioSetupDialogRef.value.openDialog(roles, autoPrefill);
+}
+
+async function handleAudioSetupSaved(bindings) {
+  segments.value = segments.value.map((seg) => {
+    const nextSeg = { ...seg };
+    if (nextSeg.role && Object.prototype.hasOwnProperty.call(bindings, nextSeg.role)) {
+      const emotionMap = bindings[nextSeg.role];
+      const currentEmotion = nextSeg.emotion || "neutral";
+      nextSeg.referenceAudio = emotionMap && emotionMap[currentEmotion] ? cloneConfig(emotionMap[currentEmotion]) : null;
+      nextSeg.manualAssigned = true;
+    }
+    nextSeg.audioUrl = null;
+    return nextSeg;
+  });
+
+  await fetchGlobalBindings();
+  await axios
+    .post(`${API}/api/listen-book/invalidate-cache`, {
+      projectName: listenProjectName.value,
+      fromChapterIndex: currentChapterIndex.value,
+    })
+    .catch(() => {});
+  await persistChapterEdits();
+  await markListenDirty();
+  ElMessage.success("角色全局情绪音频已更新，当前章节需重新生成听书");
 }
 
 // ── 重置听书状态（并发通知后端取消任务）──
 async function resetListen(skipCancel = false, useBeacon = false) {
-  forceStop = true
-  stopPolling()
-  if (currentAudio) { currentAudio.pause(); currentAudio = null }
-  forceStop = false
-  if (!skipCancel) {
-    await cancelListenTasks({ useBeacon })
+  forceStop = true;
+  stopPolling();
+  if (currentAudio) {
+    currentAudio.pause();
+    currentAudio = null;
   }
-  listenTaskId.value        = null
-  prefetchTaskIds.value     = []
-  listenState.value         = 'idle'
-  listenPhase.value         = ''
-  segments.value            = []
-  currentSegIdx.value       = -1
-  isPlaying.value           = false
-  segRefs.value             = []
-  isGenerationComplete.value = false
+  forceStop = false;
+  if (!skipCancel) {
+    await cancelListenTasks({ useBeacon });
+  }
+  listenTaskId.value = null;
+  prefetchTaskIds.value = [];
+  listenState.value = "idle";
+  listenPhase.value = "";
+  segments.value = [];
+  currentSegIdx.value = -1;
+  isPlaying.value = false;
+  segRefs.value = [];
+  isGenerationComplete.value = false;
 }
 
 async function cancelListenTasks({ useBeacon = false } = {}) {
-  const projectName = listenProjectName.value
-  if (!projectName || projectName === 'reader_unknown') return
+  const projectName = listenProjectName.value;
+  if (!projectName || projectName === "reader_unknown") return;
 
-  const url = `${API}/api/listen-book/cancel`
-  const payload = { projectName }
+  const url = `${API}/api/listen-book/cancel`;
+  const payload = { projectName };
 
-  if (useBeacon && typeof navigator !== 'undefined' && typeof navigator.sendBeacon === 'function') {
+  if (useBeacon && typeof navigator !== "undefined" && typeof navigator.sendBeacon === "function") {
     try {
-      const sent = navigator.sendBeacon(url, new Blob([JSON.stringify(payload)], { type: 'application/json' }))
-      if (sent) return
+      const sent = navigator.sendBeacon(url, new Blob([JSON.stringify(payload)], { type: "application/json" }));
+      if (sent) return;
     } catch {}
   }
 
-  if (typeof fetch === 'function') {
+  if (typeof fetch === "function") {
     try {
       await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
         keepalive: useBeacon,
-      })
-      return
+      });
+      return;
     } catch {}
   }
 
-  await axios.post(url, payload).catch(() => {})
+  await axios.post(url, payload).catch(() => {});
 }
 
 // ── 检查缓存（进入阅读视图时自动调用）──
@@ -466,27 +929,27 @@ async function checkListenCache() {
     const res = await axios.post(`${API}/api/listen-book/check`, {
       projectName: listenProjectName.value,
       chapterIndex: currentChapterIndex.value,
-    })
+    });
     if (res.data.exists) {
-      segments.value = res.data.segments || []
-      isGenerationComplete.value = true
-      listenState.value = 'ready'
-      await nextTick()
-      triggerPrefetch()
+      segments.value = res.data.segments || [];
+      isGenerationComplete.value = true;
+      listenState.value = "ready";
+      await nextTick();
+      triggerPrefetch();
     } else if (res.data.inProgress && res.data.taskId) {
-      listenTaskId.value = res.data.taskId
-      listenState.value = 'loading'
-      startPolling(res.data.taskId)
+      listenTaskId.value = res.data.taskId;
+      listenState.value = "loading";
+      startPolling(res.data.taskId);
     }
   } catch (e) {
-    console.warn('检查听书缓存失败', e.message)
+    console.warn("检查听书缓存失败", e.message);
   }
 }
 
 // ── 点击「听书」启动 ──
 async function startListening() {
-  listenState.value = 'loading'
-  listenPhase.value = 'waiting'
+  listenState.value = "loading";
+  listenPhase.value = "waiting";
 
   try {
     const res = await axios.post(`${API}/api/listen-book/generate`, {
@@ -494,184 +957,198 @@ async function startListening() {
       chapterIndex: currentChapterIndex.value,
       chapterUrl: selectedChapter.value.bookUrl,
       chapterList: chapterList.value,
-    })
+    });
 
     if (res.data.alreadyDone) {
-      listenTaskId.value = res.data.taskId || null
-      segments.value = res.data.segments || []
-      isGenerationComplete.value = true
-      listenState.value = 'ready'
-      autoPlay()
-      triggerPrefetch()
-      return
+      listenTaskId.value = res.data.taskId || null;
+      segments.value = res.data.segments || [];
+      isGenerationComplete.value = true;
+      listenState.value = "ready";
+      autoPlay();
+      triggerPrefetch();
+      return;
     }
 
-    listenTaskId.value = res.data.taskId
-    startPolling(res.data.taskId)
+    listenTaskId.value = res.data.taskId;
+    startPolling(res.data.taskId);
   } catch (e) {
-    console.error('启动听书失败', e)
-    listenState.value = 'error'
+    console.error("启动听书失败", e);
+    listenState.value = "error";
   }
 }
 
 // ── 轮询任务状态 ──
 // PLAY_THRESHOLD：至少生成多少段才开始播放
-const PLAY_THRESHOLD = 5
+const PLAY_THRESHOLD = 5;
 
 function startPolling(taskId) {
-  stopPolling()
+  stopPolling();
   pollTimer = setInterval(async () => {
     try {
-      const res = await axios.get(`${API}/api/listen-book/status/${taskId}`)
-      const { phase, segments: segs, error } = res.data
+      const res = await axios.get(`${API}/api/listen-book/status/${taskId}`);
+      const { phase, segments: segs, error } = res.data;
 
-      listenPhase.value = phase
+      listenPhase.value = phase;
 
       // 实时同步 segments（追加方式，避免覆盖正在播放的引用）
       if (Array.isArray(segs) && segs.length > segments.value.length) {
-        segments.value = segs
+        segments.value = segs;
       }
 
       // 达到阈值且当前还在 loading 状态 → 立即开始播放
-      if (
-        listenState.value === 'loading' &&
-        segments.value.length >= PLAY_THRESHOLD
-      ) {
-        listenState.value = 'ready'
-        autoPlay()  // 从头开始顺序播放；playFrom 的 for 循环随 segments.value 增长自动延伸
+      if (listenState.value === "loading" && segments.value.length >= PLAY_THRESHOLD) {
+        listenState.value = "ready";
+        autoPlay(); // 从头开始顺序播放；playFrom 的 for 循环随 segments.value 增长自动延伸
       }
 
-      if (phase === 'done') {
-        stopPolling()
+      if (phase === "done") {
+        stopPolling();
         // 确保最终 segments 完整
-        if (Array.isArray(segs)) segments.value = segs
+        if (Array.isArray(segs)) segments.value = segs;
         // 标记生成完毕，playFrom 的等待循环会感知并退出
-        isGenerationComplete.value = true
+        isGenerationComplete.value = true;
         // 如果还没开始播（段数不足5就生成完了），现在进 ready
-        if (listenState.value === 'loading') {
-          listenState.value = 'ready'
-          autoPlay()
+        if (listenState.value === "loading") {
+          listenState.value = "ready";
+          autoPlay();
         }
         // done 后才触发后续章节预缓存
-        triggerPrefetch()
-      } else if (phase === 'error') {
-        stopPolling()
-        listenState.value = 'error'
-        console.error('听书生成失败：', error)
+        triggerPrefetch();
+      } else if (phase === "error") {
+        stopPolling();
+        listenState.value = "error";
+        console.error("听书生成失败：", error);
       }
     } catch (e) {
-      console.warn('轮询失败', e.message)
+      console.warn("轮询失败", e.message);
     }
-  }, 2000)
+  }, 2000);
 }
 
 function stopPolling() {
-  if (pollTimer) { clearInterval(pollTimer); pollTimer = null }
+  if (pollTimer) {
+    clearInterval(pollTimer);
+    pollTimer = null;
+  }
 }
 
 // ── 自动播放（进入 ready 状态后从头开始）──
 function autoPlay() {
-  currentSegIdx.value = -1
-  isPlaying.value = true
-  playFrom(0)
+  currentSegIdx.value = -1;
+  isPlaying.value = true;
+  playFrom(0);
 }
 
 // ── 暂停 / 继续 ──
 function togglePlayPause() {
   if (isPlaying.value) {
     // 暂停
-    isPlaying.value = false
-    if (currentAudio) { currentAudio.pause() }
+    isPlaying.value = false;
+    if (currentAudio) {
+      currentAudio.pause();
+    }
   } else {
     // 继续
-    isPlaying.value = true
+    isPlaying.value = true;
     if (currentAudio) {
-      currentAudio.play()
+      currentAudio.play();
     } else {
       // 从当前位置重新开始
-      const startIdx = currentSegIdx.value >= 0 ? currentSegIdx.value : 0
-      playFrom(startIdx)
+      const startIdx = currentSegIdx.value >= 0 ? currentSegIdx.value : 0;
+      playFrom(startIdx);
     }
   }
 }
 
 // ── 顺序播放 segments（从指定索引开始，支持等待后续生成的内容）──
 async function playFrom(startIndex) {
-  let i = startIndex
+  let i = startIndex;
   while (true) {
-    if (forceStop || !isPlaying.value) break
+    if (forceStop || !isPlaying.value) break;
 
     if (i >= segments.value.length) {
       // 当前已有 segments 播完，判断是否还有后续生成中
-      if (isGenerationComplete.value) break  // 生成已全部完成，真正结束
+      if (isGenerationComplete.value) break; // 生成已全部完成，真正结束
       // 还在生成中，等待 500ms 后再检查是否有新 segment 到来
-      await new Promise(r => setTimeout(r, 500))
-      continue
+      await new Promise((r) => setTimeout(r, 500));
+      continue;
     }
 
-    const seg = segments.value[i]
-    currentSegIdx.value = i
-    scrollToSeg(i)
+    const seg = segments.value[i];
+    currentSegIdx.value = i;
+    scrollToSeg(i);
 
     if (seg.audioUrl) {
-      await playAudioUrl(seg.audioUrl)
+      await playAudioUrl(seg.audioUrl);
     }
 
-    if (!isPlaying.value) break
-    i++
+    if (!isPlaying.value) break;
+    i++;
   }
 
   // 播放自然结束
   if (isPlaying.value) {
-    isPlaying.value = false
-    currentAudio = null
+    isPlaying.value = false;
+    currentAudio = null;
   }
 }
 
 // ── 播放单条音频，返回 Promise（播放完毕 resolve）──
 function playAudioUrl(url) {
   return new Promise((resolve) => {
-    if (forceStop) { resolve(); return }
-    const audio = new Audio(`${API}${url}`)
-    currentAudio = audio
-    audio.onended = () => { currentAudio = null; resolve() }
-    audio.onerror = () => { currentAudio = null; resolve() } // 出错也继续
-    audio.play().catch(() => resolve())
-  })
+    if (forceStop) {
+      resolve();
+      return;
+    }
+    const audio = new Audio(`${API}${url}`);
+    currentAudio = audio;
+    audio.onended = () => {
+      currentAudio = null;
+      resolve();
+    };
+    audio.onerror = () => {
+      currentAudio = null;
+      resolve();
+    }; // 出错也继续
+    audio.play().catch(() => resolve());
+  });
 }
 
 // ── 自动滚动到当前高亮段落 ──
 function scrollToSeg(idx) {
   nextTick(() => {
-    const el = segRefs.value[idx]
+    const el = segRefs.value[idx];
     if (el) {
-      el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
     }
-  })
+  });
 }
 
 // ── 后台预生成后续章节（fire-and-forget）──
 async function triggerPrefetch() {
   try {
-    const configRes = await axios.get(`${API}/api/listen-book/config`)
-    const prefetchCount = configRes.data.prefetchCount || 2
+    const configRes = await axios.get(`${API}/api/listen-book/config`);
+    const prefetchCount = configRes.data.prefetchCount || 2;
 
     for (let i = 1; i <= prefetchCount; i++) {
-      const nextIdx = currentChapterIndex.value + i
-      if (nextIdx >= chapterList.value.length) break
-      const nextChap = chapterList.value[nextIdx]
+      const nextIdx = currentChapterIndex.value + i;
+      if (nextIdx >= chapterList.value.length) break;
+      const nextChap = chapterList.value[nextIdx];
       // 静默触发，不 await，不报错阻塞
-      axios.post(`${API}/api/listen-book/generate`, {
-        projectName: listenProjectName.value,
-        chapterIndex: nextIdx,
-        chapterUrl: nextChap.bookUrl,
-        chapterList: chapterList.value,
-      }).then((res) => {
-        const taskId = res.data?.taskId
-        if (taskId && !prefetchTaskIds.value.includes(taskId)) {
-          prefetchTaskIds.value.push(taskId)
-        }
-      }).catch(() => {})
+      axios
+        .post(`${API}/api/listen-book/generate`, {
+          projectName: listenProjectName.value,
+          chapterIndex: nextIdx,
+          chapterUrl: nextChap.bookUrl,
+          chapterList: chapterList.value,
+        })
+        .then((res) => {
+          const taskId = res.data?.taskId;
+          if (taskId && !prefetchTaskIds.value.includes(taskId)) {
+            prefetchTaskIds.value.push(taskId);
+          }
+        })
+        .catch(() => {});
     }
   } catch {
     // 预生成失败不影响主流程
@@ -679,28 +1156,33 @@ async function triggerPrefetch() {
 }
 
 const handlePageLeave = () => {
-  if (viewState.value === 'reading' || listenTaskId.value) {
-    resetListen(false, true)
+  if (viewState.value === "reading" || listenTaskId.value) {
+    resetListen(false, true);
   }
-}
+};
 
 onMounted(() => {
-  fetchAudioRecords()
-  window.addEventListener('pagehide', handlePageLeave)
-  window.addEventListener('beforeunload', handlePageLeave)
-})
+  fetchAudioRecords();
+  fetchGlobalBindings();
+  window.addEventListener("pagehide", handlePageLeave);
+  window.addEventListener("beforeunload", handlePageLeave);
+});
 
 onBeforeUnmount(() => {
-  window.removeEventListener('pagehide', handlePageLeave)
-  window.removeEventListener('beforeunload', handlePageLeave)
-  resetListen(false, true)
-})
+  window.removeEventListener("pagehide", handlePageLeave);
+  window.removeEventListener("beforeunload", handlePageLeave);
+  resetListen(false, true);
+});
 </script>
 
 <style scoped>
 /* 滚动条美化 */
-.custom-scrollbar::-webkit-scrollbar { width: 6px; }
-.custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
 .custom-scrollbar::-webkit-scrollbar-thumb {
   background: #2a2a4a;
   border-radius: 4px;

@@ -1,6 +1,6 @@
 {
   "reader_我的郁金香小姐__0": {
-    "taskId": "af28f204-c3d8-4533-9f6f-eccfb4c3f272",
+    "taskId": "72f3f434-fa82-46a0-b6c7-194d48e23ca6",
     "phase": "done",
     "segments": [
       {
@@ -16,7 +16,7 @@
         },
         "autoAssignedVoiceActor": null,
         "autoEmotionAudioMap": null,
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/2739eaf3-2df2-4355-9ad4-d9dd60bd76ac.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/22465360-8b5c-462e-b0f7-7eb037bb262d.mp3"
       },
       {
         "index": 1,
@@ -31,7 +31,7 @@
         },
         "autoAssignedVoiceActor": null,
         "autoEmotionAudioMap": null,
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/05cf704a-794f-4374-af33-24cb1ff60f17.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/1290b766-fb32-4f48-ac79-a2f8562d91b0.mp3"
       },
       {
         "index": 2,
@@ -46,7 +46,7 @@
         },
         "autoAssignedVoiceActor": null,
         "autoEmotionAudioMap": null,
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/44ee6b50-da5d-4a17-9d09-0d85303d8a2e.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/230d85b3-4378-448a-89e0-f5e2984d27a3.mp3"
       },
       {
         "index": 3,
@@ -61,7 +61,7 @@
         },
         "autoAssignedVoiceActor": null,
         "autoEmotionAudioMap": null,
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/965ebb73-87c3-48e7-883e-0cbaaa166613.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/9e23a610-2c3e-4b62-8546-4301e5767f33.mp3"
       },
       {
         "index": 4,
@@ -76,7 +76,7 @@
         },
         "autoAssignedVoiceActor": null,
         "autoEmotionAudioMap": null,
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/9019eb24-5ce0-44e8-a176-1d5fc7f4cc76.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/ac0b21d1-3931-4b20-8df6-2110b221ee39.mp3"
       },
       {
         "index": 5,
@@ -97,7 +97,7 @@
             "emoWeight": 0.65
           }
         },
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/3429d1d7-8e52-44cd-9997-de9ee34b9875.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/fdf8f1ea-2b8f-491c-843c-9f62c354d0e4.mp3"
       },
       {
         "index": 6,
@@ -138,7 +138,7 @@
             "emoWeight": 0.65
           }
         },
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/6f085eee-279e-4c8e-8ae8-df3caccdded6.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/b15a4fc9-ae66-4d7c-8f8c-bff92cfb8033.mp3"
       },
       {
         "index": 7,
@@ -159,7 +159,7 @@
             "emoWeight": 0.65
           }
         },
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/d0db55a0-86de-4dc8-96e8-6738f0555752.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/cd61e8cd-4d38-48cc-a8df-47e3a238b93d.mp3"
       },
       {
         "index": 8,
@@ -174,7 +174,7 @@
         },
         "autoAssignedVoiceActor": null,
         "autoEmotionAudioMap": null,
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/4ea08a31-30b7-4912-a7ca-b0d159c2eb7a.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/6335c53c-712b-4c25-86d0-2223e1dbfd60.mp3"
       },
       {
         "index": 9,
@@ -189,7 +189,7 @@
         },
         "autoAssignedVoiceActor": null,
         "autoEmotionAudioMap": null,
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/5f8e0e67-1ab6-487d-831d-0fdedd53222a.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/a0ceeaad-fd4e-422b-86f5-f5f11e3aa82a.mp3"
       },
       {
         "index": 10,
@@ -204,7 +204,7 @@
         },
         "autoAssignedVoiceActor": null,
         "autoEmotionAudioMap": null,
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/22739488-f37b-4504-8fa3-224adafb3834.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/9c5a60c0-0173-4fd0-bd37-b5095aa8ac5e.mp3"
       },
       {
         "index": 11,
@@ -219,7 +219,7 @@
         },
         "autoAssignedVoiceActor": null,
         "autoEmotionAudioMap": null,
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/f7cd5ca4-b31b-49d6-8085-5cdb7985f1d2.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/b9c15727-c3f9-4960-b91b-b083a1176f08.mp3"
       },
       {
         "index": 12,
@@ -256,7 +256,7 @@
             "emoWeight": 0.65
           }
         },
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/c75fad55-5ac3-4021-acff-cd35537fda72.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/79b7c973-331b-48a3-b0af-4b56d3e3f3b1.mp3"
       },
       {
         "index": 13,
@@ -277,7 +277,7 @@
             "emoWeight": 0.65
           }
         },
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/48c34029-fa1c-4247-9c36-c17d3b63233f.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/3a23a260-cb41-48e7-8b58-2a8146e49324.mp3"
       },
       {
         "index": 14,
@@ -318,7 +318,7 @@
             "emoWeight": 0.65
           }
         },
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/8e84c976-2230-4080-8089-1ca686e19ada.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/8a1d4177-cf79-4ad8-9fc8-d591ce0e3f84.mp3"
       },
       {
         "index": 15,
@@ -335,7 +335,7 @@
             "emoWeight": 0.65
           }
         },
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/4fb5bb58-3b4d-4834-940c-dfc384804612.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/f48ec12d-a578-4b49-bdbc-60ca60568c35.mp3"
       },
       {
         "index": 16,
@@ -376,7 +376,7 @@
             "emoWeight": 0.65
           }
         },
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/84a14d5b-2eff-49bc-aacc-a6f634237eba.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/69c86173-1cc0-4de7-959b-6076f15e4fd2.mp3"
       },
       {
         "index": 17,
@@ -393,7 +393,7 @@
             "emoWeight": 0.65
           }
         },
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/6c2135c1-ea9d-47a0-a327-8eb02123829b.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/71901a26-6ed7-4b18-ab31-084e4b19a8ae.mp3"
       },
       {
         "index": 18,
@@ -408,7 +408,7 @@
         },
         "autoAssignedVoiceActor": null,
         "autoEmotionAudioMap": null,
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/8d02b4bf-da46-4ec3-af4c-dfe4ead12473.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/154ea60d-c50b-4b09-974b-83f08bd00b51.mp3"
       },
       {
         "index": 19,
@@ -429,7 +429,7 @@
             "emoWeight": 0.65
           }
         },
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/e6b5a480-0f58-457f-b160-eb60c23cfa56.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/f360ba0e-568b-448b-91ae-34513d95c4ee.mp3"
       },
       {
         "index": 20,
@@ -444,7 +444,7 @@
         },
         "autoAssignedVoiceActor": null,
         "autoEmotionAudioMap": null,
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/b258b0b1-4525-4e61-a22c-5f463adb7fff.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/d6ba5208-7c46-4b85-8b09-3061b27c2b9a.mp3"
       },
       {
         "index": 21,
@@ -459,7 +459,7 @@
         },
         "autoAssignedVoiceActor": null,
         "autoEmotionAudioMap": null,
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/a453a86f-e8cd-4d9c-a933-5e8fa1ba164d.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/7a48fa23-7f26-4615-8f68-d8738b9a3c18.mp3"
       },
       {
         "index": 22,
@@ -476,7 +476,7 @@
             "emoWeight": 0.65
           }
         },
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/8333d6d4-abaa-4d4e-94b4-3975c6e74fd3.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/98ca0e15-8f88-4818-b33a-77fd7a239ae3.mp3"
       },
       {
         "index": 23,
@@ -491,7 +491,7 @@
         },
         "autoAssignedVoiceActor": null,
         "autoEmotionAudioMap": null,
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/e6f22d38-fe06-435f-ab71-3446de94b96a.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/fa10b090-235e-4da7-ab21-df0afc11e7cb.mp3"
       },
       {
         "index": 24,
@@ -532,7 +532,7 @@
             "emoWeight": 0.65
           }
         },
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/41c870b1-e75e-4d8a-a6be-d45a2e2eda8c.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/c63b2e1b-9af2-4048-a224-167a85c8de2c.mp3"
       },
       {
         "index": 25,
@@ -547,7 +547,7 @@
         },
         "autoAssignedVoiceActor": null,
         "autoEmotionAudioMap": null,
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/f0b4305b-ae6a-4d28-b9c9-9c80591cc1d3.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/96f9f7b4-d282-41d5-8a88-1cc0ed7933ca.mp3"
       },
       {
         "index": 26,
@@ -564,7 +564,7 @@
             "emoWeight": 0.65
           }
         },
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/c10b939b-24c0-4560-abad-1acf2f094d66.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/8a1674ec-7147-458a-a498-61450f9fb290.mp3"
       },
       {
         "index": 27,
@@ -601,7 +601,7 @@
             "emoWeight": 0.65
           }
         },
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/a2356841-522b-46e9-a2f2-19d6154c341d.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/365d4c57-0f71-48a4-a02b-8b666e421f73.mp3"
       },
       {
         "index": 28,
@@ -616,7 +616,7 @@
         },
         "autoAssignedVoiceActor": null,
         "autoEmotionAudioMap": null,
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/a58619dd-d6e0-477e-b870-a2fc220d94fe.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/15e82ce6-3a41-42c0-a8bd-a9615b46d781.mp3"
       },
       {
         "index": 29,
@@ -633,7 +633,7 @@
             "emoWeight": 0.65
           }
         },
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/8ac6ec68-4596-43d3-bee9-64af13a1f889.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/6bf6e68c-17fc-4003-8019-ccc5b38f40bf.mp3"
       },
       {
         "index": 30,
@@ -648,7 +648,7 @@
         },
         "autoAssignedVoiceActor": null,
         "autoEmotionAudioMap": null,
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/b4eacc92-d85b-4b92-b669-6ab1afcef344.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/ffd22dcc-d1fa-4310-bd65-b7730c4a6fd6.mp3"
       },
       {
         "index": 31,
@@ -663,7 +663,7 @@
         },
         "autoAssignedVoiceActor": null,
         "autoEmotionAudioMap": null,
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/a0f8fd71-af8c-4deb-9d78-f3f283936b76.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/c1c58046-d090-4b32-a6a8-bf4ad2eb3a10.mp3"
       },
       {
         "index": 32,
@@ -680,7 +680,7 @@
             "emoWeight": 0.65
           }
         },
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/dbad221e-379a-4882-a6c5-e5324d7be642.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/5f3315ed-4edd-41b3-8570-468c6e23dd8d.mp3"
       },
       {
         "index": 33,
@@ -721,7 +721,7 @@
             "emoWeight": 0.65
           }
         },
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/ada9d899-b2d1-4414-b231-846d5b2b634d.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/d3974f56-0db7-4aa3-a040-56cfa0bba5f7.mp3"
       },
       {
         "index": 34,
@@ -738,7 +738,7 @@
             "emoWeight": 0.65
           }
         },
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/bc64068a-5f0c-480c-92c6-487d6466ee29.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/209489e1-3297-4e0b-9df9-b1229f6ef940.mp3"
       },
       {
         "index": 35,
@@ -779,7 +779,7 @@
             "emoWeight": 0.65
           }
         },
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/b6388dc7-9286-469c-b956-788df28973e7.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/cd283b79-ab09-4b38-a434-66bbc5caae8f.mp3"
       },
       {
         "index": 36,
@@ -796,7 +796,7 @@
             "emoWeight": 0.65
           }
         },
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/2cf587d9-1398-498a-b82a-d7bc40d656fd.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/9b1ac8e8-6ae2-402e-9e3a-c9ddf1fcc700.mp3"
       },
       {
         "index": 37,
@@ -811,7 +811,7 @@
         },
         "autoAssignedVoiceActor": null,
         "autoEmotionAudioMap": null,
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/82719187-fd37-4a96-820f-ca0320d13cb0.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/703d52df-a070-444a-8981-6947f3fa4f5b.mp3"
       },
       {
         "index": 38,
@@ -826,7 +826,7 @@
         },
         "autoAssignedVoiceActor": null,
         "autoEmotionAudioMap": null,
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/5a809041-3bce-4d6e-bcb3-bb4b33d48cdc.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/7e3aa7f8-3149-435d-b4f1-421f3d74f912.mp3"
       },
       {
         "index": 39,
@@ -841,7 +841,7 @@
         },
         "autoAssignedVoiceActor": null,
         "autoEmotionAudioMap": null,
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/ab60a622-0198-4fd8-9c24-fc27a459f1ff.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/f8f8b242-e09b-48b5-843a-92e70b531103.mp3"
       },
       {
         "index": 40,
@@ -856,7 +856,7 @@
         },
         "autoAssignedVoiceActor": null,
         "autoEmotionAudioMap": null,
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/1385ade5-b70e-4086-967a-20aedcb9a082.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/4a14f60d-23aa-4e4f-9c7a-65f2db633391.mp3"
       },
       {
         "index": 41,
@@ -871,7 +871,7 @@
         },
         "autoAssignedVoiceActor": null,
         "autoEmotionAudioMap": null,
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/0dd362d0-dd7a-49f8-9fc7-a8bce48842fa.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/c8007c88-591f-43c8-92b4-e594687de311.mp3"
       },
       {
         "index": 42,
@@ -886,7 +886,7 @@
         },
         "autoAssignedVoiceActor": null,
         "autoEmotionAudioMap": null,
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/93cc1074-f65e-42e0-9b98-1392f45caea4.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/bab9ebb7-a099-4a3d-99f3-5587995d9205.mp3"
       },
       {
         "index": 43,
@@ -901,7 +901,7 @@
         },
         "autoAssignedVoiceActor": null,
         "autoEmotionAudioMap": null,
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/b9ee2dd3-83bc-463a-92d4-8149e8b361da.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/8fe147ba-44d8-4aaa-9f64-ca373e74bfff.mp3"
       },
       {
         "index": 44,
@@ -916,7 +916,7 @@
         },
         "autoAssignedVoiceActor": null,
         "autoEmotionAudioMap": null,
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/4df5e7b6-ad34-441b-90fd-1a23a447c5bf.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/07b1c489-549e-4f08-91fb-19607855ba8f.mp3"
       },
       {
         "index": 45,
@@ -931,7 +931,7 @@
         },
         "autoAssignedVoiceActor": null,
         "autoEmotionAudioMap": null,
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/9eeccdcc-ea64-4878-bb80-fe476c771b30.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/5f5d1783-d0a3-4961-b711-8df1cb649b2c.mp3"
       },
       {
         "index": 46,
@@ -948,7 +948,7 @@
             "emoWeight": 0.65
           }
         },
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/30bce36c-67ab-45c1-8d9e-1d5d811a9e6b.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/a8496e40-7065-45b2-ab13-8936ab6fe8d5.mp3"
       },
       {
         "index": 47,
@@ -963,7 +963,7 @@
         },
         "autoAssignedVoiceActor": null,
         "autoEmotionAudioMap": null,
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/4f02b455-073e-4002-b1f9-2e6f9b253b28.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/8ad16de3-fe04-4667-b7f1-e7d59f922029.mp3"
       },
       {
         "index": 48,
@@ -978,7 +978,7 @@
         },
         "autoAssignedVoiceActor": null,
         "autoEmotionAudioMap": null,
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/0191ffc9-f488-4726-bef0-071debfea68a.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/a7c8df5e-83d4-4d83-a7b9-3dbfd36f9d85.mp3"
       },
       {
         "index": 49,
@@ -993,7 +993,7 @@
         },
         "autoAssignedVoiceActor": null,
         "autoEmotionAudioMap": null,
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/aa0080fb-4054-4d60-8820-318c32bde0dd.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/e0d22ef2-580f-475b-8e57-bd157efbc88c.mp3"
       },
       {
         "index": 50,
@@ -1008,7 +1008,7 @@
         },
         "autoAssignedVoiceActor": null,
         "autoEmotionAudioMap": null,
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/36796cca-7125-4f32-bce4-07cf2dcca8f7.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/d6368690-4543-4363-ad14-d4717813c302.mp3"
       },
       {
         "index": 51,
@@ -1025,7 +1025,7 @@
             "emoWeight": 0.65
           }
         },
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/cbca4f55-ae23-4e29-8016-8facdf1c409a.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/2af3a03e-1660-4124-9847-a97ebf7e04ff.mp3"
       },
       {
         "index": 52,
@@ -1036,25 +1036,10 @@
         "referenceAudio": null,
         "autoAssignedVoiceActor": null,
         "autoEmotionAudioMap": null,
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/e4175b73-d2d4-4ac8-b9db-86a942e64bd9.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/c6de3552-98c8-4529-9a87-bd5a494fed59.mp3"
       },
       {
         "index": 53,
-        "type": "narration",
-        "role": "旁白",
-        "emotion": "neutral",
-        "text": "她没让江桥说下去，用一副烂漫的笑容回道：",
-        "referenceAudio": {
-          "id": "f2c00789-01a1-474d-bfcd-c5f940006be9",
-          "mode": 1,
-          "emoWeight": 0.65
-        },
-        "autoAssignedVoiceActor": null,
-        "autoEmotionAudioMap": null,
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/572fb808-a189-47d3-8ea9-ac950afe9854.mp3"
-      },
-      {
-        "index": 54,
         "type": "dialogue",
         "role": "未命名_白裙姑娘",
         "emotion": "happy",
@@ -1062,10 +1047,10 @@
         "referenceAudio": null,
         "autoAssignedVoiceActor": null,
         "autoEmotionAudioMap": null,
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/f895aa10-3c49-49ac-927b-6c1cf24e9df7.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/b696da51-e031-4a6b-9288-4244f9dc4cbd.mp3"
       },
       {
-        "index": 55,
+        "index": 54,
         "type": "narration",
         "role": "旁白",
         "emotion": "neutral",
@@ -1077,13 +1062,13 @@
         },
         "autoAssignedVoiceActor": null,
         "autoEmotionAudioMap": null,
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/67978296-d6ad-45c7-9248-3b7ffad4a8fc.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/71e800e3-d816-4ca2-8479-3db3bd02c9fa.mp3"
       }
     ],
-    "createdAt": "2026-03-26T05:48:52.296Z"
+    "createdAt": "2026-03-27T07:01:43.608Z"
   },
   "reader_我的郁金香小姐__1": {
-    "taskId": "b9b6e38a-0997-4671-b8ca-93b204b90fc8",
+    "taskId": "57e03b7b-ddb3-44ce-a20f-f599e7c7275a",
     "phase": "done",
     "segments": [
       {
@@ -1091,7 +1076,7 @@
         "type": "narration",
         "role": "旁白",
         "emotion": "neutral",
-        "text": "我还在云里雾里搞不清楚时，这个在我没有一丝防备中出现的丫头已经准备离开，我挡在门口不让她走，又一次问道：",
+        "text": "江桥还在云里雾里搞不清楚时，这个在他没有一丝防备中出现的丫头已经准备离开，江桥挡在门口不让她走，又一次问道：",
         "referenceAudio": {
           "id": "f2c00789-01a1-474d-bfcd-c5f940006be9",
           "mode": 1,
@@ -1099,7 +1084,7 @@
         },
         "autoAssignedVoiceActor": null,
         "autoEmotionAudioMap": null,
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/39d82287-ff7b-44e5-82be-1196e2cca213.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/eaca47f4-5c31-452a-9826-75b538feb03d.mp3"
       },
       {
         "index": 1,
@@ -1116,7 +1101,7 @@
             "emoWeight": 0.65
           }
         },
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/8b303afd-46ca-4425-a428-8a8b8d08075a.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/92b67c60-cde5-4f64-9bd0-3f3f5d2aa9bd.mp3"
       },
       {
         "index": 2,
@@ -1127,14 +1112,14 @@
         "referenceAudio": null,
         "autoAssignedVoiceActor": null,
         "autoEmotionAudioMap": null,
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/41cb08e0-35ee-452b-ae52-dfe6171253a7.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/1aa6ad64-fb8e-409d-9b37-14015742b998.mp3"
       },
       {
         "index": 3,
         "type": "narration",
         "role": "旁白",
         "emotion": "neutral",
-        "text": "说完也不畏惧和我的身体接触伸手推开了我，走出院落后，沿着陈艺刚刚走过的路也离开了这条弄堂。",
+        "text": "说完也不畏惧和江桥的身体接触伸手推开了他，走出院落后，沿着陈艺刚刚走过的路也离开了这条弄堂。",
         "referenceAudio": {
           "id": "f2c00789-01a1-474d-bfcd-c5f940006be9",
           "mode": 1,
@@ -1142,14 +1127,14 @@
         },
         "autoAssignedVoiceActor": null,
         "autoEmotionAudioMap": null,
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/c97a8ce3-ddd4-48de-aa22-905d14a63eb1.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/3d0b42af-e546-41a1-b1a3-b295b1e11f26.mp3"
       },
       {
         "index": 4,
         "type": "narration",
         "role": "旁白",
         "emotion": "neutral",
-        "text": "我有点儿恍惚，从口袋里摸出一支烟点燃，然后在一丝难得的缝隙中看见了在远处矗立的高楼，霓虹将城市的上空映出了一片红亮，我没有做梦，南京依旧是这个南京，我也依旧是我，一切都很真实。",
+        "text": "江桥有点儿恍惚，从口袋里摸出一支烟点燃，然后在一丝难得的缝隙中看见了在远处矗立的高楼，霓虹将城市的上空映出了一片红亮，他没有做梦，南京依旧是这个南京，他也依旧是他，一切都很真实。",
         "referenceAudio": {
           "id": "f2c00789-01a1-474d-bfcd-c5f940006be9",
           "mode": 1,
@@ -1157,14 +1142,14 @@
         },
         "autoAssignedVoiceActor": null,
         "autoEmotionAudioMap": null,
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/fe58e40c-e043-4b0e-aedc-e28dcf94837f.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/6d93ba91-38b0-43f1-ab88-7a64ddc4171e.mp3"
       },
       {
         "index": 5,
         "type": "narration",
         "role": "旁白",
         "emotion": "neutral",
-        "text": "次日，早晨的阳光选了个最好的角度落在我的床上，我睁开了眼睛，也意味着三点一线的生活又这么重复着开始了。",
+        "text": "次日，早晨的阳光选了个最好的角度落在江桥的床上，他睁开了眼睛，也意味着三点一线的生活又这么重复着开始了。",
         "referenceAudio": {
           "id": "f2c00789-01a1-474d-bfcd-c5f940006be9",
           "mode": 1,
@@ -1172,14 +1157,14 @@
         },
         "autoAssignedVoiceActor": null,
         "autoEmotionAudioMap": null,
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/7cd007d5-de2f-4378-8253-affa3a393220.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/5b6966f2-b3fc-403a-b795-97866b29e245.mp3"
       },
       {
         "index": 6,
         "type": "narration",
         "role": "旁白",
         "emotion": "neutral",
-        "text": "洗漱之后，我简单吃了个早餐便又乘坐86路车去了公司，在那摇摆不定，人群密集的车厢里，我一直反复想着昨天晚上陈艺拒绝我去主持婚礼的事情，直到此时我心里仍有那么一点儿气愤，反正我是不愿意再和她提这件事情了，毕竟狠话已经撂了出去，我是个很在意脸面的男人。",
+        "text": "洗漱之后，江桥简单吃了个早餐便又乘坐86路车去了公司，在那摇摆不定，人群密集的车厢里，他一直反复想着昨天晚上陈艺拒绝他去主持婚礼的事情，直到此时他心里仍有那么一点儿气愤，反正他是不愿意再和她提这件事情了，毕竟狠话已经撂了出去，他是个很在意脸面的男人。",
         "referenceAudio": {
           "id": "f2c00789-01a1-474d-bfcd-c5f940006be9",
           "mode": 1,
@@ -1187,14 +1172,14 @@
         },
         "autoAssignedVoiceActor": null,
         "autoEmotionAudioMap": null,
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/bcc6ee53-9970-43ba-9743-b42cd61f2c57.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/5f7421ed-9c2a-4a44-b2b7-eb7d138a4f62.mp3"
       },
       {
         "index": 7,
         "type": "narration",
         "role": "旁白",
         "emotion": "neutral",
-        "text": "到了公司后，我便陷入到了忙碌中，最近我正在策划的婚礼还有另外两场，我先是去设计部那边跟进了婚礼场景的设计情况，然后又将填好的《婚礼资源移交表格》交给了营销部，办完这两件事情之后，老板金志强也从外面跑完业务回到了公司，第一时间将我叫到了他的办公室。",
+        "text": "到了公司后，江桥便陷入到了忙碌中，最近他正在策划的婚礼还有另外两场，他先是去设计部那边跟进了婚礼场景的设计情况，然后又将填好的《婚礼资源移交表格》交给了营销部，办完这两件事情之后，老板金志强也从外面跑完业务回到了公司，第一时间将江桥叫到了他的办公室。",
         "referenceAudio": {
           "id": "f2c00789-01a1-474d-bfcd-c5f940006be9",
           "mode": 1,
@@ -1202,14 +1187,14 @@
         },
         "autoAssignedVoiceActor": null,
         "autoEmotionAudioMap": null,
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/ff400606-e2d1-4603-b795-b98937beab25.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/f14a54eb-da03-4019-969b-613120062faf.mp3"
       },
       {
         "index": 8,
         "type": "narration",
         "role": "旁白",
         "emotion": "neutral",
-        "text": "老金泡了一壶普洱茶，亲自给我倒了一杯，我受宠若惊的从他手中接过，定了定神，向他汇报道：",
+        "text": "老金泡了一壶普洱茶，亲自给江桥倒了一杯，江桥受宠若惊的从他手中接过，定了定神，向他汇报道：",
         "referenceAudio": {
           "id": "f2c00789-01a1-474d-bfcd-c5f940006be9",
           "mode": 1,
@@ -1217,7 +1202,7 @@
         },
         "autoAssignedVoiceActor": null,
         "autoEmotionAudioMap": null,
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/80c28168-2a99-4161-9359-5e19e31525f6.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/19e9c120-73fe-4979-83d4-ddee95a0a0ac.mp3"
       },
       {
         "index": 9,
@@ -1238,7 +1223,7 @@
             "emoWeight": 0.65
           }
         },
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/4076f04c-3b54-4212-998a-91b8a739b91f.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/c7f5f145-759b-4f99-8ca6-e0d08f389d93.mp3"
       },
       {
         "index": 10,
@@ -1255,7 +1240,7 @@
             "emoWeight": 0.65
           }
         },
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/43889c76-c22d-490e-b3b2-0301adec2773.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/92d12ec4-01ad-43aa-bb0e-3a82dd0d3978.mp3"
       },
       {
         "index": 11,
@@ -1272,7 +1257,7 @@
             "emoWeight": 0.65
           }
         },
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/91e5f83a-d984-4022-8a76-257377f13aaf.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/27f0958a-274b-4593-80b5-e59dcdf690ba.mp3"
       },
       {
         "index": 12,
@@ -1289,7 +1274,7 @@
             "emoWeight": 0.65
           }
         },
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/3d62a345-e004-4b0a-8805-1b796a5a623b.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/40074ac8-eb84-412e-af4c-67bfca259805.mp3"
       },
       {
         "index": 13,
@@ -1306,7 +1291,7 @@
             "emoWeight": 0.65
           }
         },
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/787e9c89-1991-4ed6-a19e-8f67a6707067.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/b309d5c7-e934-42bd-a974-a95b3d3d50e7.mp3"
       },
       {
         "index": 14,
@@ -1323,14 +1308,14 @@
             "emoWeight": 0.65
           }
         },
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/81b48cff-4b58-4595-8f14-227677828a3b.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/28960c2b-c20d-4421-bbb5-67e9839196dd.mp3"
       },
       {
         "index": 15,
         "type": "narration",
         "role": "旁白",
         "emotion": "neutral",
-        "text": "被老金骂无能，我心中已经有火，但还是强忍在心里没有发作……",
+        "text": "被老金骂无能，江桥心中已经有火，但还是强忍在心里没有发作……",
         "referenceAudio": {
           "id": "f2c00789-01a1-474d-bfcd-c5f940006be9",
           "mode": 1,
@@ -1338,7 +1323,7 @@
         },
         "autoAssignedVoiceActor": null,
         "autoEmotionAudioMap": null,
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/5f4bd46f-fc2f-4e04-875e-7612e9155e26.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/7c7723d9-d0ae-46fe-81e7-2805596d2625.mp3"
       },
       {
         "index": 16,
@@ -1355,7 +1340,7 @@
             "emoWeight": 0.65
           }
         },
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/26c037e5-dd03-44f4-8cd5-25f0cc417c1e.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/63a9fda1-4fdf-40c4-b5f5-f9203a4fea5e.mp3"
       },
       {
         "index": 17,
@@ -1372,7 +1357,7 @@
             "emoWeight": 0.65
           }
         },
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/eff3566e-fcc1-40eb-8185-1036069baccd.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/f92480e1-bed5-4d2c-9a5c-130c3abbe23a.mp3"
       },
       {
         "index": 18,
@@ -1389,7 +1374,7 @@
             "emoWeight": 0.65
           }
         },
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/d7763650-2b4d-4f88-a7b8-132d9f44991c.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/90ca8783-7f5a-4b01-abc1-aeb7aa73c4a9.mp3"
       },
       {
         "index": 19,
@@ -1406,14 +1391,14 @@
             "emoWeight": 0.65
           }
         },
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/e7d1f0c0-332f-4a17-ad86-9683b9acfa08.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/c5262d29-cf68-47e3-81da-897560e55832.mp3"
       },
       {
         "index": 20,
         "type": "narration",
         "role": "旁白",
         "emotion": "neutral",
-        "text": "我图心中痛快，就这么把老金给骂了，可后来却被老金用更下流的脏话骂出了他的办公室，我和老金都不是文化人，所以5年多前，没有文化的他收留了同样没有文化的我，给了我一份还算正经体面的工作，然后教我怎么去面对这个用利益去衡量一切的社会，他是我走上社会后第一个老板。",
+        "text": "江桥图心中痛快，就这么把老金给骂了，可后来却被老金用更下流的脏话骂出了他的办公室，江桥和老金都不是文化人，所以5年多前，没有文化的他收留了同样没有文化的江桥，给了他一份还算正经体面的工作，然后教他怎么去面对这个用利益去衡量一切的社会，他是江桥走上社会后第一个老板。",
         "referenceAudio": {
           "id": "f2c00789-01a1-474d-bfcd-c5f940006be9",
           "mode": 1,
@@ -1421,14 +1406,14 @@
         },
         "autoAssignedVoiceActor": null,
         "autoEmotionAudioMap": null,
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/d9a6ad89-66fe-423a-a855-805713ef67fb.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/54639ff9-dd6e-45f5-be4b-6fd1f7e6abb6.mp3"
       },
       {
         "index": 21,
         "type": "narration",
         "role": "旁白",
-        "emotion": "melancholy",
-        "text": "转眼入行快6年了，我策划过无数场婚礼，司机不够用时，我当过婚车司机，司仪临时来不了了，我客串过司仪紧急救过场，甚至穿上过厚厚的道具服，在婚礼现场扮演了吉祥物，可如今我自己也到了结婚的年纪，身边却没有一个女朋友，更不用谈结婚的对象，也许这个世界上从来就没有一个人懂过：我在面对着那些带着婚戒洋溢着幸福的笑脸时，是一种怎样孤独的心情……我忽然有些厌倦了这个行业，也厌倦了老金这个吊人，更不想再去求陈艺什么……她要懂我这些年的心酸，就不会拒绝的那么彻底了。",
+        "emotion": "neutral",
+        "text": "转眼入行快6年了，江桥策划过无数场婚礼，司机不够用时，他当过婚车司机，司仪临时来不了了，他客串过司仪紧急救过场，甚至穿上过厚厚的道具服，在婚礼现场扮演了吉祥物，可如今他自己也到了结婚的年纪，身边却没有一个女朋友，更不用谈结婚的对象，也许这个世界上从来就没有一个人懂过：他在面对着那些带着婚戒洋溢着幸福的笑脸时，是一种怎样孤独的心情……江桥忽然有些厌倦了这个行业，也厌倦了老金这个吊人，更不想再去求陈艺什么……她要懂他这些年的心酸，就不会拒绝的那么彻底了。",
         "referenceAudio": {
           "id": "f2c00789-01a1-474d-bfcd-c5f940006be9",
           "mode": 1,
@@ -1436,14 +1421,14 @@
         },
         "autoAssignedVoiceActor": null,
         "autoEmotionAudioMap": null,
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/a187a47b-5c18-4a3a-914c-b8e65703c57f.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/2fc396e7-5a26-49b6-afc8-a7b3ce279df3.mp3"
       },
       {
         "index": 22,
         "type": "narration",
         "role": "旁白",
-        "emotion": "melancholy",
-        "text": "下了班回到家，我一个人坐在小院落里的台阶上抽着烟，身边只有那些花草还算有生命，可我并不害怕孤独，却又如此孤独……我总是想起陈艺，如果她不拒绝，现在又是个什么情景呢？也许我已经迫不及待的开始想着帮她设计主持脚本了，反正不会像现在这样，对自己的工作产生质疑，也不会和老金翻脸，把一份做了快6年的工作混到岌岌可危的地步。",
+        "emotion": "neutral",
+        "text": "下了班回到家，江桥一个人坐在小院落里的台阶上抽着烟，身边只有那些花草还算有生命，可他并不害怕孤独，却又如此孤独……他总是想起陈艺，如果她不拒绝，现在又是个什么情景呢？也许他已经迫不及待的开始想着帮她设计主持脚本了，反正不会像现在这样，对自己的工作产生质疑，也不会和老金翻脸，把一份做了快6年的工作混到岌岌可危的地步。",
         "referenceAudio": {
           "id": "f2c00789-01a1-474d-bfcd-c5f940006be9",
           "mode": 1,
@@ -1451,7 +1436,7 @@
         },
         "autoAssignedVoiceActor": null,
         "autoEmotionAudioMap": null,
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/0982f9b4-4af3-4eb9-bd4d-d61cd0e6af15.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/835e6db6-8989-42eb-b42e-63423f9f667c.mp3"
       },
       {
         "index": 23,
@@ -1466,14 +1451,14 @@
         },
         "autoAssignedVoiceActor": null,
         "autoEmotionAudioMap": null,
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/ce57313b-aced-43a3-b246-9161559b6b48.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/78224d43-b18b-4514-bde5-2e7d955d666e.mp3"
       },
       {
         "index": 24,
         "type": "narration",
         "role": "旁白",
         "emotion": "neutral",
-        "text": "下一刻，院子的木板门被推开，昨天那个忽然闯进我生活中的丫头就这么出现在了我的面前，她趴在门框上，冲我挥了挥手：",
+        "text": "下一刻，院子的木板门被推开，昨天那个忽然闯进江桥生活中的丫头就这么出现在了他的面前，她趴在门框上，冲江桥挥了挥手：",
         "referenceAudio": {
           "id": "f2c00789-01a1-474d-bfcd-c5f940006be9",
           "mode": 1,
@@ -1481,7 +1466,7 @@
         },
         "autoAssignedVoiceActor": null,
         "autoEmotionAudioMap": null,
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/debdbf35-11a1-434a-91cb-2ed1af07662f.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/e343afa5-78d2-4f3e-a549-e595e8e51274.mp3"
       },
       {
         "index": 25,
@@ -1492,7 +1477,7 @@
         "referenceAudio": null,
         "autoAssignedVoiceActor": null,
         "autoEmotionAudioMap": null,
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/8b50bbbc-4b55-45d9-bc2a-e5c4cc7b8d58.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/8936c0ca-e28c-4adc-86c5-7a6a4a4bd5bc.mp3"
       },
       {
         "index": 26,
@@ -1513,14 +1498,14 @@
             "emoWeight": 0.65
           }
         },
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/56907ecb-fb73-476f-a396-24e637d06fa7.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/a517557d-ba5a-42b9-bc02-38c9467affee.mp3"
       },
       {
         "index": 27,
         "type": "narration",
         "role": "旁白",
         "emotion": "neutral",
-        "text": "她没有回答我，反而很不客气的在我身边坐了下来，然后左顾右盼，仿佛对这个院子里的一切仍有很强烈的好奇，她又打开自己的单肩包，从里面拿出一罐啤酒递到我面前，问道：",
+        "text": "她没有回答江桥，反而很不客气的在他身边坐了下来，然后左顾右盼，仿佛对这个院子里的一切仍有很强烈的好奇，她又打开自己的单肩包，从里面拿出一罐啤酒递到江桥面前，问道：",
         "referenceAudio": {
           "id": "f2c00789-01a1-474d-bfcd-c5f940006be9",
           "mode": 1,
@@ -1528,7 +1513,7 @@
         },
         "autoAssignedVoiceActor": null,
         "autoEmotionAudioMap": null,
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/e0fb85f0-ac5b-4084-b6f8-3c47205d91b8.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/51540c0b-0fc1-45cc-aa66-2bfd3863fb98.mp3"
       },
       {
         "index": 28,
@@ -1539,10 +1524,25 @@
         "referenceAudio": null,
         "autoAssignedVoiceActor": null,
         "autoEmotionAudioMap": null,
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/322d9c77-6e56-4017-a1c5-06d03db42942.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/b26eae28-781b-4467-b274-691026221052.mp3"
       },
       {
         "index": 29,
+        "type": "narration",
+        "role": "旁白",
+        "emotion": "neutral",
+        "text": "江桥求之不得，从她手中接过啤酒，她也从包里拿出一袋牛肉干和花生米扔在了江桥的腿上，自己依旧托着下巴看着石桌上的那些盆栽。",
+        "referenceAudio": {
+          "id": "f2c00789-01a1-474d-bfcd-c5f940006be9",
+          "mode": 1,
+          "emoWeight": 0.65
+        },
+        "autoAssignedVoiceActor": null,
+        "autoEmotionAudioMap": null,
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/e7dba405-c645-4b8a-b5d5-5b77cb3511dd.mp3"
+      },
+      {
+        "index": 30,
         "type": "dialogue",
         "role": "江桥",
         "emotion": "neutral",
@@ -1560,10 +1560,10 @@
             "emoWeight": 0.65
           }
         },
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/5f31aa69-fe35-4723-a2d2-445a941e8e01.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/5ef9ff42-7b5d-497b-a30b-f674b435b205.mp3"
       },
       {
-        "index": 30,
+        "index": 31,
         "type": "dialogue",
         "role": "未命名_白裙姑娘",
         "emotion": "neutral",
@@ -1571,10 +1571,10 @@
         "referenceAudio": null,
         "autoAssignedVoiceActor": null,
         "autoEmotionAudioMap": null,
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/ed986152-1be8-4a5a-b814-dbccecbdfefe.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/28b1975f-45bb-48ad-b00c-49e36d79ef94.mp3"
       },
       {
-        "index": 31,
+        "index": 32,
         "type": "dialogue",
         "role": "江桥",
         "emotion": "sad",
@@ -1588,10 +1588,10 @@
             "emoWeight": 0.65
           }
         },
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/7c4e47f9-c3c3-494f-9f54-2df70a0624aa.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/54a277ce-a358-448d-9380-4bd5de232bf2.mp3"
       },
       {
-        "index": 32,
+        "index": 33,
         "type": "dialogue",
         "role": "未命名_白裙姑娘",
         "emotion": "melancholy",
@@ -1599,10 +1599,10 @@
         "referenceAudio": null,
         "autoAssignedVoiceActor": null,
         "autoEmotionAudioMap": null,
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/895cf543-ca06-4882-b0fd-d51e4ef869d5.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/e217a2fd-34fc-4464-9acf-40c7d9525f70.mp3"
       },
       {
-        "index": 33,
+        "index": 34,
         "type": "dialogue",
         "role": "江桥",
         "emotion": "neutral",
@@ -1620,10 +1620,10 @@
             "emoWeight": 0.65
           }
         },
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/3132ea44-0237-4ef7-a040-daed1ed42a15.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/111abfaf-c289-4e20-b072-842e85de5f97.mp3"
       },
       {
-        "index": 34,
+        "index": 35,
         "type": "dialogue",
         "role": "未命名_白裙姑娘",
         "emotion": "surprised",
@@ -1631,13 +1631,13 @@
         "referenceAudio": null,
         "autoAssignedVoiceActor": null,
         "autoEmotionAudioMap": null,
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/f4908c1c-715d-473f-b74d-4ea5ac7cc043.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/7a78fe75-f6fb-4e8e-ab23-a406c4664fbb.mp3"
       },
       {
-        "index": 35,
+        "index": 36,
         "type": "dialogue",
         "role": "江桥",
-        "emotion": "melancholy",
+        "emotion": "sad",
         "text": "有，枯萎的时候，没人给它们浇水的时候。",
         "referenceAudio": null,
         "autoAssignedVoiceActor": "钟离",
@@ -1648,10 +1648,10 @@
             "emoWeight": 0.65
           }
         },
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/e64a6bbe-7c4e-4183-a6be-1141e21941f5.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/afc180fc-d4a6-4bb2-8eb9-87dc52827a45.mp3"
       },
       {
-        "index": 36,
+        "index": 37,
         "type": "dialogue",
         "role": "未命名_白裙姑娘",
         "emotion": "neutral",
@@ -1659,10 +1659,10 @@
         "referenceAudio": null,
         "autoAssignedVoiceActor": null,
         "autoEmotionAudioMap": null,
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/03881a89-4e81-4916-b20d-53bf7b0488ee.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/78d5c7c0-44fc-44e0-95c0-fa0e252e0e9d.mp3"
       },
       {
-        "index": 37,
+        "index": 38,
         "type": "dialogue",
         "role": "江桥",
         "emotion": "angry",
@@ -1676,10 +1676,10 @@
             "emoWeight": 0.65
           }
         },
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/7122fa83-a6a9-4b05-9a06-ec49c1f15df3.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/76154c8a-66db-4d18-b010-bbd20267353a.mp3"
       },
       {
-        "index": 38,
+        "index": 39,
         "type": "dialogue",
         "role": "未命名_白裙姑娘",
         "emotion": "happy",
@@ -1687,10 +1687,10 @@
         "referenceAudio": null,
         "autoAssignedVoiceActor": null,
         "autoEmotionAudioMap": null,
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/32c68b66-2252-4064-a1fc-e4862ccd5f56.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/f299c430-ceba-427b-a988-8ba94a305f23.mp3"
       },
       {
-        "index": 39,
+        "index": 40,
         "type": "dialogue",
         "role": "江桥",
         "emotion": "surprised",
@@ -1704,10 +1704,10 @@
             "emoWeight": 0.65
           }
         },
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/099fb963-7422-4646-b58a-253461edbebf.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/090633ed-3826-4f2c-a60c-c45148f4f332.mp3"
       },
       {
-        "index": 40,
+        "index": 41,
         "type": "dialogue",
         "role": "未命名_白裙姑娘",
         "emotion": "happy",
@@ -1715,14 +1715,14 @@
         "referenceAudio": null,
         "autoAssignedVoiceActor": null,
         "autoEmotionAudioMap": null,
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/fcf22b3f-7878-42e8-83cb-75ddf344241d.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/6ba30352-d7a9-49cd-ae2e-8051fa7e1e04.mp3"
       },
       {
-        "index": 41,
+        "index": 42,
         "type": "narration",
         "role": "旁白",
         "emotion": "neutral",
-        "text": "说着便将那只红色的单肩包背在了身上，又说道：",
+        "text": "她说着便将那只红色的单肩包背在了身上，又说道：",
         "referenceAudio": {
           "id": "f2c00789-01a1-474d-bfcd-c5f940006be9",
           "mode": 1,
@@ -1730,10 +1730,10 @@
         },
         "autoAssignedVoiceActor": null,
         "autoEmotionAudioMap": null,
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/30497e93-b025-4bfb-92e6-eb9ff8d52a4d.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/751078fd-eb9d-4945-ab8d-57fa76c180f5.mp3"
       },
       {
-        "index": 42,
+        "index": 43,
         "type": "dialogue",
         "role": "未命名_白裙姑娘",
         "emotion": "happy",
@@ -1741,10 +1741,10 @@
         "referenceAudio": null,
         "autoAssignedVoiceActor": null,
         "autoEmotionAudioMap": null,
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/9ce45629-1f58-4ddb-91c6-763a63b3d3fd.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/797f3dfa-4007-4d38-a73d-e78f78946478.mp3"
       },
       {
-        "index": 43,
+        "index": 44,
         "type": "dialogue",
         "role": "江桥",
         "emotion": "surprised",
@@ -1758,14 +1758,14 @@
             "emoWeight": 0.65
           }
         },
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/1eed2dc8-1689-4198-a90e-263b4b36d2bd.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/356af841-8bf7-4072-ad6a-831dfe34c554.mp3"
       },
       {
-        "index": 44,
+        "index": 45,
         "type": "narration",
         "role": "旁白",
         "emotion": "neutral",
-        "text": "我暗自感叹了一句，也随她起了身走到院外，追着问道：",
+        "text": "江桥暗自感叹了一句，也随她起了身走到院外，追着问道：",
         "referenceAudio": {
           "id": "f2c00789-01a1-474d-bfcd-c5f940006be9",
           "mode": 1,
@@ -1773,10 +1773,10 @@
         },
         "autoAssignedVoiceActor": null,
         "autoEmotionAudioMap": null,
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/f70a5d90-7ac7-4778-885e-e21557674d81.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/f217a27b-b3a0-42a0-ba2d-0042c7771fa4.mp3"
       },
       {
-        "index": 45,
+        "index": 46,
         "type": "dialogue",
         "role": "江桥",
         "emotion": "neutral",
@@ -1794,10 +1794,10 @@
             "emoWeight": 0.65
           }
         },
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/2be0fae0-8668-4fac-8b16-9fcc3ab7d705.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/a36b1728-d129-4e00-b411-82a72c8e9d70.mp3"
       },
       {
-        "index": 46,
+        "index": 47,
         "type": "dialogue",
         "role": "未命名_白裙姑娘",
         "emotion": "happy",
@@ -1805,29 +1805,14 @@
         "referenceAudio": null,
         "autoAssignedVoiceActor": null,
         "autoEmotionAudioMap": null,
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/cbcc92ad-479d-4117-a90b-603b2d78a6ec.mp3"
-      },
-      {
-        "index": 47,
-        "type": "narration",
-        "role": "旁白",
-        "emotion": "neutral",
-        "text": "我下意识的看着她所指的方向，蓦然看到了穿着一身藕紫色收腰雪纺裙的陈艺，她正在向我和这个丫头的身边走来，眼看就要打上一个照面。",
-        "referenceAudio": {
-          "id": "f2c00789-01a1-474d-bfcd-c5f940006be9",
-          "mode": 1,
-          "emoWeight": 0.65
-        },
-        "autoAssignedVoiceActor": null,
-        "autoEmotionAudioMap": null,
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/1b4a5add-0708-48c3-be2c-30317d1d3c4a.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/b38e2307-002c-47e5-853b-25bc8a3bfbcd.mp3"
       },
       {
         "index": 48,
         "type": "narration",
         "role": "旁白",
         "emotion": "neutral",
-        "text": "弄堂很窄，我和这个丫头靠的很紧，走过来的陈艺主动侧过身子礼让我们先过，我正和她生着气，没准备和她说话，打算直接走过，却不想身边的丫头停下了脚步，指着陈艺说道：",
+        "text": "江桥下意识的看着她所指的方向，蓦然看到了穿着一身藕紫色收腰雪纺裙的陈艺，她正在向江桥和这个丫头的身边走来，眼看就要打上一个照面。",
         "referenceAudio": {
           "id": "f2c00789-01a1-474d-bfcd-c5f940006be9",
           "mode": 1,
@@ -1835,10 +1820,25 @@
         },
         "autoAssignedVoiceActor": null,
         "autoEmotionAudioMap": null,
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/d9b743df-7ddc-410c-bd21-409d2f4908b8.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/e5df51d8-f456-4120-a5cc-7b588bbe429b.mp3"
       },
       {
         "index": 49,
+        "type": "narration",
+        "role": "旁白",
+        "emotion": "neutral",
+        "text": "弄堂很窄，江桥和这个丫头靠的很紧，走过来的陈艺主动侧过身子礼让他们先过，江桥正和她生着气，没准备和她说话，打算直接走过，却不想身边的丫头停下了脚步，指着陈艺说道：",
+        "referenceAudio": {
+          "id": "f2c00789-01a1-474d-bfcd-c5f940006be9",
+          "mode": 1,
+          "emoWeight": 0.65
+        },
+        "autoAssignedVoiceActor": null,
+        "autoEmotionAudioMap": null,
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/3c7391df-d771-4646-b217-54384580006a.mp3"
+      },
+      {
+        "index": 50,
         "type": "dialogue",
         "role": "未命名_白裙姑娘",
         "emotion": "surprised",
@@ -1846,14 +1846,14 @@
         "referenceAudio": null,
         "autoAssignedVoiceActor": null,
         "autoEmotionAudioMap": null,
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/a6b6e71a-93ec-49b5-ad84-aeb92f9a9f21.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/5b1a661a-e651-4290-8618-6ec5fefc7ca5.mp3"
       },
       {
-        "index": 50,
+        "index": 51,
         "type": "narration",
         "role": "旁白",
         "emotion": "neutral",
-        "text": "陈艺看了看这个丫头，又看了看我，没有回答。",
+        "text": "陈艺看了看这个丫头，又看了看江桥，没有回答。",
         "referenceAudio": {
           "id": "f2c00789-01a1-474d-bfcd-c5f940006be9",
           "mode": 1,
@@ -1861,10 +1861,10 @@
         },
         "autoAssignedVoiceActor": null,
         "autoEmotionAudioMap": null,
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/5bc09b2b-b61b-470e-948c-f72abe538744.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/59224e77-4a86-4fc6-a64f-4deec23dbd42.mp3"
       },
       {
-        "index": 51,
+        "index": 52,
         "type": "dialogue",
         "role": "江桥",
         "emotion": "angry",
@@ -1878,40 +1878,25 @@
             "emoWeight": 0.65
           }
         },
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/97ec6ffd-b8be-412c-b906-77bdd34d5b95.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/766e14ad-704e-476a-8bf8-184fc4726bec.mp3"
       },
       {
-        "index": 52,
+        "index": 53,
         "type": "dialogue",
         "role": "未命名_白裙姑娘",
-        "emotion": "neutral",
+        "emotion": "surprised",
         "text": "她就是陈艺啊，我不会看错的。",
         "referenceAudio": null,
         "autoAssignedVoiceActor": null,
         "autoEmotionAudioMap": null,
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/97496f81-fdae-4359-b8c6-99771b404358.mp3"
-      },
-      {
-        "index": 53,
-        "type": "narration",
-        "role": "旁白",
-        "emotion": "neutral",
-        "text": "陈艺当然明白我是在讽刺她昨天晚上的无情无义，可她却没有反驳什么，只是对着我身边的丫头笑了笑，继续向巷尾走去，她的身影在刚刚亮起的路灯下忽长忽短，我也跟着那个丫头继续向巷口走去。",
-        "referenceAudio": {
-          "id": "f2c00789-01a1-474d-bfcd-c5f940006be9",
-          "mode": 1,
-          "emoWeight": 0.65
-        },
-        "autoAssignedVoiceActor": null,
-        "autoEmotionAudioMap": null,
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/067a8ca0-5c04-46e0-912b-15b9c11b6c95.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/8309e024-dc4e-421f-a311-acd12031ba99.mp3"
       },
       {
         "index": 54,
         "type": "narration",
         "role": "旁白",
         "emotion": "neutral",
-        "text": "出了弄堂就是郁金香路，这个丫头伸手拦了一辆出租车，我拉住了她：",
+        "text": "陈艺当然明白江桥是在讽刺她昨天晚上的无情无义，可她却没有反驳什么，只是对着江桥身边的丫头笑了笑，继续向巷尾走去，她的身影在刚刚亮起的路灯下忽长忽短，江桥也跟着那个丫头继续向巷口走去。",
         "referenceAudio": {
           "id": "f2c00789-01a1-474d-bfcd-c5f940006be9",
           "mode": 1,
@@ -1919,10 +1904,25 @@
         },
         "autoAssignedVoiceActor": null,
         "autoEmotionAudioMap": null,
-        "audioUrl": null
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/3143a7b0-9687-4286-bbc3-63181d654d2f.mp3"
       },
       {
         "index": 55,
+        "type": "narration",
+        "role": "旁白",
+        "emotion": "neutral",
+        "text": "出了弄堂就是郁金香路，这个丫头伸手拦了一辆出租车，江桥拉住了她：",
+        "referenceAudio": {
+          "id": "f2c00789-01a1-474d-bfcd-c5f940006be9",
+          "mode": 1,
+          "emoWeight": 0.65
+        },
+        "autoAssignedVoiceActor": null,
+        "autoEmotionAudioMap": null,
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/c1253f20-c545-452b-a529-a74233cc7364.mp3"
+      },
+      {
+        "index": 56,
         "type": "dialogue",
         "role": "江桥",
         "emotion": "neutral",
@@ -1940,10 +1940,10 @@
             "emoWeight": 0.65
           }
         },
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/b84ad811-408e-4988-a0c8-0f059b7d0eb7.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/b172614a-edba-4c74-bcbc-9e7de46957e5.mp3"
       },
       {
-        "index": 56,
+        "index": 57,
         "type": "dialogue",
         "role": "未命名_白裙姑娘",
         "emotion": "happy",
@@ -1951,14 +1951,14 @@
         "referenceAudio": null,
         "autoAssignedVoiceActor": null,
         "autoEmotionAudioMap": null,
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/405bd69e-3b8e-41dc-92eb-499754204fb6.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/33256d46-3fa6-413c-a02c-c4e47580670b.mp3"
       },
       {
-        "index": 57,
+        "index": 58,
         "type": "narration",
         "role": "旁白",
         "emotion": "neutral",
-        "text": "说着拿掉了我抓住她胳膊的手，转身上了出租车，不一会儿便融入到了仿佛在远方的城市中。",
+        "text": "她说着拿掉了江桥抓住她胳膊的手，转身上了出租车，不一会儿便融入到了仿佛在远方的城市中。",
         "referenceAudio": {
           "id": "f2c00789-01a1-474d-bfcd-c5f940006be9",
           "mode": 1,
@@ -1966,35 +1966,14 @@
         },
         "autoAssignedVoiceActor": null,
         "autoEmotionAudioMap": null,
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/fe385478-b6d3-4928-b2c2-3d5e8f8d10af.mp3"
-      },
-      {
-        "index": 58,
-        "type": "dialogue",
-        "role": "江桥",
-        "emotion": "neutral",
-        "text": "我哭笑不得，难怪这丫头的出现像是一场行为艺术，原来是个学艺术的，看样子真不能用常人的思维去看待她。",
-        "referenceAudio": {
-          "id": "857e60db-4894-4c6b-9de3-f95d9e5ed8bf",
-          "mode": 1,
-          "emoWeight": 0.65
-        },
-        "autoAssignedVoiceActor": "钟离",
-        "autoEmotionAudioMap": {
-          "neutral": {
-            "id": "857e60db-4894-4c6b-9de3-f95d9e5ed8bf",
-            "mode": 1,
-            "emoWeight": 0.65
-          }
-        },
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/8be2edd2-e182-4d57-b1d2-eb456bd5369c.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/39b97245-6c46-4b61-adf3-7b023854b9b1.mp3"
       },
       {
         "index": 59,
         "type": "narration",
         "role": "旁白",
-        "emotion": "melancholy",
-        "text": "我又顺着原路返回，再次路过那间\"心情咖啡\"店，想起昨天发生的事情心中又是一阵烦闷，我已经不知道该怎么解决眼前的这些麻烦了，但却知道，如果我搞定不定陈艺做主持人这件事情，老金这个吊人是肯定不会放过我的。",
+        "emotion": "neutral",
+        "text": "江桥哭笑不得，难怪这丫头的出现像是一场行为艺术，原来是个学艺术的，看样子真不能用常人的思维去看待她。",
         "referenceAudio": {
           "id": "f2c00789-01a1-474d-bfcd-c5f940006be9",
           "mode": 1,
@@ -2002,9 +1981,24 @@
         },
         "autoAssignedVoiceActor": null,
         "autoEmotionAudioMap": null,
-        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/d813307f-1c35-4de4-8906-70eff9ed741d.mp3"
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/c1e83f74-f2ee-45f6-8957-3e5849126ddc.mp3"
+      },
+      {
+        "index": 60,
+        "type": "narration",
+        "role": "旁白",
+        "emotion": "neutral",
+        "text": "江桥又顺着原路返回，再次路过那间“心情咖啡”店，想起昨天发生的事情心中又是一阵烦闷，他已经不知道该怎么解决眼前的这些麻烦了，但却知道，如果他搞定不定陈艺做主持人这件事情，老金这个吊人是肯定不会放过他的。",
+        "referenceAudio": {
+          "id": "f2c00789-01a1-474d-bfcd-c5f940006be9",
+          "mode": 1,
+          "emoWeight": 0.65
+        },
+        "autoAssignedVoiceActor": null,
+        "autoEmotionAudioMap": null,
+        "audioUrl": "/api/tts/preview/reader_我的郁金香小姐/d1d207fc-b202-4578-9b18-f3b7d2fef353.mp3"
       }
     ],
-    "createdAt": "2026-03-26T05:54:11.911Z"
+    "createdAt": "2026-03-27T07:08:10.984Z"
   }
 }
