@@ -520,6 +520,7 @@ const listenState = ref("idle"); // idle | loading | ready | error
 const listenPhase = ref(""); // prescan | parse | assign | tts | done
 const segments = ref([]); // { index, type, role, emotion, text, audioUrl }
 const currentSegIdx = ref(-1); // 当前播放的 segment 索引
+const nextSegIdx = ref(0); // 下一条待播放的 segment 索引
 const isPlaying = ref(false);
 const segRefs = ref([]); // DOM 引用，用于自动滚动
 const listenTaskId = ref(null);
@@ -561,6 +562,8 @@ let currentAudio = null;
 let forceStop = false;
 // 当前章节的 TTS 生成是否已全部完成
 const isGenerationComplete = ref(false);
+// 段间播放间隔，单位毫秒。可直接在这里调整。
+const SEGMENT_PLAY_GAP_MS = 2000;
 
 // 阶段文案
 const phaseTextMap = {
@@ -782,6 +785,7 @@ async function markListenDirty() {
   listenState.value = "idle";
   listenPhase.value = "";
   currentSegIdx.value = -1;
+  nextSegIdx.value = 0;
   isPlaying.value = false;
   isGenerationComplete.value = false;
 }
@@ -889,6 +893,7 @@ async function resetListen(skipCancel = false, useBeacon = false) {
   listenPhase.value = "";
   segments.value = [];
   currentSegIdx.value = -1;
+  nextSegIdx.value = 0;
   isPlaying.value = false;
   segRefs.value = [];
   isGenerationComplete.value = false;
@@ -1035,6 +1040,7 @@ function stopPolling() {
 // ── 自动播放（进入 ready 状态后从头开始）──
 function autoPlay() {
   currentSegIdx.value = -1;
+  nextSegIdx.value = 0;
   isPlaying.value = true;
   playFrom(0);
 }
@@ -1054,7 +1060,7 @@ function togglePlayPause() {
       currentAudio.play();
     } else {
       // 从当前位置重新开始
-      const startIdx = currentSegIdx.value >= 0 ? currentSegIdx.value : 0;
+      const startIdx = nextSegIdx.value >= 0 ? nextSegIdx.value : 0;
       playFrom(startIdx);
     }
   }
@@ -1076,6 +1082,7 @@ async function playFrom(startIndex) {
 
     const seg = segments.value[i];
     currentSegIdx.value = i;
+    nextSegIdx.value = i;
     scrollToSeg(i);
 
     if (seg.audioUrl) {
@@ -1083,6 +1090,13 @@ async function playFrom(startIndex) {
     }
 
     if (!isPlaying.value) break;
+    nextSegIdx.value = i + 1;
+
+    if (SEGMENT_PLAY_GAP_MS > 0) {
+      await waitSegmentGap(SEGMENT_PLAY_GAP_MS);
+      if (forceStop || !isPlaying.value) break;
+    }
+
     i++;
   }
 
@@ -1090,7 +1104,14 @@ async function playFrom(startIndex) {
   if (isPlaying.value) {
     isPlaying.value = false;
     currentAudio = null;
+    nextSegIdx.value = segments.value.length;
   }
+}
+
+function waitSegmentGap(delayMs) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, delayMs);
+  });
 }
 
 // ── 播放单条音频，返回 Promise（播放完毕 resolve）──
