@@ -170,6 +170,7 @@ router.post("/parse", async (req, res) => {
       timeout: 120000, // 设置超时时间为 120 秒 (120000 毫秒)
       signal: abortController.signal,
     });
+    console.log("请求状态", response.status);
 
     let rawResult = "";
     // 处理流式数据
@@ -199,10 +200,16 @@ router.post("/parse", async (req, res) => {
                 const content = data.choices[0].delta.content;
                 rawResult += content;
                 process.stdout.write(content); // 在终端实时打印接收到的流式数据
+              } else {
+                console.warn("流式数据块格式不符合预期，缺少 content 字段:", data);
+                console.log("当前数据块:", data.choices[0].delta);
+                
               }
             } catch (e) {
               console.error("解析流式数据块失败:", e, trimmedLine);
             }
+          } else {
+            console.warn("收到无法识别的流式数据块:", trimmedLine);
           }
         }
       });
@@ -448,6 +455,7 @@ router.post("/prescan-characters", async (req, res) => {
     }
 
     res.json({ success: true, data: existingCharacters });
+    console.log("LLM预扫描完成");
   } catch (error) {
     console.error("预扫描失败:", error.message);
     if (error.response) {
