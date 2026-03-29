@@ -1,98 +1,162 @@
 [
   {
-    "id": "f2c00789-01a1-474d-bfcd-c5f940006be9",
-    "name": "行秋-旁白-男",
-    "fileName": "2910063a-6df7-4e35-aecc-78107b46832e.mp3",
-    "originalName": "行秋-旁白-男.mp3",
-    "size": 247514,
-    "createTime": "2026-03-18T09:24:05.122Z",
-    "url": "/uploads/reference_audios/2910063a-6df7-4e35-aecc-78107b46832e.mp3",
-    "remark": "",
-    "sampleText": "在下行秋，不过书海一蠹。某虽不才，仍愿为君略尽绵薄。难得有机会说这种风格的台词，感觉还不错。",
-    "siliconUri": "speech:voice_f2c00789_01a1_474d_bfcd_c5f940006be9:cm0l76q8q00vgihkaez0a28rw:kzgictzsxqueukfhvqii"
-  },
-  {
-    "id": "350dc131-c232-4986-a145-d851608e411e",
-    "name": "那维莱特-平静-男",
-    "fileName": "4a36f6d2-c9a3-4d3c-85f5-b6d0eb4919a6.mp3",
-    "originalName": "那维莱特-平静-男.mp3",
-    "size": 96329,
-    "createTime": "2026-03-18T09:24:49.798Z",
-    "url": "/uploads/reference_audios/4a36f6d2-c9a3-4d3c-85f5-b6d0eb4919a6.mp3",
-    "remark": "",
-    "sampleText": "我既认可我自身工作的价值，也认同枫丹大众所作所为的意义。我想，我还是会以我的责任为荣的。",
-    "siliconUri": "speech:voice_350dc131_c232_4986_a145_d851608e411e:cm0l76q8q00vgihkaez0a28rw:wtqulsyepqcdjevfjzib"
-  },
-  {
-    "id": "857e60db-4894-4c6b-9de3-f95d9e5ed8bf",
-    "name": "钟离-平静-男",
-    "fileName": "ff8ce5c7-4c91-4644-b288-64f9e1678a0b.wav",
-    "originalName": "钟离-平静-男.wav",
-    "size": 2652450,
-    "createTime": "2026-03-18T09:25:04.779Z",
-    "url": "/uploads/reference_audios/ff8ce5c7-4c91-4644-b288-64f9e1678a0b.wav",
-    "remark": "",
-    "sampleText": "一份新的「契约」？好吧…虽然我还在度假，但也可以陪你走一趟。契约书上，该签什么名字呢？我有许多名字，度假期间的话，我会自称「钟离」。你呢，旅行者？你会签下什么名字？",
-    "siliconUri": "speech:voice_857e60db_4894_4c6b_9de3_f95d9e5ed8bf:cm0l76q8q00vgihkaez0a28rw:wklhxfgdgcrmyqlckdyq"
-  },
-  {
-    "id": "b5ce78c8-acbd-4fba-a21c-914a295ccfce",
-    "name": "刻晴-厌恶-女",
-    "fileName": "1c7b259a-794c-4eb5-952b-731faff60275.wav",
-    "originalName": "刻晴-厌恶-女.wav",
-    "size": 1485974,
-    "createTime": "2026-03-18T09:25:36.378Z",
-    "url": "/uploads/reference_audios/1c7b259a-794c-4eb5-952b-731faff60275.wav",
-    "remark": "",
-    "sampleText": "每种菜肴都有最理想的味道，我不能接受除此以外的做法，尝试都不行。比如，咸味的杏仁豆腐，甜味的莲子禽蛋羹什么的…都是在暴殄天物！",
-    "siliconUri": "speech:voice_b5ce78c8_acbd_4fba_a21c_914a295ccfce:cm0l76q8q00vgihkaez0a28rw:vncctkaytwfqhyfnbpgy"
-  },
-  {
-    "id": "d1707117-4a36-48a7-b8ce-792b7a26c0b5",
+    "id": "20de76bd-0e87-41f1-813f-63fc22f89d08",
     "name": "刻晴-开心-女",
-    "fileName": "22755bae-4721-478b-a1d9-054b31fd6833.wav",
+    "fileName": "34582d30-4800-43b1-9c5e-164f4b6bc048.wav",
     "originalName": "刻晴-开心-女.wav",
     "size": 1047774,
-    "createTime": "2026-03-18T09:25:48.509Z",
-    "url": "/uploads/reference_audios/22755bae-4721-478b-a1d9-054b31fd6833.wav",
-    "remark": "",
-    "sampleText": "这么多式样、这么多质地、这么多选择…啊，这就是「消费」呀，真是令人难以抵御的魅力。",
-    "siliconUri": "speech:voice_d1707117_4a36_48a7_b8ce_792b7a26c0b5:cm0l76q8q00vgihkaez0a28rw:qhnsnvrxynstwmpfzosj"
+    "createTime": "2026-03-29T09:33:24.224Z",
+    "url": "/uploads/reference_audios/34582d30-4800-43b1-9c5e-164f4b6bc048.wav",
+    "remark": ""
   },
   {
-    "id": "39a8e2ba-7220-42ea-84ae-1e01808c5c3d",
-    "name": "刻晴-忧郁-女",
-    "fileName": "4da66015-99c6-4f4c-809c-42fd0841a1ed.wav",
-    "originalName": "刻晴-忧郁-女.wav",
-    "size": 1702510,
-    "createTime": "2026-03-18T09:26:04.390Z",
-    "url": "/uploads/reference_audios/4da66015-99c6-4f4c-809c-42fd0841a1ed.wav",
-    "remark": "",
-    "sampleText": "璃月人的生活越来越好，这确实没错，但不思进取，好吃懒做的人也越来越多了。唉，「璃月七星」很努力地改善社会福利，可不是为了养活这帮闲人啊。",
-    "siliconUri": "speech:voice_39a8e2ba_7220_42ea_84ae_1e01808c5c3d:cm0l76q8q00vgihkaez0a28rw:wxsdnefmjlxxhwfazukd"
-  },
-  {
-    "id": "4cea6ef9-cd75-4f90-afdb-4d1531e0a448",
+    "id": "05b46bd3-0614-454a-9ecf-3e22383e557c",
     "name": "刻晴-平静-女",
-    "fileName": "000d533e-af43-4825-ae56-4c38e6dc061e.wav",
+    "fileName": "162a5eba-b599-4672-92bd-1be4964f0197.wav",
     "originalName": "刻晴-平静-女.wav",
     "size": 1791202,
-    "createTime": "2026-03-18T09:26:15.808Z",
-    "url": "/uploads/reference_audios/000d533e-af43-4825-ae56-4c38e6dc061e.wav",
-    "remark": "",
-    "sampleText": "我是刻晴，璃月七星中的「玉衡」。变革的时机已经到来，维持了千年的秩序即将被改写。这历史性的时刻，你愿意和我一起见证吗?",
-    "siliconUri": "speech:voice_4cea6ef9_cd75_4f90_afdb_4d1531e0a448:cm0l76q8q00vgihkaez0a28rw:qqqxlqqtqjxbeumxbaig"
+    "createTime": "2026-03-29T09:33:27.370Z",
+    "url": "/uploads/reference_audios/162a5eba-b599-4672-92bd-1be4964f0197.wav",
+    "remark": ""
   },
   {
-    "id": "d0fc651f-c4c3-4914-b7fe-8c898867423d",
+    "id": "cdca7afa-b037-4739-be5d-1cdf7e17cba2",
     "name": "刻晴-生气-女",
-    "fileName": "dce7bfba-3da6-4636-a0da-339bec048524.wav",
+    "fileName": "2bdd3a0f-de7e-4226-9afb-b6b5ca3781d3.wav",
     "originalName": "刻晴-生气-女.wav",
     "size": 1800366,
-    "createTime": "2026-03-18T09:26:59.763Z",
-    "url": "/uploads/reference_audios/dce7bfba-3da6-4636-a0da-339bec048524.wav",
-    "remark": "",
-    "sampleText": "话虽这么说！明星斋的「琉璃新月」，我提前三个月就预定了！结果去取货的时候才知道，凝光她用两倍的价钱，把这几个月里所有的「琉璃新月」都买走了！果然我还是受不了她！",
-    "siliconUri": "speech:voice_d0fc651f_c4c3_4914_b7fe_8c898867423d:cm0l76q8q00vgihkaez0a28rw:edxxvwcuokfehmvmxtwt"
+    "createTime": "2026-03-29T09:33:32.448Z",
+    "url": "/uploads/reference_audios/2bdd3a0f-de7e-4226-9afb-b6b5ca3781d3.wav",
+    "remark": ""
+  },
+  {
+    "id": "d2033014-a6b8-4190-891e-46318e27a02a",
+    "name": "刻晴-厌恶-女",
+    "fileName": "2efdf38e-5a4d-43e4-aeac-b7306cebee28.wav",
+    "originalName": "刻晴-厌恶-女.wav",
+    "size": 1485974,
+    "createTime": "2026-03-29T09:33:39.862Z",
+    "url": "/uploads/reference_audios/2efdf38e-5a4d-43e4-aeac-b7306cebee28.wav",
+    "remark": ""
+  },
+  {
+    "id": "c061e4c9-5a38-4137-9f41-b595bbbd1ac0",
+    "name": "刻晴-忧郁-女",
+    "fileName": "2411eb91-da16-446b-b352-262e434159ce.wav",
+    "originalName": "刻晴-忧郁-女.wav",
+    "size": 1702510,
+    "createTime": "2026-03-29T09:33:41.993Z",
+    "url": "/uploads/reference_audios/2411eb91-da16-446b-b352-262e434159ce.wav",
+    "remark": ""
+  },
+  {
+    "id": "c0167654-46f2-411e-9ebb-ecce0578825c",
+    "name": "那维莱特-平静-男",
+    "fileName": "85c58a73-4dce-470c-a7a8-156b02f2b956.mp3",
+    "originalName": "那维莱特-平静-男.mp3",
+    "size": 96329,
+    "createTime": "2026-03-29T09:33:44.076Z",
+    "url": "/uploads/reference_audios/85c58a73-4dce-470c-a7a8-156b02f2b956.mp3",
+    "remark": ""
+  },
+  {
+    "id": "d8bb4dfd-31a7-41c3-a76b-8e9f874737c4",
+    "name": "钟离-平静-男",
+    "fileName": "bb44dda7-809b-424a-9dba-9d50363cf070.wav",
+    "originalName": "钟离-平静-男.wav",
+    "size": 2652450,
+    "createTime": "2026-03-29T09:33:45.988Z",
+    "url": "/uploads/reference_audios/bb44dda7-809b-424a-9dba-9d50363cf070.wav",
+    "remark": ""
+  },
+  {
+    "id": "37279c73-fdca-42cb-a930-9e95a70362f9",
+    "name": "夜兰-平静-女",
+    "fileName": "ff55f1f8-b148-416b-85c5-e9cdb7f7647b.mp3",
+    "originalName": "夜兰-平静-女.mp3",
+    "size": 61388,
+    "createTime": "2026-03-29T09:35:06.738Z",
+    "url": "/uploads/reference_audios/ff55f1f8-b148-416b-85c5-e9cdb7f7647b.mp3",
+    "remark": ""
+  },
+  {
+    "id": "f561d57b-00c8-4564-aed0-0e2b64ec2eab",
+    "name": "珊瑚宫心海-平静-女",
+    "fileName": "19e277df-2a33-4844-844f-35d4d9fcbf29.mp3",
+    "originalName": "珊瑚宫心海-平静-女.mp3",
+    "size": 103328,
+    "createTime": "2026-03-29T09:37:26.789Z",
+    "url": "/uploads/reference_audios/19e277df-2a33-4844-844f-35d4d9fcbf29.mp3",
+    "remark": ""
+  },
+  {
+    "id": "07b13333-6b11-451e-af9b-95067b3b49f9",
+    "name": "甘雨-平静-女",
+    "fileName": "b7fa2613-706d-4115-887d-c6133bc2e186.mp3",
+    "originalName": "甘雨-平静-女.mp3",
+    "size": 54944,
+    "createTime": "2026-03-29T09:38:08.149Z",
+    "url": "/uploads/reference_audios/b7fa2613-706d-4115-887d-c6133bc2e186.mp3",
+    "remark": ""
+  },
+  {
+    "id": "07ca099f-9159-4b80-b6c1-35936e6c3424",
+    "name": "神里绫华-平静-女",
+    "fileName": "d5b3c680-0e89-4e51-8cdf-3195a52f0250.mp3",
+    "originalName": "神里绫华-平静-女.mp3",
+    "size": 125984,
+    "createTime": "2026-03-29T09:38:39.507Z",
+    "url": "/uploads/reference_audios/d5b3c680-0e89-4e51-8cdf-3195a52f0250.mp3",
+    "remark": ""
+  },
+  {
+    "id": "b25ca368-8f55-4d7b-84d3-eebdd76316d3",
+    "name": "重云-平静-男",
+    "fileName": "8c9a244a-31e2-467c-ba9d-29c45e05fb80.mp3",
+    "originalName": "重云-平静-男.mp3",
+    "size": 137085,
+    "createTime": "2026-03-29T09:40:03.121Z",
+    "url": "/uploads/reference_audios/8c9a244a-31e2-467c-ba9d-29c45e05fb80.mp3",
+    "remark": ""
+  },
+  {
+    "id": "17053b0d-76c7-44dd-93a9-96b52d564f5c",
+    "name": "艾尔海森-平静-男",
+    "fileName": "bfbad293-7600-4f0e-81dd-215d5ef2da08.mp3",
+    "originalName": "艾尔海森-平静-男.mp3",
+    "size": 41186,
+    "createTime": "2026-03-29T09:41:14.125Z",
+    "url": "/uploads/reference_audios/bfbad293-7600-4f0e-81dd-215d5ef2da08.mp3",
+    "remark": ""
+  },
+  {
+    "id": "fae50aac-c555-4784-9b52-843762a894d5",
+    "name": "叶洛亚-平静-男",
+    "fileName": "8fe18809-f64c-4b62-87da-e3d87a97e6bd.mp3",
+    "originalName": "叶洛亚-平静-男.mp3",
+    "size": 39180,
+    "createTime": "2026-03-29T09:41:59.435Z",
+    "url": "/uploads/reference_audios/8fe18809-f64c-4b62-87da-e3d87a97e6bd.mp3",
+    "remark": ""
+  },
+  {
+    "id": "d57d9a9d-b81a-447f-9dc2-203783a556fd",
+    "name": "琴-平静-女",
+    "fileName": "15986d97-9441-4b59-8c5f-2f32b1752eff.mp3",
+    "originalName": "琴-平静-女.mp3",
+    "size": 40940,
+    "createTime": "2026-03-29T09:44:59.268Z",
+    "url": "/uploads/reference_audios/15986d97-9441-4b59-8c5f-2f32b1752eff.mp3",
+    "remark": ""
+  },
+  {
+    "id": "f038d51f-f6ca-443c-b2b5-7547d9617dcf",
+    "name": "行秋-旁白-男",
+    "fileName": "9cea220c-bb8e-465f-b126-140fc9352b6b.mp3",
+    "originalName": "行秋-旁白-男.mp3",
+    "size": 247514,
+    "createTime": "2026-03-29T09:47:57.352Z",
+    "url": "/uploads/reference_audios/9cea220c-bb8e-465f-b126-140fc9352b6b.mp3",
+    "remark": ""
   }
 ]
