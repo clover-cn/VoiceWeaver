@@ -4,16 +4,19 @@ const fs = require("fs");
 const path = require("path");
 const axios = require("axios");
 const { v4: uuidv4 } = require("uuid");
+const {
+  cacheKey,
+  getProjectDir,
+  readProjectListenCache,
+  writeProjectListenCache,
+  clearProjectListenCache,
+  findDoneListenCacheByTaskId,
+} = require("../services/listenBookCacheService");
 
 // ─────────────────────────────────────────────
 // 路径常量
 // ─────────────────────────────────────────────
 const dataDir = path.join(__dirname, "../data");
-const cacheFilePath = path.join(dataDir, "listen_book_cache.json");
-
-if (!fs.existsSync(cacheFilePath)) {
-  fs.writeFileSync(cacheFilePath, "{}", "utf8");
-}
 
 // ─────────────────────────────────────────────
 // 内存任务表（服务重启后丢失，已完成的靠 cache 恢复）
@@ -29,34 +32,6 @@ function createCancelledError(message = "CANCELLED") {
 // ─────────────────────────────────────────────
 // 工具函数
 // ─────────────────────────────────────────────
-function readCache() {
-  try {
-    const raw = fs.readFileSync(cacheFilePath, "utf8").trim();
-    return raw ? JSON.parse(raw) : {};
-  } catch {
-    return {};
-  }
-}
-
-function writeCache(data) {
-  fs.writeFileSync(cacheFilePath, JSON.stringify(data, null, 2), "utf8");
-}
-
-function cacheKey(projectName, chapterIndex) {
-  return `${projectName}__${chapterIndex}`;
-}
-
-function getProjectDir(projectName) {
-  const safeProjectName = String(projectName || "")
-    .trim()
-    .replace(/[\\/:*?"<>|]/g, "");
-  const projectDir = path.join(dataDir, "projects", safeProjectName);
-  if (!fs.existsSync(projectDir)) {
-    fs.mkdirSync(projectDir, { recursive: true });
-  }
-  return projectDir;
-}
-
 function getChapterEditsPath(projectName) {
   return path.join(getProjectDir(projectName), "reader_edits.json");
 }
@@ -147,29 +122,16 @@ function cancelTask(task) {
 }
 
 function clearRunningCache(projectName, chapterIndex) {
-  const cache = readCache();
+  const cache = readProjectListenCache(projectName);
   const key = cacheKey(projectName, chapterIndex);
   if (cache[key] && cache[key].phase !== "done") {
     delete cache[key];
-    writeCache(cache);
+    writeProjectListenCache(projectName, cache);
   }
 }
 
 function clearProjectCacheFromChapter(projectName, fromChapterIndex = 0) {
-  const cache = readCache();
-  let changed = false;
-  Object.keys(cache).forEach((key) => {
-    const [cachedProjectName, cachedChapterIndex] = key.split("__");
-    if (cachedProjectName !== projectName) return;
-    const idx = Number(cachedChapterIndex);
-    if (!Number.isFinite(idx) || idx < fromChapterIndex) return;
-    delete cache[key];
-    changed = true;
-  });
-  if (changed) {
-    writeCache(cache);
-  }
-  return changed;
+  return clearProjectListenCache(projectName, fromChapterIndex);
 }
 
 // ─────────────────────────────────────────────
@@ -324,14 +286,14 @@ async function runPipeline(taskId, { projectName, chapterIndex, chapterUrl, chap
     console.log(`[listenBook][${taskId}] 完成，成功生成 ${task.segments.filter((s) => s.audioUrl).length}/${cards.length} 条`);
 
     // 全部完成后写入 cache（前端检测到 done 再触发后续章节预缓存）
-    const cache = readCache();
+    const cache = readProjectListenCache(projectName);
     cache[cacheKey(projectName, chapterIndex)] = {
       taskId,
       phase: "done",
       segments: task.segments,
       createdAt: new Date().toISOString(),
     };
-    writeCache(cache);
+    writeProjectListenCache(projectName, cache);
   } catch (err) {
     if (isCancelledError(err)) {
       clearRunningCache(projectName, chapterIndex);
@@ -374,7 +336,7 @@ router.post("/check", (req, res) => {
   }
 
   const key = cacheKey(projectName, chapterIndex);
-  const cache = readCache();
+  const cache = readProjectListenCache(projectName);
 
   // 已完成
   if (cache[key] && cache[key].phase === "done") {
@@ -405,7 +367,7 @@ router.post("/generate", (req, res) => {
   }
 
   const key = cacheKey(projectName, chapterIndex);
-  const cache = readCache();
+  const cache = readProjectListenCache(projectName);
 
   // 已完成 → 直接返回
   if (cache[key] && cache[key].phase === "done") {
@@ -437,7 +399,7 @@ router.post("/generate", (req, res) => {
 
   // 写入 cache 标记进行中（防并发重复触发）
   cache[key] = { taskId, phase: "running", createdAt: new Date().toISOString() };
-  writeCache(cache);
+  writeProjectListenCache(projectName, cache);
 
   // 异步启动，不阻塞响应
   runPipeline(taskId, { projectName, chapterIndex, chapterUrl, chapterList }).catch((e) => {
@@ -457,8 +419,7 @@ router.get("/status/:taskId", (req, res) => {
 
   if (!task) {
     // 服务重启后内存丢失，从 cache 恢复
-    const cache = readCache();
-    const found = Object.values(cache).find((v) => v.taskId === taskId && v.phase === "done");
+    const found = findDoneListenCacheByTaskId(taskId);
     if (found) {
       return res.json({ phase: "done", progress: 100, segments: found.segments });
     }

@@ -3,6 +3,7 @@ const axios = require("axios");
 const fs = require("fs");
 const path = require("path");
 const { loadProjectCasting, saveProjectCasting, parseAudioRecordName, loadProjectReaderSettings, saveProjectReaderSettings } = require("../services/autoCastingService");
+const { clearProjectListenCache } = require("../services/listenBookCacheService");
 
 const router = express.Router();
 
@@ -10,7 +11,6 @@ const router = express.Router();
 const TARGET_BASE_URL = "http://154.58.233.231:9080/reader3";
 const dataDir = path.join(__dirname, "../data");
 const audioRecordsPath = path.join(dataDir, "audio_records.json");
-const listenCachePath = path.join(dataDir, "listen_book_cache.json");
 
 function getAudioRecords() {
   try {
@@ -24,23 +24,7 @@ function getAudioRecords() {
 
 function clearListenBookCache(projectName, fromChapterIndex = 0) {
   try {
-    if (!fs.existsSync(listenCachePath)) return;
-    const raw = fs.readFileSync(listenCachePath, "utf8").trim();
-    const cache = raw ? JSON.parse(raw) : {};
-    let changed = false;
-
-    Object.keys(cache).forEach((key) => {
-      const [cachedProjectName, cachedChapterIndex] = key.split("__");
-      if (cachedProjectName !== projectName) return;
-      const idx = Number(cachedChapterIndex);
-      if (!Number.isFinite(idx) || idx < fromChapterIndex) return;
-      delete cache[key];
-      changed = true;
-    });
-
-    if (changed) {
-      fs.writeFileSync(listenCachePath, JSON.stringify(cache, null, 2), "utf8");
-    }
+    clearProjectListenCache(projectName, fromChapterIndex);
   } catch (error) {
     console.warn("清理听书缓存失败:", error.message);
   }
