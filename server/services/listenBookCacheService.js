@@ -130,9 +130,13 @@ function clearProjectListenCache(projectName, fromChapterIndex = 0) {
   return changed;
 }
 
-function findDoneListenCacheByTaskId(taskId) {
+function findListenCacheByTaskId(taskId, { phase } = {}) {
   const legacyCache = readLegacyCache();
-  const legacyMatch = Object.values(legacyCache).find((item) => item.taskId === taskId && item.phase === "done");
+  const legacyMatch = Object.values(legacyCache).find((item) => {
+    if (item.taskId !== taskId) return false;
+    if (phase && item.phase !== phase) return false;
+    return true;
+  });
   if (legacyMatch) return legacyMatch;
 
   if (!fs.existsSync(projectsDir)) return null;
@@ -141,7 +145,11 @@ function findDoneListenCacheByTaskId(taskId) {
   for (const entry of projectDirs) {
     const cachePath = path.join(projectsDir, entry.name, cacheFileName);
     const projectCache = readJson(cachePath, {});
-    const match = Object.values(projectCache).find((item) => item.taskId === taskId && item.phase === "done");
+    const match = Object.values(projectCache).find((item) => {
+      if (item.taskId !== taskId) return false;
+      if (phase && item.phase !== phase) return false;
+      return true;
+    });
     if (match) {
       return match;
     }
@@ -157,5 +165,5 @@ module.exports = {
   readProjectListenCache,
   writeProjectListenCache,
   clearProjectListenCache,
-  findDoneListenCacheByTaskId,
+  findListenCacheByTaskId,
 };

@@ -34,12 +34,6 @@
       "id": null,
       "mode": 3,
       "emoWeight": 0
-    },
-    "neutral": {
-      "id": "f038d51f-f6ca-443c-b2b5-7547d9617dcf",
-      "mode": 1,
-      "emoWeight": 0.65,
-      "emoAlpha": 0.6
     }
   },
   "刻晴": {
@@ -70,53 +64,9 @@
       "emoAlpha": 0.6
     }
   },
-  "钟离": {
-    "neutral": {
-      "id": "857e60db-4894-4c6b-9de3-f95d9e5ed8bf",
-      "mode": 1,
-      "emoWeight": 0.65,
-      "emoAlpha": 0.6
-    }
-  },
   "那维莱特": {
     "neutral": {
       "id": "350dc131-c232-4986-a145-d851608e411e",
-      "mode": 1,
-      "emoWeight": 0.65,
-      "emoAlpha": 0.6
-    }
-  },
-  "江桥": {
-    "neutral": {
-      "id": "d8bb4dfd-31a7-41c3-a76b-8e9f874737c4",
-      "mode": 1,
-      "emoWeight": 0.65,
-      "emoAlpha": 0.6
-    }
-  },
-  "陈艺": {
-    "happy": {
-      "id": "20de76bd-0e87-41f1-813f-63fc22f89d08",
-      "mode": 1,
-      "emoWeight": 0.65
-    },
-    "angry": {
-      "id": "cdca7afa-b037-4739-be5d-1cdf7e17cba2",
-      "mode": 1,
-      "emoWeight": 0.65
-    },
-    "disgusted": {
-      "id": "d2033014-a6b8-4190-891e-46318e27a02a",
-      "mode": 1,
-      "emoWeight": 0.65
-    },
-    "melancholy": {
-      "id": "c061e4c9-5a38-4137-9f41-b595bbbd1ac0",
-      "mode": 1,
-      "emoWeight": 0.65
-    },
-    "neutral": {
-      "id": "05b46bd3-0614-454a-9ecf-3e22383e557c",
       "mode": 1,
       "emoWeight": 0.65,
       "emoAlpha": 0.6
