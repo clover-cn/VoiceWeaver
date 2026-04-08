@@ -9,9 +9,9 @@
         <p class="text-[#7777aa] text-[15px] m-0 mb-8">搜索你想阅读的小说，开启沉浸阅读旅程</p>
 
         <!-- 搜索框 -->
-        <div class="flex w-full max-w-[560px] gap-2.5">
-          <input
-            v-model="searchKeyword"
+      <div class="flex w-full max-w-[560px] gap-2.5">
+        <input
+          v-model="searchKeyword"
             class="flex-1 px-5 py-3.5 bg-[#1a1a2e] border border-[#3a3a6a] rounded-xl text-[#e2e2f0] text-base outline-none transition-all duration-200 focus:border-[#7c6ff7] focus:ring-[3px] focus:ring-[rgba(124,111,247,0.2)] placeholder:text-[#555577]"
             placeholder="输入书名或作者..."
             @keyup.enter="doSearch"
@@ -26,6 +26,82 @@
               <el-icon><Search /></el-icon>搜索
             </div>
           </button>
+        </div>
+
+        <div v-if="searchHistory.length" class="w-full max-w-[560px] mt-5">
+          <div class="flex items-center justify-between gap-3 mb-3">
+            <span class="text-[13px] font-medium text-[#9a9ac8]">搜索历史</span>
+            <button
+              type="button"
+              class="text-[12px] text-[#6f6fa8] transition-colors duration-200 hover:text-[#b5b5e8]"
+              @click="clearSearchHistory"
+            >
+              清空
+            </button>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <button
+              v-for="item in searchHistory"
+              :key="item.keyword"
+              type="button"
+              class="rounded-full border border-[rgba(124,111,247,0.25)] bg-[rgba(124,111,247,0.1)] px-3 py-1.5 text-[12px] text-[#d7d7fb] transition-colors duration-200 hover:bg-[rgba(124,111,247,0.2)]"
+              @click="reuseSearchKeyword(item.keyword)"
+            >
+              {{ item.keyword }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div v-if="readingHistory.length" class="px-6 mt-6">
+        <div class="flex items-center justify-between gap-3 mb-3">
+          <div class="flex items-center gap-2">
+            <span class="text-[15px] font-semibold text-[#d9d9f8]">阅读历史</span>
+            <span class="text-[12px] text-[#7171a6]">下次可直接续读</span>
+          </div>
+          <button
+            type="button"
+            class="text-[12px] text-[#6f6fa8] transition-colors duration-200 hover:text-[#b5b5e8]"
+            @click="clearReadingHistory"
+          >
+            清空
+          </button>
+        </div>
+        <div class="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-4">
+          <div
+            v-for="item in readingHistory"
+            :key="item.id"
+            class="flex gap-3.5 rounded-2xl border border-[rgba(124,111,247,0.18)] bg-[linear-gradient(135deg,rgba(26,26,46,0.92),rgba(18,18,34,0.95))] p-4"
+          >
+            <div class="shrink-0 flex h-[90px] w-[68px] items-center justify-center overflow-hidden rounded-lg bg-[#1e1e3a]">
+              <img v-if="item.coverUrl" class="h-full w-full object-cover" :src="item.coverUrl" :alt="item.bookName" @error="handleImgError($event)" />
+              <div v-else class="flex h-full w-full items-center justify-center bg-gradient-to-br from-[#2e2e5a] to-[#3a2a5a] text-[28px] font-bold text-[#a09ef5]">
+                {{ item.bookName?.slice(0, 1) }}
+              </div>
+            </div>
+            <div class="min-w-0 flex-1">
+              <div class="truncate text-[15px] font-semibold text-[#ececff]" :title="item.bookName">{{ item.bookName }}</div>
+              <div class="mt-1 text-[13px] text-[#9292c8]">{{ item.author || "未知作者" }}</div>
+              <div class="mt-3 line-clamp-2 text-[12px] leading-5 text-[#c8c8ec]" :title="item.chapterTitle">上次看到：{{ item.chapterTitle }}</div>
+              <div class="mt-2 text-[11px] text-[#666699]">{{ formatHistoryTime(item.updatedAt) }}</div>
+              <div class="mt-3 flex gap-2">
+                <button
+                  type="button"
+                  class="rounded-lg bg-gradient-to-br from-[#7c6ff7] to-[#c44dff] px-3 py-1.5 text-[12px] font-semibold text-white transition-all duration-200 hover:-translate-y-[1px] hover:opacity-90"
+                  @click="resumeReading(item)"
+                >
+                  继续阅读
+                </button>
+                <button
+                  type="button"
+                  class="rounded-lg border border-[rgba(124,111,247,0.25)] bg-[rgba(124,111,247,0.08)] px-3 py-1.5 text-[12px] text-[#bcbcf1] transition-colors duration-200 hover:bg-[rgba(124,111,247,0.16)]"
+                  @click="reuseSearchKeyword(item.searchKeyword || item.bookName)"
+                >
+                  再次搜索
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -124,7 +200,7 @@
           class="bg-[rgba(124,111,247,0.15)] border border-[rgba(124,111,247,0.3)] text-[#a09ef5] px-4 py-2 rounded-lg cursor-pointer text-sm transition-colors duration-200 hover:bg-[rgba(124,111,247,0.28)] whitespace-nowrap"
           @click="backToChapters"
         >
-          ← 章节列表
+          ← {{ chapterList.length ? "章节列表" : "返回搜索" }}
         </button>
         <div class="flex-1 text-center text-[15px] font-semibold text-[#c0c0e0] whitespace-nowrap overflow-hidden text-ellipsis">{{ selectedChapter?.title }}</div>
         <div class="flex gap-2 items-center">
@@ -314,7 +390,7 @@
         >
           <el-icon><ArrowLeft /></el-icon> 上一章
         </button>
-        <span class="text-[#6666aa] text-[14px]">{{ currentChapterIndex + 1 }} / {{ chapterList.length }}</span>
+        <span class="text-[#6666aa] text-[14px]">{{ currentChapterIndex + 1 }} / {{ chapterList.length || "?" }}</span>
         <button
           class="flex items-center gap-1 px-7 py-2.5 bg-[rgba(124,111,247,0.12)] border border-[rgba(124,111,247,0.3)] rounded-xl text-[#a09ef5] text-[15px] cursor-pointer transition-all duration-200 hover:-translate-y-[1px] hover:bg-[rgba(124,111,247,0.28)] disabled:opacity-30 disabled:cursor-not-allowed disabled:transform-none"
           :disabled="currentChapterIndex >= chapterList.length - 1"
@@ -389,12 +465,100 @@ const API = "http://localhost:3000";
 
 // ── 状态机 ──
 const viewState = ref("search"); // 'search' | 'chapters' | 'reading'
+const SEARCH_HISTORY_KEY = "voiceweaver_reader_search_history";
+const READING_HISTORY_KEY = "voiceweaver_reader_reading_history";
+const SEARCH_HISTORY_LIMIT = 12;
+const READING_HISTORY_LIMIT = 8;
 
 // ── 搜索 ──
 const searchKeyword = ref("");
 const isSearching = ref(false);
 const hasSearched = ref(false);
 const searchResults = ref([]);
+const searchHistory = ref([]);
+const readingHistory = ref([]);
+
+function loadLocalList(key) {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = window.localStorage.getItem(key);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (e) {
+    console.warn(`读取本地数据失败: ${key}`, e.message);
+    return [];
+  }
+}
+
+function persistLocalList(key, list) {
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem(key, JSON.stringify(list));
+}
+
+function saveSearchHistory(keyword) {
+  const value = String(keyword || "").trim();
+  if (!value) return;
+  const nextHistory = [
+    { keyword: value, updatedAt: Date.now() },
+    ...searchHistory.value.filter((item) => item.keyword !== value),
+  ].slice(0, SEARCH_HISTORY_LIMIT);
+  searchHistory.value = nextHistory;
+  persistLocalList(SEARCH_HISTORY_KEY, nextHistory);
+}
+
+function saveReadingHistory() {
+  if (!selectedBook.value || !selectedChapter.value) return;
+  const now = Date.now();
+  const historyItem = {
+    id: `${selectedBook.value.bookUrl}::${currentChapterIndex.value}`,
+    bookUrl: selectedBook.value.bookUrl,
+    bookName: selectedBook.value.name,
+    author: selectedBook.value.author,
+    coverUrl: selectedBook.value.coverUrl || "",
+    origin: selectedBook.value.origin,
+    originName: selectedBook.value.originName,
+    intro: selectedBook.value.intro || "",
+    latestChapterTitle: selectedBook.value.latestChapterTitle || "",
+    chapterIndex: currentChapterIndex.value,
+    chapterTitle: selectedChapter.value.title,
+    chapterUrl: selectedChapter.value.bookUrl,
+    searchKeyword: searchKeyword.value.trim(),
+    updatedAt: now,
+  };
+  const nextHistory = [
+    historyItem,
+    ...readingHistory.value.filter((item) => item.bookUrl !== historyItem.bookUrl),
+  ].slice(0, READING_HISTORY_LIMIT);
+  readingHistory.value = nextHistory;
+  persistLocalList(READING_HISTORY_KEY, nextHistory);
+}
+
+function clearSearchHistory() {
+  searchHistory.value = [];
+  persistLocalList(SEARCH_HISTORY_KEY, []);
+}
+
+function clearReadingHistory() {
+  readingHistory.value = [];
+  persistLocalList(READING_HISTORY_KEY, []);
+}
+
+function formatHistoryTime(timestamp) {
+  if (!timestamp) return "";
+  const date = new Date(timestamp);
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toLocaleString("zh-CN", {
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function reuseSearchKeyword(keyword) {
+  searchKeyword.value = keyword || "";
+  doSearch();
+}
 
 const doSearch = async () => {
   const key = searchKeyword.value.trim();
@@ -407,6 +571,7 @@ const doSearch = async () => {
       params: { key, concurrentCount: 4 },
     });
     searchResults.value = res.data.data || [];
+    saveSearchHistory(key);
   } catch (e) {
     console.error("搜索失败", e);
     searchResults.value = [];
@@ -438,6 +603,31 @@ const selectBook = async (book) => {
   } finally {
     isLoadingChapters.value = false;
   }
+};
+
+const resumeReading = async (historyItem) => {
+  await resetListen();
+  chapterList.value = [];
+  selectedBook.value = {
+    name: historyItem.bookName,
+    author: historyItem.author,
+    coverUrl: historyItem.coverUrl,
+    bookUrl: historyItem.bookUrl,
+    origin: historyItem.origin,
+    originName: historyItem.originName,
+    intro: historyItem.intro,
+    latestChapterTitle: historyItem.latestChapterTitle,
+  };
+  searchKeyword.value = historyItem.searchKeyword || historyItem.bookName || "";
+  selectedChapter.value = {
+    title: historyItem.chapterTitle,
+    bookUrl: historyItem.bookUrl,
+  };
+  currentChapterIndex.value = Number.isFinite(Number(historyItem.chapterIndex)) ? Number(historyItem.chapterIndex) : 0;
+  viewState.value = "reading";
+  await fetchGenerationSettings();
+  await fetchContent(selectedChapter.value, currentChapterIndex.value);
+  await checkListenCache();
 };
 
 // ── 选章 → 阅读 ──
@@ -472,6 +662,7 @@ const fetchContent = async (chap, idx) => {
         .split("\n")
         .map((p) => p.trim())
         .filter((p) => p.length > 0);
+      saveReadingHistory();
     }
   } catch (e) {
     console.error("获取正文失败", e);
@@ -505,7 +696,7 @@ const backToSearch = async () => {
 
 const backToChapters = async () => {
   await resetListen();
-  viewState.value = "chapters";
+  viewState.value = chapterList.value.length ? "chapters" : "search";
 };
 
 // ════════════════════════════════════════════════════════════
@@ -1183,6 +1374,8 @@ const handlePageLeave = () => {
 };
 
 onMounted(() => {
+  searchHistory.value = loadLocalList(SEARCH_HISTORY_KEY);
+  readingHistory.value = loadLocalList(READING_HISTORY_KEY);
   fetchAudioRecords();
   fetchGlobalBindings();
   window.addEventListener("pagehide", handlePageLeave);
