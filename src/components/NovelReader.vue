@@ -200,7 +200,7 @@
           class="bg-[rgba(124,111,247,0.15)] border border-[rgba(124,111,247,0.3)] text-[#a09ef5] px-4 py-2 rounded-lg cursor-pointer text-sm transition-colors duration-200 hover:bg-[rgba(124,111,247,0.28)] whitespace-nowrap"
           @click="backToChapters"
         >
-          ← {{ chapterList.length ? "章节列表" : "返回搜索" }}
+          ← 章节列表
         </button>
         <div class="flex-1 text-center text-[15px] font-semibold text-[#c0c0e0] whitespace-nowrap overflow-hidden text-ellipsis">{{ selectedChapter?.title }}</div>
         <div class="flex gap-2 items-center">
@@ -390,7 +390,7 @@
         >
           <el-icon><ArrowLeft /></el-icon> 上一章
         </button>
-        <span class="text-[#6666aa] text-[14px]">{{ currentChapterIndex + 1 }} / {{ chapterList.length || "?" }}</span>
+        <span class="text-[#6666aa] text-[14px]">{{ currentChapterIndex + 1 }} / {{ chapterList.length }}</span>
         <button
           class="flex items-center gap-1 px-7 py-2.5 bg-[rgba(124,111,247,0.12)] border border-[rgba(124,111,247,0.3)] rounded-xl text-[#a09ef5] text-[15px] cursor-pointer transition-all duration-200 hover:-translate-y-[1px] hover:bg-[rgba(124,111,247,0.28)] disabled:opacity-30 disabled:cursor-not-allowed disabled:transform-none"
           :disabled="currentChapterIndex >= chapterList.length - 1"
@@ -606,9 +606,7 @@ const selectBook = async (book) => {
 };
 
 const resumeReading = async (historyItem) => {
-  await resetListen();
-  chapterList.value = [];
-  selectedBook.value = {
+  const book = {
     name: historyItem.bookName,
     author: historyItem.author,
     coverUrl: historyItem.coverUrl,
@@ -619,15 +617,27 @@ const resumeReading = async (historyItem) => {
     latestChapterTitle: historyItem.latestChapterTitle,
   };
   searchKeyword.value = historyItem.searchKeyword || historyItem.bookName || "";
-  selectedChapter.value = {
-    title: historyItem.chapterTitle,
-    bookUrl: historyItem.bookUrl,
-  };
-  currentChapterIndex.value = Number.isFinite(Number(historyItem.chapterIndex)) ? Number(historyItem.chapterIndex) : 0;
-  viewState.value = "reading";
-  await fetchGenerationSettings();
-  await fetchContent(selectedChapter.value, currentChapterIndex.value);
-  await checkListenCache();
+  await selectBook(book);
+  if (!chapterList.value.length) {
+    ElMessage.warning("未能恢复章节列表，请重新搜索后再试");
+    return;
+  }
+
+  const historyIndex = Number.isFinite(Number(historyItem.chapterIndex)) ? Number(historyItem.chapterIndex) : 0;
+  const matchedIndex = chapterList.value.findIndex((chap) => chap.bookUrl === historyItem.chapterUrl || chap.title === historyItem.chapterTitle);
+  let targetIndex = matchedIndex >= 0 ? matchedIndex : Math.min(historyIndex, chapterList.value.length - 1);
+
+  while (targetIndex < chapterList.value.length && chapterList.value[targetIndex]?.isVolume) {
+    targetIndex += 1;
+  }
+
+  const targetChapter = chapterList.value[targetIndex] || chapterList.value.find((chap) => !chap.isVolume);
+  if (!targetChapter) {
+    ElMessage.warning("未找到上次阅读的章节");
+    return;
+  }
+
+  await selectChapter(targetChapter, chapterList.value.indexOf(targetChapter));
 };
 
 // ── 选章 → 阅读 ──
@@ -696,7 +706,7 @@ const backToSearch = async () => {
 
 const backToChapters = async () => {
   await resetListen();
-  viewState.value = chapterList.value.length ? "chapters" : "search";
+  viewState.value = "chapters";
 };
 
 // ════════════════════════════════════════════════════════════
