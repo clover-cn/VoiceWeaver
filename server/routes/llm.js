@@ -34,12 +34,7 @@ function saveCharacters(projectName, chars) {
 }
 
 function isAbortError(error) {
-  return Boolean(
-    error &&
-    (error.code === "ERR_CANCELED" ||
-      error.name === "CanceledError" ||
-      error.cancelled === true)
-  );
+  return Boolean(error && (error.code === "ERR_CANCELED" || error.name === "CanceledError" || error.cancelled === true));
 }
 
 // 构建角色别名上下文信息
@@ -175,6 +170,7 @@ router.post("/parse", async (req, res) => {
       timeout: 120000, // 设置超时时间为 120 秒 (120000 毫秒)
       signal: abortController.signal,
     });
+    console.log("请求状态", response.status);
 
     let rawResult = "";
     // 处理流式数据
@@ -204,10 +200,16 @@ router.post("/parse", async (req, res) => {
                 const content = data.choices[0].delta.content;
                 rawResult += content;
                 process.stdout.write(content); // 在终端实时打印接收到的流式数据
+              } else {
+                console.warn("流式数据块格式不符合预期，缺少 content 字段:", data);
+                console.log("当前数据块:", data.choices[0].delta);
+                
               }
             } catch (e) {
               console.error("解析流式数据块失败:", e, trimmedLine);
             }
+          } else {
+            console.warn("收到无法识别的流式数据块:", trimmedLine);
           }
         }
       });
@@ -340,21 +342,32 @@ router.post("/prescan-characters", async (req, res) => {
     const apiKey = process.env.LLM_API_KEY;
     const aiEndpoint = process.env.LLM_ENDPOINT || "https://api.deepseek.com/v1/chat/completions";
     const chapterCount = process.env.PRESCAN_CHAPTER_COUNT || 10;
+    const localChars = getCharacters(projectName);
+    const characterContext = buildCharacterContext(localChars);
+
+    console.log("LLM解析：本项目之前已出现的角色有：", characterContext);
 
     const prescanPrompt = `
   你是一个专业的小说角色分析与指代消解专家。
   任务：阅读这篇小说的前 ${chapterCount} 章内容，提取所有核心角色的全局映射表。
+  本项目之前已出现的角色有：${characterContext}
 
   【重点要求】
-  1. 发现真名：有些角色初期以特征代称（如"白裙姑娘", "丫头", "黑衣人"）出场，但在后续章节揭示了真名（如"陈艺"）。你需要将这些特征代称作为"别名"（aliases）绑定到她的真名下。
+  1. 发现真名：有些角色初期以特征代称（如"白裙姑娘", "黑衣人"）出场，但在后续章节揭示了真名（如"陈艺"）。你需要将这些特征代称作为"别名"（aliases）绑定到她的真名下。
   2. 提取主角：如果小说是第一人称（使用"我"），请务必从上下文中推断出"我"的真实姓名。如果找到了，把"我"加入该角色的别名中。
   3. 无法确定真名的情况：如果在提供的文本中，该角色始终没有揭示真名，请为其创建一个具备辨识度的临时标准名（如"未命名_白裙姑娘"）。
+
+  【别名提取严格规范 - 极其重要】
+  别名（aliases）必须是文中他人**明确叫出口的称呼**，或者是旁白在不知道真名时**长期使用的固定指代**。
+  绝对禁止脑补！绝对禁止将“比喻”、“形容词”、“临时身份”或“情绪化描述”作为别名！
+  * 反面例子：文本说“陈艺这个小丫头真像一个小毛贼一样”。这里的“小毛贼”是比喻，“小丫头”是身份描述，它们**绝对不能**被提取为别名！
+  * 正面例子：文本出现对话“小艺艺，你快过来”，或者旁白长期用“白裙姑娘”作为主语行动。这里的“小艺艺”和“白裙姑娘”才能作为别名。
 
   【过滤规则 - 非常重要】
   请忽略以下类型的“背景板角色”或“工具人”：
   1. 仅被提及名字但从未出场互动的角色（如回忆中的路人）。
-  2. 仅执行单一功能性动作且没有后续剧情的龙套（如：服务员端茶、出租车司机开车、快递员送货），除非他们有持续的对话交流或对剧情产生重要影响。
-  3. 仅作为群体出现的角色（如：围观群众、一群学生）。
+  2. 仅执行单一功能性动作且没有后续剧情的龙套（如：服务员端茶、出租车司机），除非他们有持续对话或对剧情产生重要影响。
+  3. 仅作为群体出现的角色（如：围观群众）。
   *判定标准：该角色是否至少有一句直接引语（对话），或者名字/代称在不同段落中重复出现超过3次。*
 
   【输出格式】
@@ -364,7 +377,7 @@ router.post("/prescan-characters", async (req, res) => {
       {
         "standardName": "角色的真名或标准名（如：陈艺、江桥，如果实在没名字填：未命名_白裙姑娘）",
         "gender": "male | female | unknown",
-        "aliases": ["文中所出现的所有对该角色的称呼、外号、特征代称", "小艺艺", "白裙姑娘", "丫头"],
+        "aliases": ["仅限文中明确叫出口的称呼、或者不知道真名时的固定指代，严禁包含比喻或临时形容词"],
         "description": "简短描述该角色的身份或外貌特征，不超过30字"
       }
     ]
@@ -442,6 +455,7 @@ router.post("/prescan-characters", async (req, res) => {
     }
 
     res.json({ success: true, data: existingCharacters });
+    console.log("LLM预扫描完成");
   } catch (error) {
     console.error("预扫描失败:", error.message);
     if (error.response) {

@@ -121,6 +121,16 @@ function baseUrl() {
   return `http://localhost:${process.env.PORT || 3000}`;
 }
 
+function getListenBookTtsTimeout() {
+  const raw = process.env.LISTEN_BOOK_TTS_TIMEOUT_MS;
+  if (raw === undefined || raw === null || String(raw).trim() === "") {
+    // 听书任务是后台串行生成，默认不限制时长，仅依赖取消信号中断。
+    return 0;
+  }
+  const parsed = Number(raw);
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : 0;
+}
+
 function isCancelledError(err) {
   return Boolean(err && (err.cancelled || err.code === "ERR_CANCELED" || err.name === "CanceledError"));
 }
@@ -179,6 +189,7 @@ async function runPipeline(taskId, { projectName, chapterIndex, chapterUrl, chap
   const task = tasks[taskId];
   const BASE = baseUrl();
   const signal = task.controller.signal;
+  const ttsTimeout = getListenBookTtsTimeout();
 
   try {
     // ── 阶段 1: 预扫描（调用现有 /api/llm/prescan-characters）──
@@ -268,7 +279,7 @@ async function runPipeline(taskId, { projectName, chapterIndex, chapterUrl, chap
             dialogue: card,
             projectName,
           },
-          { timeout: 60000, signal },
+          { timeout: ttsTimeout, signal },
         );
 
         task.segments.push({
@@ -284,7 +295,13 @@ async function runPipeline(taskId, { projectName, chapterIndex, chapterUrl, chap
         });
       } catch (e) {
         if (e.cancelled) throw e; // 取消错误直接向上抛
-        console.warn(`[listenBook][${taskId}] 第 ${i} 条 TTS 失败: ${e.message}，跳过`);
+        if (e.code === "ECONNABORTED") {
+          console.warn(
+            `[listenBook][${taskId}] 第 ${i} 条 TTS 请求超时（timeout=${ttsTimeout}ms）: ${e.message}，跳过`,
+          );
+        } else {
+          console.warn(`[listenBook][${taskId}] 第 ${i} 条 TTS 失败: ${e.message}，跳过`);
+        }
         task.segments.push({
           index: i,
           type: card.type,
