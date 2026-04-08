@@ -360,6 +360,19 @@
                   >
                     <span>编辑片段</span>
                   </button>
+                  <button
+                    type="button"
+                    class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] transition-colors duration-200"
+                    :class="
+                      seg.audioUrl
+                        ? 'cursor-pointer border border-[rgba(94,234,212,0.3)] bg-[rgba(94,234,212,0.1)] text-[#c8fff2] hover:bg-[rgba(94,234,212,0.2)]'
+                        : 'cursor-not-allowed border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.04)] text-[#7f81a8]'
+                    "
+                    :disabled="!seg.audioUrl"
+                    @click="playSegmentFrom(i)"
+                  >
+                    <span>{{ seg.audioUrl ? "从这里播放" : "音频待生成" }}</span>
+                  </button>
                 </div>
               </div>
               <div>
@@ -404,7 +417,7 @@
 
   <el-dialog v-model="segmentEditorVisible" :title="segmentEditForm.role ? `编辑片段 · ${segmentEditForm.role}` : '编辑片段'" width="560px" destroy-on-close>
     <div class="flex flex-col gap-4">
-      <div class="rounded-xl border border-[rgba(124,111,247,0.2)] bg-[rgba(124,111,247,0.08)] px-4 py-3 text-[13px] leading-6 text-[#d9d7f6]">
+      <div class="rounded-xl border border-[rgba(124,111,247,0.2)] bg-[rgba(124,111,247,0.08)] px-4 py-3 text-[13px] leading-6 text-[#686868]">
         这里可以像调度台一样修改当前片段的角色、情绪和参考音频。保存后仅覆盖当前章节这个片段，并让当前章重新生成听书。
       </div>
 
@@ -759,12 +772,14 @@ const emotionLabelMap = {
 let pollTimer = null;
 // 当前播放的 Audio 对象
 let currentAudio = null;
+// 每次启动新播放时递增，旧循环据此自行失效
+let playbackSessionId = 0;
 // 是否强制停止（切章、重置时）
 let forceStop = false;
 // 当前章节的 TTS 生成是否已全部完成
 const isGenerationComplete = ref(false);
 // 段间播放间隔，单位毫秒。可直接在这里调整。
-const SEGMENT_PLAY_GAP_MS = 2000;
+const SEGMENT_PLAY_GAP_MS = 1500;
 
 // 阶段文案
 const phaseTextMap = {
@@ -974,11 +989,9 @@ async function persistChapterEdits() {
 
 async function markListenDirty() {
   forceStop = true;
+  playbackSessionId += 1;
   stopPolling();
-  if (currentAudio) {
-    currentAudio.pause();
-    currentAudio = null;
-  }
+  stopCurrentAudio();
   forceStop = false;
   await cancelListenTasks().catch(() => {});
   listenTaskId.value = null;
@@ -1079,11 +1092,9 @@ async function handleAudioSetupSaved(bindings) {
 // ── 重置听书状态（并发通知后端取消任务）──
 async function resetListen(skipCancel = false, useBeacon = false) {
   forceStop = true;
+  playbackSessionId += 1;
   stopPolling();
-  if (currentAudio) {
-    currentAudio.pause();
-    currentAudio = null;
-  }
+  stopCurrentAudio();
   forceStop = false;
   if (!skipCancel) {
     await cancelListenTasks({ useBeacon });
@@ -1238,12 +1249,31 @@ function stopPolling() {
   }
 }
 
+function stopCurrentAudio() {
+  if (!currentAudio) return;
+  currentAudio.onended = null;
+  currentAudio.onerror = null;
+  currentAudio.pause();
+  currentAudio = null;
+}
+
+function startPlaybackFrom(startIndex, { autoScroll = true } = {}) {
+  if (!segments.value.length) return;
+  const safeIndex = Math.max(0, Math.min(startIndex, segments.value.length - 1));
+  playbackSessionId += 1;
+  stopCurrentAudio();
+  currentSegIdx.value = safeIndex;
+  nextSegIdx.value = safeIndex;
+  isPlaying.value = true;
+  if (autoScroll) {
+    scrollToSeg(safeIndex);
+  }
+  playFrom(safeIndex, playbackSessionId);
+}
+
 // ── 自动播放（进入 ready 状态后从头开始）──
 function autoPlay() {
-  currentSegIdx.value = -1;
-  nextSegIdx.value = 0;
-  isPlaying.value = true;
-  playFrom(0);
+  startPlaybackFrom(0, { autoScroll: false });
 }
 
 // ── 暂停 / 继续 ──
@@ -1262,16 +1292,26 @@ function togglePlayPause() {
     } else {
       // 从当前位置重新开始
       const startIdx = nextSegIdx.value >= 0 ? nextSegIdx.value : 0;
-      playFrom(startIdx);
+      startPlaybackFrom(startIdx, { autoScroll: false });
     }
   }
 }
 
+function playSegmentFrom(index) {
+  if (index < 0 || index >= segments.value.length) return;
+  const target = segments.value[index];
+  if (!target?.audioUrl) return;
+  if (listenState.value === "idle") {
+    listenState.value = "ready";
+  }
+  startPlaybackFrom(index);
+}
+
 // ── 顺序播放 segments（从指定索引开始，支持等待后续生成的内容）──
-async function playFrom(startIndex) {
+async function playFrom(startIndex, sessionId) {
   let i = startIndex;
   while (true) {
-    if (forceStop || !isPlaying.value) break;
+    if (forceStop || !isPlaying.value || sessionId !== playbackSessionId) break;
 
     if (i >= segments.value.length) {
       // 当前已有 segments 播完，判断是否还有后续生成中
@@ -1287,22 +1327,22 @@ async function playFrom(startIndex) {
     scrollToSeg(i);
 
     if (seg.audioUrl) {
-      await playAudioUrl(seg.audioUrl);
+      await playAudioUrl(seg.audioUrl, sessionId);
     }
 
-    if (!isPlaying.value) break;
+    if (!isPlaying.value || sessionId !== playbackSessionId) break;
     nextSegIdx.value = i + 1;
 
     if (SEGMENT_PLAY_GAP_MS > 0) {
       await waitSegmentGap(SEGMENT_PLAY_GAP_MS);
-      if (forceStop || !isPlaying.value) break;
+      if (forceStop || !isPlaying.value || sessionId !== playbackSessionId) break;
     }
 
     i++;
   }
 
   // 播放自然结束
-  if (isPlaying.value) {
+  if (sessionId === playbackSessionId && isPlaying.value) {
     isPlaying.value = false;
     currentAudio = null;
     nextSegIdx.value = segments.value.length;
@@ -1316,20 +1356,25 @@ function waitSegmentGap(delayMs) {
 }
 
 // ── 播放单条音频，返回 Promise（播放完毕 resolve）──
-function playAudioUrl(url) {
+function playAudioUrl(url, sessionId) {
   return new Promise((resolve) => {
-    if (forceStop) {
+    if (forceStop || sessionId !== playbackSessionId) {
       resolve();
       return;
     }
+    stopCurrentAudio();
     const audio = new Audio(`${API}${url}`);
     currentAudio = audio;
     audio.onended = () => {
-      currentAudio = null;
+      if (currentAudio === audio) {
+        currentAudio = null;
+      }
       resolve();
     };
     audio.onerror = () => {
-      currentAudio = null;
+      if (currentAudio === audio) {
+        currentAudio = null;
+      }
       resolve();
     }; // 出错也继续
     audio.play().catch(() => resolve());
