@@ -9,20 +9,22 @@ const { v4: uuidv4 } = require("uuid");
 // 确保目录存在
 const uploadDir = path.join(__dirname, "../uploads/reference_audios");
 const dataDir = path.join(__dirname, "../data");
+const projectsDir = path.join(dataDir, "projects");
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
 if (!fs.existsSync(dataDir)) {
   fs.mkdirSync(dataDir, { recursive: true });
 }
+if (!fs.existsSync(projectsDir)) {
+  fs.mkdirSync(projectsDir, { recursive: true });
+}
 
 // 配置文件存储路径
 const audioRecordsPath = path.join(dataDir, "audio_records.json");
-const globalRolesPath = path.join(dataDir, "global_roles.json");
 
 // 初始化数据据文件
 if (!fs.existsSync(audioRecordsPath)) fs.writeFileSync(audioRecordsPath, "[]", "utf8");
-if (!fs.existsSync(globalRolesPath)) fs.writeFileSync(globalRolesPath, "{}", "utf8");
 
 // Multer 配置
 const storage = multer.diskStorage({
@@ -45,17 +47,39 @@ function getAudioRecords() {
 function saveAudioRecords(records) {
   fs.writeFileSync(audioRecordsPath, JSON.stringify(records, null, 2), "utf8");
 }
-function getGlobalRoles() {
+
+function sanitizeProjectName(projectName) {
+  return String(projectName || "")
+    .trim()
+    .replace(/[\\/:*?"<>|]/g, "");
+}
+
+function getProjectGlobalRolesPath(projectName) {
+  const safeProjectName = sanitizeProjectName(projectName);
+  if (!safeProjectName) {
+    throw new Error("projectName 不能为空");
+  }
+  const projectDir = path.join(projectsDir, safeProjectName);
+  if (!fs.existsSync(projectDir)) {
+    fs.mkdirSync(projectDir, { recursive: true });
+  }
+  return path.join(projectDir, "global_roles.json");
+}
+
+function getProjectGlobalRoles(projectName) {
   try {
+    const globalRolesPath = getProjectGlobalRolesPath(projectName);
+    if (!fs.existsSync(globalRolesPath)) return {};
     const raw = fs.readFileSync(globalRolesPath, "utf8").trim();
     if (!raw) return {};
     return JSON.parse(raw);
   } catch (e) {
-    console.warn("global_roles.json 读取或解析失败，已自动回退为空对象:", e.message);
+    console.warn(`[audio] 项目 ${projectName} 的 global_roles.json 读取或解析失败，已自动回退为空对象:`, e.message);
     return {};
   }
 }
-function saveGlobalRoles(roles) {
+function saveProjectGlobalRoles(projectName, roles) {
+  const globalRolesPath = getProjectGlobalRolesPath(projectName);
   fs.writeFileSync(globalRolesPath, JSON.stringify(roles, null, 2), "utf8");
 }
 
@@ -158,27 +182,30 @@ router.delete("/:id", async (req, res) => {
     saveAudioRecords(records);
 
     // 同步清理全局角色中绑定的该音频（嵌套情感结构）
-    const globalRoles = getGlobalRoles();
-    let rolesModified = false;
-    for (const roleName in globalRoles) {
-      const emotionMap = globalRoles[roleName];
-      if (typeof emotionMap === "object" && emotionMap !== null) {
-        for (const emotion in emotionMap) {
-          const config = emotionMap[emotion];
-          if (config === id || (config && typeof config === "object" && config.id === id)) {
-            delete emotionMap[emotion];
-            rolesModified = true;
+    const projectDirs = fs.readdirSync(projectsDir, { withFileTypes: true }).filter((entry) => entry.isDirectory());
+    projectDirs.forEach((entry) => {
+      const projectName = entry.name;
+      const globalRoles = getProjectGlobalRoles(projectName);
+      let rolesModified = false;
+      for (const roleName in globalRoles) {
+        const emotionMap = globalRoles[roleName];
+        if (typeof emotionMap === "object" && emotionMap !== null) {
+          for (const emotion in emotionMap) {
+            const config = emotionMap[emotion];
+            if (config === id || (config && typeof config === "object" && config.id === id)) {
+              delete emotionMap[emotion];
+              rolesModified = true;
+            }
+          }
+          if (Object.keys(emotionMap).length === 0) {
+            delete globalRoles[roleName];
           }
         }
-        // 如果该角色的所有情感维度绑定均已清空，就删除整个角色条目
-        if (Object.keys(emotionMap).length === 0) {
-          delete globalRoles[roleName];
-        }
       }
-    }
-    if (rolesModified) {
-      saveGlobalRoles(globalRoles);
-    }
+      if (rolesModified) {
+        saveProjectGlobalRoles(projectName, globalRoles);
+      }
+    });
 
     res.json({ success: true, message: "删除成功" });
   } catch (error) {
@@ -192,7 +219,12 @@ router.delete("/:id", async (req, res) => {
 // 4. 获取所有全局角色的音频绑定
 router.get("/global-roles", (req, res) => {
   try {
-    const roles = getGlobalRoles();
+    const { projectName } = req.query || {};
+    if (!projectName) {
+      return res.status(400).json({ error: "缺少 projectName" });
+    }
+
+    const roles = getProjectGlobalRoles(projectName);
     const records = getAudioRecords();
 
     // 组装格式，支持新版带模式和权重的对象结构
@@ -222,13 +254,16 @@ router.get("/global-roles", (req, res) => {
 // 5. 更新（完全覆盖）全局角色的音频绑定
 router.post("/global-roles", (req, res) => {
   try {
-    const { bindings } = req.body;
+    const { projectName, bindings } = req.body;
 
+    if (!projectName) {
+      return res.status(400).json({ error: "缺少 projectName" });
+    }
     if (!bindings || typeof bindings !== "object") {
       return res.status(400).json({ error: "参数格式不正确" });
     }
 
-    const roles = getGlobalRoles();
+    const roles = getProjectGlobalRoles(projectName);
 
     for (const roleName in bindings) {
       const emotionMap = bindings[roleName];
@@ -257,7 +292,7 @@ router.post("/global-roles", (req, res) => {
       }
     }
 
-    saveGlobalRoles(roles);
+    saveProjectGlobalRoles(projectName, roles);
     res.json({ success: true, message: "角色全局音频绑定更新成功" });
   } catch (error) {
     console.error("保存全局角色绑定错误:", error);

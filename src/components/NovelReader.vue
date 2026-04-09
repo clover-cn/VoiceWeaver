@@ -222,7 +222,7 @@
             class="px-3.5 py-1.5 bg-[rgba(255,191,94,0.12)] border border-[rgba(255,191,94,0.28)] rounded-lg text-[#ffd480] text-[13px] cursor-pointer transition-colors duration-200 whitespace-nowrap hover:bg-[rgba(255,191,94,0.22)]"
             @click="openRoleSetup"
           >
-            统一音频配置
+            当前书角色配置
           </button>
           <!-- 听书控制区 -->
           <div class="flex items-center gap-2">
@@ -461,7 +461,7 @@
     <template #footer>
       <div class="flex justify-end gap-3">
         <el-button @click="segmentEditorVisible = false">取消</el-button>
-        <el-button @click="openRoleSetup">编辑该角色全局情绪音频</el-button>
+        <el-button @click="openRoleSetup">编辑当前书角色音频</el-button>
         <el-button type="primary" :loading="isSavingSegmentEdit" @click="saveSegmentEdit">保存片段修改</el-button>
       </div>
     </template>
@@ -810,8 +810,15 @@ async function fetchAudioRecords() {
 }
 
 async function fetchGlobalBindings() {
+  const projectName = listenProjectName.value;
+  if (!projectName || projectName === "reader_unknown") {
+    globalAudioBindings.value = {};
+    return {};
+  }
   try {
-    const globalRes = await axios.get(`${API}/api/audio/global-roles`);
+    const globalRes = await axios.get(`${API}/api/audio/global-roles`, {
+      params: { projectName },
+    });
     if (globalRes.data?.success) {
       globalAudioBindings.value = globalRes.data.roles || {};
       return globalAudioBindings.value;
@@ -1142,6 +1149,7 @@ async function syncGlobalBindingsForRole(role, emotionMap) {
   if (!bindingPayload) return;
 
   await axios.post(`${API}/api/audio/global-roles`, {
+    projectName: listenProjectName.value,
     bindings: {
       [role]: bindingPayload,
     },
@@ -1242,7 +1250,7 @@ function openRoleSetup() {
     }
   });
 
-  roleAudioSetupDialogRef.value.openDialog(roles, autoPrefill);
+  roleAudioSetupDialogRef.value.openDialog(roles, autoPrefill, listenProjectName.value);
 }
 
 async function handleAudioSetupSaved(bindings) {
@@ -1268,7 +1276,7 @@ async function handleAudioSetupSaved(bindings) {
     .catch(() => {});
   await persistChapterEdits([]);
   stopListenForManualEdit();
-  ElMessage.success("角色全局情绪音频已更新，当前章节已同步，后续章节会按新配置生成");
+  ElMessage.success("当前书角色音频已更新，当前章节已同步，后续章节会按新配置生成");
 }
 
 // ── 重置听书状态（并发通知后端取消任务）──

@@ -1,12 +1,12 @@
 <template>
-  <el-dialog v-model="dialogVisible" title="全局角色参考音频配置" width="72%" destroy-on-close>
+  <el-dialog v-model="dialogVisible" title="当前项目角色参考音频配置" width="72%" destroy-on-close>
     <div class="flex flex-col" style="max-height: 68vh">
       <!-- 提示说明 -->
       <div class="mb-4 text-sm text-gray-500 bg-blue-50 p-3 rounded border border-blue-100 flex items-start gap-2 shrink-0">
         <el-icon class="text-blue-500 mt-0.5 shrink-0"><InfoFilled /></el-icon>
         <div>
-          <p>提取了当前小说列表内出现的所有角色。</p>
-          <p>为每个角色的不同情感维度绑定参考音频，生成时将自动依据情感选择对应的参考音频。</p>
+          <p>这里只配置当前项目内出现的角色。</p>
+          <p>为每个角色的不同情感维度绑定参考音频，生成时会只在当前项目内按情感选择对应音频。</p>
         </div>
       </div>
 
@@ -143,6 +143,7 @@ const ttsProvider = ref("siliconflow");
 const roleModes = ref({});
 const roleEmoAlphas = ref({});
 const autoPrefillBindings = ref({});
+const currentProjectName = ref("");
 
 const previewPlayer = ref(null);
 const isPlaying = ref(false);
@@ -168,7 +169,7 @@ const handleRoleModeChange = (role) => {
   }
 };
 
-const openDialog = async (roles, autoPrefill = {}) => {
+const openDialog = async (roles, autoPrefill = {}, projectName = "") => {
   // 旁白始终排在第一位
   const sorted = [...(roles || [])];
   const idx = sorted.indexOf("旁白");
@@ -194,6 +195,7 @@ const openDialog = async (roles, autoPrefill = {}) => {
   roleModes.value = skeletonModes;
   roleEmoAlphas.value = skeletonAlphas;
   autoPrefillBindings.value = autoPrefill && typeof autoPrefill === "object" ? autoPrefill : {};
+  currentProjectName.value = projectName || "";
 
   dialogVisible.value = true;
   await fetchProvider();
@@ -219,7 +221,9 @@ const fetchData = async () => {
       audioList.value = audioRes.data.list;
     }
 
-    const globalRes = await axios.get("http://localhost:3000/api/audio/global-roles");
+    const globalRes = await axios.get("http://localhost:3000/api/audio/global-roles", {
+      params: { projectName: currentProjectName.value },
+    });
     if (globalRes.data.success) {
       const globalRoles = globalRes.data.roles;
       const newBindings = {};
@@ -360,11 +364,12 @@ const handleSave = async () => {
     }
 
     const res = await axios.post("http://localhost:3000/api/audio/global-roles", {
+      projectName: currentProjectName.value,
       bindings: cleanBindings,
     });
 
     if (res.data.success) {
-      ElMessage.success("全局角色绑定配置保存成功");
+      ElMessage.success("当前项目角色绑定配置保存成功");
       dialogVisible.value = false;
       emit("saved", cleanBindings);
     }

@@ -13,7 +13,7 @@
           ><el-icon><User /></el-icon>角色别名</el-button
         >
         <el-button @click="openRoleSetup" plain type="warning" :disabled="dialogueCards.length === 0"
-          ><el-icon><Setting /></el-icon>统一音频配置</el-button
+          ><el-icon><Setting /></el-icon>项目音频配置</el-button
         >
         <el-button plain @click="clearList" :disabled="dialogueCards.length === 0">清空列表</el-button>
         <el-button type="primary" :loading="isGeneratingAll" @click="handleGenerateAll" :disabled="dialogueCards.length === 0 || isGeneratingAll || isMergingAll">
@@ -273,14 +273,20 @@ const fetchProvider = async () => {
 };
 
 const fetchGlobalBindings = async () => {
+  if (!props.projectName) {
+    globalAudioBindings.value = {};
+    return {};
+  }
   try {
-    const globalRes = await axios.get("http://localhost:3000/api/audio/global-roles");
+    const globalRes = await axios.get("http://localhost:3000/api/audio/global-roles", {
+      params: { projectName: props.projectName },
+    });
     if (globalRes.data.success) {
       globalAudioBindings.value = globalRes.data.roles;
       return globalRes.data.roles;
     }
   } catch (e) {
-    console.error("尝试拉取全局参考音频失败", e);
+    console.error("尝试拉取当前项目参考音频失败", e);
   }
   return null;
 };
@@ -419,7 +425,7 @@ const openRoleSetup = () => {
   });
 
   if (roleAudioSetupDialogRef.value) {
-    roleAudioSetupDialogRef.value.openDialog(roles, autoPrefill);
+    roleAudioSetupDialogRef.value.openDialog(roles, autoPrefill, props.projectName);
   }
 };
 
