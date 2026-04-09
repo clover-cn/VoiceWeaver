@@ -5,7 +5,11 @@ const dataDir = path.join(__dirname, "../data");
 const projectsDir = path.join(dataDir, "projects");
 const audioRecordsPath = path.join(dataDir, "audio_records.json");
 const DEFAULT_READER_SETTINGS = {
-  missingEmotionPolicy: "strict",
+  /**
+   * strict: 严格模式：没有对应情绪音频时，直接显示未配置
+   * fallback_neutral: 回退模式：没有对应情绪音频时，自动使用平静音频
+   */
+  missingEmotionPolicy: "fallback_neutral",
 };
 
 const SUPPORTED_PROVIDERS = new Set(["indextts2", "siliconflow"]);

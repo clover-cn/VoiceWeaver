@@ -34,6 +34,12 @@
       "id": null,
       "mode": 3,
       "emoWeight": 0
+    },
+    "neutral": {
+      "id": "386a841b-8867-4c1d-992c-d2b465170438",
+      "mode": 1,
+      "emoWeight": 0.65,
+      "emoAlpha": 0.6
     }
   },
   "刻晴": {
@@ -67,6 +73,55 @@
   "那维莱特": {
     "neutral": {
       "id": "350dc131-c232-4986-a145-d851608e411e",
+      "mode": 1,
+      "emoWeight": 0.65,
+      "emoAlpha": 0.6
+    }
+  },
+  "江桥": {
+    "happy": {
+      "id": "64d1bf50-873a-40eb-b8c2-7c1cfe98f9c4",
+      "mode": 1,
+      "emoWeight": 0.65
+    },
+    "angry": {
+      "id": "8a4001ff-75b1-4c29-a0ea-943b2dd1494f",
+      "mode": 1,
+      "emoWeight": 0.65
+    },
+    "sad": {
+      "id": "a7f8ffdb-2ac4-4a72-bed1-5679576c57f0",
+      "mode": 1,
+      "emoWeight": 0.65
+    },
+    "disgusted": {
+      "id": "fee1e10f-a8af-44b6-92a8-519497434286",
+      "mode": 1,
+      "emoWeight": 0.65
+    },
+    "melancholy": {
+      "id": "a7f8ffdb-2ac4-4a72-bed1-5679576c57f0",
+      "mode": 1,
+      "emoWeight": 0.65
+    },
+    "neutral": {
+      "id": "a39c9ebd-56a0-4f59-acbc-f7913f867aa7",
+      "mode": 1,
+      "emoWeight": 0.65,
+      "emoAlpha": 0.6
+    }
+  },
+  "陈艺": {
+    "neutral": {
+      "id": "04f84e03-e186-4b70-89d5-cecb6409ba00",
+      "mode": 1,
+      "emoWeight": 0.65,
+      "emoAlpha": 0.6
+    }
+  },
+  "未命名_白裙姑娘": {
+    "neutral": {
+      "id": "f5d65a4d-5252-4fc8-8ae2-26910ae81047",
       "mode": 1,
       "emoWeight": 0.65,
       "emoAlpha": 0.6

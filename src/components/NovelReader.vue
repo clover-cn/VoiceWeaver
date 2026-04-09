@@ -366,12 +366,14 @@
                     :class="
                       seg.audioUrl
                         ? 'cursor-pointer border border-[rgba(94,234,212,0.3)] bg-[rgba(94,234,212,0.1)] text-[#c8fff2] hover:bg-[rgba(94,234,212,0.2)]'
-                        : 'cursor-not-allowed border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.04)] text-[#7f81a8]'
+                        : isSegmentRegenerating(i)
+                          ? 'cursor-wait border border-[rgba(255,191,94,0.28)] bg-[rgba(255,191,94,0.12)] text-[#ffd480]'
+                          : 'cursor-pointer border border-[rgba(255,255,255,0.14)] bg-[rgba(255,255,255,0.06)] text-[#cfd1f3] hover:bg-[rgba(255,255,255,0.12)]'
                     "
-                    :disabled="!seg.audioUrl"
-                    @click="playSegmentFrom(i)"
+                    :disabled="isSegmentRegenerating(i)"
+                    @click="handleSegmentAction(i)"
                   >
-                    <span>{{ seg.audioUrl ? "从这里播放" : "音频待生成" }}</span>
+                    <span>{{ seg.audioUrl ? "从这里播放" : isSegmentRegenerating(i) ? "生成中..." : "音频待生成" }}</span>
                   </button>
                 </div>
               </div>
@@ -418,7 +420,7 @@
   <el-dialog v-model="segmentEditorVisible" :title="segmentEditForm.role ? `编辑片段 · ${segmentEditForm.role}` : '编辑片段'" width="560px" destroy-on-close>
     <div class="flex flex-col gap-4">
       <div class="rounded-xl border border-[rgba(124,111,247,0.2)] bg-[rgba(124,111,247,0.08)] px-4 py-3 text-[13px] leading-6 text-[#686868]">
-        这里可以像调度台一样修改当前片段的角色、情绪和参考音频。保存后仅覆盖当前章节这个片段，并让当前章重新生成听书。
+        这里可以像调度台一样修改当前片段的角色、情绪和参考音频。保存后只会让当前片段音频失效；如果你为对话角色改了参考音频，后续章节会优先沿用这次手动指定的角色声线。
       </div>
 
       <div class="grid grid-cols-2 gap-4">
@@ -745,6 +747,7 @@ const globalAudioBindings = ref({});
 const roleAudioSetupDialogRef = ref(null);
 const segmentEditorVisible = ref(false);
 const isSavingSegmentEdit = ref(false);
+const segmentRegeneratingMap = ref({});
 const editingSegmentIndex = ref(-1);
 const selectedSegmentAudioId = ref(null);
 const segmentEditForm = ref({
@@ -757,7 +760,7 @@ const segmentEditForm = ref({
   autoAssignedVoiceActor: null,
   manualAssigned: false,
 });
-const missingEmotionPolicy = ref("strict");
+const missingEmotionPolicy = ref("fallback_neutral"); // strict | fallback_neutral
 const emotionLabelMap = {
   happy: "高兴",
   angry: "愤怒",
@@ -887,11 +890,92 @@ function cloneConfig(data) {
   return data ? JSON.parse(JSON.stringify(data)) : data;
 }
 
+function getVoiceActorFromAudioId(audioId) {
+  const record = audioId ? audioRecordMap.value[audioId] : null;
+  const name = String(record?.name || "").trim();
+  if (!name) return null;
+  const [voiceActor] = name.split("-").map((item) => item.trim());
+  return voiceActor || null;
+}
+
+function parseAudioRecordMeta(audioId) {
+  const record = audioId ? audioRecordMap.value[audioId] : null;
+  const name = String(record?.name || "").trim();
+  if (!name) return null;
+  const parts = name
+    .split("-")
+    .map((item) => item.trim())
+    .filter(Boolean);
+  if (parts.length < 2) return null;
+
+  return {
+    voiceActor: parts[0] || null,
+    emotion: parts[1] || "neutral",
+    gender: parts[2] || null,
+  };
+}
+
+function normalizeAudioEmotion(emotion) {
+  const val = String(emotion || "").trim().toLowerCase();
+  const map = {
+    happy: "happy",
+    开心: "happy",
+    高兴: "happy",
+    angry: "angry",
+    生气: "angry",
+    愤怒: "angry",
+    sad: "sad",
+    悲伤: "sad",
+    fearful: "fearful",
+    害怕: "fearful",
+    恐惧: "fearful",
+    disgusted: "disgusted",
+    厌恶: "disgusted",
+    melancholy: "melancholy",
+    忧郁: "melancholy",
+    忧伤: "melancholy",
+    surprised: "surprised",
+    惊讶: "surprised",
+    neutral: "neutral",
+    平静: "neutral",
+  };
+  return map[val] || "neutral";
+}
+
+function buildEmotionAudioMapForVoiceActor(audioId) {
+  const meta = parseAudioRecordMeta(audioId);
+  if (!meta?.voiceActor) return null;
+
+  const emotionMap = {};
+  audioOptions.value.forEach((audio) => {
+    const itemMeta = parseAudioRecordMeta(audio.id);
+    if (!itemMeta || itemMeta.voiceActor !== meta.voiceActor) return;
+    const emotion = normalizeAudioEmotion(itemMeta.emotion);
+    if (!emotionMap[emotion]) {
+      emotionMap[emotion] = { id: audio.id, mode: 1, emoWeight: 0.65 };
+    }
+  });
+
+  return Object.keys(emotionMap).length ? emotionMap : null;
+}
+
+function pickReferenceAudioByEmotion(emotionMap, emotion) {
+  if (!emotionMap || typeof emotionMap !== "object") return null;
+  const normalizedEmotion = normalizeAudioEmotion(emotion);
+  if (emotionMap[normalizedEmotion]) {
+    return cloneConfig(emotionMap[normalizedEmotion]);
+  }
+  if (missingEmotionPolicy.value === "fallback_neutral" && emotionMap.neutral) {
+    return cloneConfig(emotionMap.neutral);
+  }
+  return null;
+}
+
 function applyEmotionToSegment(segment) {
   const currentEmotion = segment.emotion || "neutral";
 
-  if (segment.autoEmotionAudioMap && segment.autoEmotionAudioMap[currentEmotion]) {
-    segment.referenceAudio = cloneConfig(segment.autoEmotionAudioMap[currentEmotion]);
+  if (segment.autoEmotionAudioMap) {
+    segment.referenceAudio = pickReferenceAudioByEmotion(segment.autoEmotionAudioMap, currentEmotion);
     return;
   }
 
@@ -970,10 +1054,11 @@ async function openSegmentEditor(seg, index) {
   segmentEditorVisible.value = true;
 }
 
-async function persistChapterEdits() {
+async function persistChapterEdits(invalidatedSegmentIndexes = [editingSegmentIndex.value]) {
   await axios.post(`${API}/api/listen-book/chapter-edits`, {
     projectName: listenProjectName.value,
     chapterIndex: currentChapterIndex.value,
+    invalidatedSegmentIndexes,
     segments: segments.value.map((seg) => ({
       type: seg.type,
       role: seg.role,
@@ -987,21 +1072,48 @@ async function persistChapterEdits() {
   });
 }
 
-async function markListenDirty() {
+function stopListenForManualEdit() {
   forceStop = true;
   playbackSessionId += 1;
   stopPolling();
   stopCurrentAudio();
   forceStop = false;
-  await cancelListenTasks().catch(() => {});
   listenTaskId.value = null;
-  prefetchTaskIds.value = [];
-  listenState.value = "idle";
+  if (segments.value.length) {
+    listenState.value = "ready";
+  } else {
+    listenState.value = "idle";
+  }
   listenPhase.value = "";
   currentSegIdx.value = -1;
   nextSegIdx.value = 0;
   isPlaying.value = false;
+  isGenerationComplete.value = true;
+}
+
+async function markListenDirty() {
+  stopListenForManualEdit();
+  await cancelListenTasks().catch(() => {});
+  prefetchTaskIds.value = [];
+  listenState.value = "idle";
   isGenerationComplete.value = false;
+}
+
+function isSegmentRegenerating(index) {
+  return Boolean(segmentRegeneratingMap.value[index]);
+}
+
+async function syncRoleOverrideForSegment(segment, audioId) {
+  if (!audioId || segment.type !== "dialogue" || !segment.role || segment.role === "旁白") {
+    return;
+  }
+
+  await axios.post(`${API}/api/reader/role-audio-override`, {
+    projectName: listenProjectName.value,
+    role: segment.role,
+    audioId,
+    chapterIndex: currentChapterIndex.value + 1,
+  });
 }
 
 async function saveSegmentEdit() {
@@ -1009,21 +1121,56 @@ async function saveSegmentEdit() {
   isSavingSegmentEdit.value = true;
   try {
     const nextSegment = cloneConfig(segmentEditForm.value);
-    nextSegment.referenceAudio = selectedSegmentAudioId.value ? { id: selectedSegmentAudioId.value, mode: 1, emoWeight: 0.65 } : null;
+    const manualEmotionMap = selectedSegmentAudioId.value ? buildEmotionAudioMapForVoiceActor(selectedSegmentAudioId.value) : null;
+    nextSegment.autoEmotionAudioMap = manualEmotionMap ? cloneConfig(manualEmotionMap) : nextSegment.autoEmotionAudioMap || null;
+    nextSegment.referenceAudio = manualEmotionMap
+      ? pickReferenceAudioByEmotion(manualEmotionMap, nextSegment.emotion)
+      : selectedSegmentAudioId.value
+        ? { id: selectedSegmentAudioId.value, mode: 1, emoWeight: 0.65 }
+        : null;
     nextSegment.manualAssigned = true;
     nextSegment.audioUrl = null;
-    segments.value.splice(editingSegmentIndex.value, 1, nextSegment);
+    const nextRole = nextSegment.role || "旁白";
+    const nextVoiceActor = getVoiceActorFromAudioId(selectedSegmentAudioId.value);
+    const invalidatedIndexes = [];
 
-    await axios
-      .post(`${API}/api/listen-book/invalidate-cache`, {
-        projectName: listenProjectName.value,
-        fromChapterIndex: currentChapterIndex.value,
-      })
-      .catch(() => {});
-    await persistChapterEdits();
-    await markListenDirty();
+    segments.value = segments.value.map((seg, index) => {
+      if (index === editingSegmentIndex.value) {
+        invalidatedIndexes.push(index);
+        return {
+          ...nextSegment,
+          autoAssignedVoiceActor: nextVoiceActor || nextSegment.autoAssignedVoiceActor || null,
+          autoEmotionAudioMap: manualEmotionMap ? cloneConfig(manualEmotionMap) : nextSegment.autoEmotionAudioMap || null,
+        };
+      }
+
+      if (selectedSegmentAudioId.value && nextSegment.type === "dialogue" && seg.role === nextRole) {
+        const syncedReferenceAudio = manualEmotionMap
+          ? pickReferenceAudioByEmotion(manualEmotionMap, seg.emotion) || cloneConfig(manualEmotionMap.neutral)
+          : { id: selectedSegmentAudioId.value, mode: 1, emoWeight: 0.65 };
+        invalidatedIndexes.push(index);
+        return {
+          ...seg,
+          referenceAudio: syncedReferenceAudio,
+          autoAssignedVoiceActor: nextVoiceActor,
+          autoEmotionAudioMap: manualEmotionMap ? cloneConfig(manualEmotionMap) : null,
+          manualAssigned: true,
+          audioUrl: null,
+        };
+      }
+
+      return seg;
+    });
+
+    stopListenForManualEdit();
+    await syncRoleOverrideForSegment(nextSegment, selectedSegmentAudioId.value);
+    await persistChapterEdits([...new Set(invalidatedIndexes)]);
     segmentEditorVisible.value = false;
-    ElMessage.success("片段修改已保存，当前章节需重新生成听书");
+    ElMessage.success(
+      selectedSegmentAudioId.value && nextSegment.type === "dialogue"
+        ? "当前章节同角色片段已同步更新，可逐段点击“音频待生成”重新生成"
+        : "片段修改已保存，可点击“音频待生成”重新生成当前段",
+    );
   } catch (e) {
     console.error("保存片段修改失败", e);
     ElMessage.error("保存失败，请稍后重试");
@@ -1065,6 +1212,7 @@ function openRoleSetup() {
 }
 
 async function handleAudioSetupSaved(bindings) {
+  stopListenForManualEdit();
   segments.value = segments.value.map((seg) => {
     const nextSeg = { ...seg };
     if (nextSeg.role && Object.prototype.hasOwnProperty.call(bindings, nextSeg.role)) {
@@ -1084,7 +1232,7 @@ async function handleAudioSetupSaved(bindings) {
       fromChapterIndex: currentChapterIndex.value,
     })
     .catch(() => {});
-  await persistChapterEdits();
+  await persistChapterEdits([]);
   await markListenDirty();
   ElMessage.success("角色全局情绪音频已更新，当前章节需重新生成听书");
 }
@@ -1307,6 +1455,51 @@ function playSegmentFrom(index) {
   startPlaybackFrom(index);
 }
 
+async function regenerateSegment(index) {
+  if (index < 0 || index >= segments.value.length || isSegmentRegenerating(index)) return;
+
+  segmentRegeneratingMap.value = {
+    ...segmentRegeneratingMap.value,
+    [index]: true,
+  };
+
+  try {
+    stopListenForManualEdit();
+    const res = await axios.post(`${API}/api/listen-book/regenerate-segment`, {
+      projectName: listenProjectName.value,
+      chapterIndex: currentChapterIndex.value,
+      segmentIndex: index,
+    });
+
+    if (Array.isArray(res.data.segments) && res.data.segments.length) {
+      segments.value = res.data.segments;
+    } else if (res.data.segment) {
+      segments.value.splice(index, 1, res.data.segment);
+    }
+
+    listenState.value = "ready";
+    isGenerationComplete.value = true;
+    ElMessage.success("当前片段音频已重新生成");
+  } catch (e) {
+    console.error("重新生成片段音频失败", e);
+    ElMessage.error(e.response?.data?.error || "重新生成失败，请稍后重试");
+  } finally {
+    const nextMap = { ...segmentRegeneratingMap.value };
+    delete nextMap[index];
+    segmentRegeneratingMap.value = nextMap;
+  }
+}
+
+function handleSegmentAction(index) {
+  const target = segments.value[index];
+  if (!target) return;
+  if (target.audioUrl) {
+    playSegmentFrom(index);
+    return;
+  }
+  regenerateSegment(index);
+}
+
 // ── 顺序播放 segments（从指定索引开始，支持等待后续生成的内容）──
 async function playFrom(startIndex, sessionId) {
   let i = startIndex;
@@ -1395,7 +1588,9 @@ function scrollToSeg(idx) {
 async function triggerPrefetch() {
   try {
     const configRes = await axios.get(`${API}/api/listen-book/config`);
-    const prefetchCount = configRes.data.prefetchCount || 2;
+    const prefetchCount = Number.isFinite(configRes.data.prefetchCount)
+      ? Math.max(0, configRes.data.prefetchCount)
+      : 2;
 
     for (let i = 1; i <= prefetchCount; i++) {
       const nextIdx = currentChapterIndex.value + i;

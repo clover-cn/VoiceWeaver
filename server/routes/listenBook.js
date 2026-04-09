@@ -29,6 +29,12 @@ function createCancelledError(message = "CANCELLED") {
   return err;
 }
 
+function parseNonNegativeEnvInt(value, fallback) {
+  const parsed = Number.parseInt(value, 10);
+  if (Number.isNaN(parsed)) return fallback;
+  return Math.max(0, parsed);
+}
+
 // ─────────────────────────────────────────────
 // 工具函数
 // ─────────────────────────────────────────────
@@ -157,6 +163,17 @@ function buildSegmentFromCard(card, index, audioUrl) {
   };
 }
 
+function buildSegmentForCache(card, index, currentSegment = null) {
+  return {
+    ...buildSegmentFromCard(card, index, currentSegment?.audioUrl || null),
+    audioUrl: currentSegment?.audioUrl || null,
+  };
+}
+
+function countCompletedSegments(segments) {
+  return normalizeSegments(segments).filter((segment) => Boolean(segment.audioUrl)).length;
+}
+
 function readChapterCacheEntry(projectName, chapterIndex) {
   const key = cacheKey(projectName, chapterIndex);
   const cache = readProjectListenCache(projectName);
@@ -206,7 +223,11 @@ async function runPipeline(taskId, { projectName, chapterIndex, chapterUrl, chap
       // ── 阶段 1: 预扫描（调用现有 /api/llm/prescan-characters）──
       task.phase = "prescan";
       task.progress = 0;
-      console.log(`[listenBook][${taskId}] 预扫描开始`);
+      console.log('预扫描的章节数',process.env.PRESCAN_CHAPTER_COUNT);
+      
+      if (process.env.PRESCAN_CHAPTER_COUNT > 0) {
+        console.log(`[listenBook][${taskId}] 预扫描开始`);
+      }
       updateChapterCacheEntry(projectName, chapterIndex, (current) => ({
         ...(current || {}),
         ...cacheIdentity,
@@ -216,7 +237,7 @@ async function runPipeline(taskId, { projectName, chapterIndex, chapterUrl, chap
         updatedAt: new Date().toISOString(),
       }));
 
-      const prescanCount = parseInt(process.env.PRESCAN_CHAPTER_COUNT || "10", 10);
+      const prescanCount = parseNonNegativeEnvInt(process.env.PRESCAN_CHAPTER_COUNT, 10);
       const scanChapters = chapterList.slice(chapterIndex, chapterIndex + prescanCount);
 
       const contentTexts = await Promise.all(
@@ -438,8 +459,8 @@ async function runPipeline(taskId, { projectName, chapterIndex, chapterUrl, chap
 router.get("/config", (req, res) => {
   res.json({
     success: true,
-    prefetchCount: parseInt(process.env.LISTEN_PREFETCH_COUNT || "2", 10),
-    prescanCount: parseInt(process.env.PRESCAN_CHAPTER_COUNT || "10", 10),
+    prefetchCount: parseNonNegativeEnvInt(process.env.LISTEN_PREFETCH_COUNT, 2),
+    prescanCount: parseNonNegativeEnvInt(process.env.PRESCAN_CHAPTER_COUNT, 10),
   });
 });
 
@@ -644,11 +665,16 @@ router.get("/chapter-edits", (req, res) => {
 });
 
 router.post("/chapter-edits", (req, res) => {
-  const { projectName, chapterIndex, segments } = req.body || {};
+  const { projectName, chapterIndex, segments, invalidatedSegmentIndexes = [] } = req.body || {};
   if (!projectName || chapterIndex === undefined || !Array.isArray(segments)) {
     return res.status(400).json({ error: "缺少 projectName / chapterIndex / segments" });
   }
 
+  const invalidatedIndexSet = new Set(
+    (Array.isArray(invalidatedSegmentIndexes) ? invalidatedSegmentIndexes : [])
+      .map((index) => Number(index))
+      .filter((index) => Number.isInteger(index) && index >= 0),
+  );
   const chapterEdits = readChapterEdits(projectName);
   chapterEdits[String(chapterIndex)] = {
     updatedAt: new Date().toISOString(),
@@ -664,9 +690,120 @@ router.post("/chapter-edits", (req, res) => {
     })),
   };
   writeChapterEdits(projectName, chapterEdits);
-  clearProjectCacheFromChapter(projectName, Number(chapterIndex) || 0);
+
+  updateChapterCacheEntry(projectName, Number(chapterIndex), (current) => {
+    if (!current) return current;
+
+    const parsedCards = segments.map((segment) => ({
+      type: segment.type || null,
+      role: segment.role || null,
+      emotion: segment.emotion || "neutral",
+      text: typeof segment.text === "string" ? segment.text : "",
+      referenceAudio: segment.referenceAudio || null,
+      autoEmotionAudioMap: segment.autoEmotionAudioMap || null,
+      autoAssignedVoiceActor: segment.autoAssignedVoiceActor || null,
+      manualAssigned: Boolean(segment.manualAssigned),
+    }));
+
+    const existingSegments = normalizeSegments(current.segments, parsedCards.length);
+    const existingSegmentMap = new Map(existingSegments.map((segment) => [segment.index, segment]));
+    const nextSegments = parsedCards.map((card, index) => {
+      const cachedSegment = existingSegmentMap.get(index);
+      const nextSegment = buildSegmentForCache(card, index, cachedSegment);
+      if (invalidatedIndexSet.has(index)) {
+        nextSegment.audioUrl = null;
+      }
+      return nextSegment;
+    });
+
+    return {
+      ...current,
+      phase: "done",
+      parsedCards,
+      segments: nextSegments,
+      totalSegments: parsedCards.length,
+      completedSegments: countCompletedSegments(nextSegments),
+      updatedAt: new Date().toISOString(),
+    };
+  });
 
   res.json({ success: true });
+});
+
+router.post("/regenerate-segment", async (req, res) => {
+  const { projectName, chapterIndex, segmentIndex } = req.body || {};
+  if (!projectName || chapterIndex === undefined || segmentIndex === undefined) {
+    return res.status(400).json({ error: "缺少 projectName / chapterIndex / segmentIndex" });
+  }
+
+  const normalizedChapterIndex = Number(chapterIndex);
+  const normalizedSegmentIndex = Number(segmentIndex);
+  if (!Number.isInteger(normalizedChapterIndex) || normalizedChapterIndex < 0) {
+    return res.status(400).json({ error: "chapterIndex 非法" });
+  }
+  if (!Number.isInteger(normalizedSegmentIndex) || normalizedSegmentIndex < 0) {
+    return res.status(400).json({ error: "segmentIndex 非法" });
+  }
+
+  const cacheEntry = readChapterCacheEntry(projectName, normalizedChapterIndex).entry;
+  const parsedCards = Array.isArray(cacheEntry?.parsedCards) ? cacheEntry.parsedCards : [];
+  if (!parsedCards.length) {
+    return res.status(409).json({ error: "当前章节尚未解析，请先生成听书" });
+  }
+
+  const card = parsedCards[normalizedSegmentIndex];
+  if (!card) {
+    return res.status(404).json({ error: "目标片段不存在" });
+  }
+
+  try {
+    const ttsResp = await axios.post(
+      `${baseUrl()}/api/tts/generate-single`,
+      {
+        dialogue: card,
+        projectName,
+      },
+      { timeout: getListenBookTtsTimeout() },
+    );
+
+    const updatedEntry = updateChapterCacheEntry(projectName, normalizedChapterIndex, (current) => {
+      if (!current || !Array.isArray(current.parsedCards)) return current;
+
+      const nextParsedCards = current.parsedCards.map((item, index) =>
+        index === normalizedSegmentIndex ? { ...card } : { ...item },
+      );
+      const currentSegments = normalizeSegments(current.segments, nextParsedCards.length);
+      const segmentMap = new Map(currentSegments.map((segment) => [segment.index, segment]));
+      const nextSegments = nextParsedCards.map((item, index) => {
+        const nextSegment = buildSegmentForCache(item, index, segmentMap.get(index));
+        if (index === normalizedSegmentIndex) {
+          nextSegment.audioUrl = ttsResp.data.audioUrl || null;
+        }
+        return nextSegment;
+      });
+
+      return {
+        ...current,
+        phase: "done",
+        parsedCards: nextParsedCards,
+        segments: nextSegments,
+        totalSegments: nextParsedCards.length,
+        completedSegments: countCompletedSegments(nextSegments),
+        updatedAt: new Date().toISOString(),
+      };
+    });
+
+    const nextSegments = normalizeSegments(updatedEntry?.segments, parsedCards.length);
+    return res.json({
+      success: true,
+      segment: nextSegments.find((segment) => segment.index === normalizedSegmentIndex) || null,
+      segments: nextSegments,
+      completedSegments: countCompletedSegments(nextSegments),
+    });
+  } catch (error) {
+    console.error("单段音频重生成失败:", error.message);
+    return res.status(500).json({ error: error.message || "单段音频重生成失败" });
+  }
 });
 
 module.exports = router;

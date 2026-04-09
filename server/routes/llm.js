@@ -37,6 +37,12 @@ function isAbortError(error) {
   return Boolean(error && (error.code === "ERR_CANCELED" || error.name === "CanceledError" || error.cancelled === true));
 }
 
+function parseNonNegativeEnvInt(value, fallback) {
+  const parsed = Number.parseInt(value, 10);
+  if (Number.isNaN(parsed)) return fallback;
+  return Math.max(0, parsed);
+}
+
 // 构建角色别名上下文信息
 function buildCharacterContext(localChars) {
   const charNames = Object.keys(localChars).filter((name) => name !== "旁白");
@@ -341,7 +347,7 @@ router.post("/prescan-characters", async (req, res) => {
     const prescanModel = process.env.PRESCAN_LLM_MODEL || process.env.LLM_MODEL || "deepseek-chat";
     const apiKey = process.env.LLM_API_KEY;
     const aiEndpoint = process.env.LLM_ENDPOINT || "https://api.deepseek.com/v1/chat/completions";
-    const chapterCount = process.env.PRESCAN_CHAPTER_COUNT || 10;
+    const chapterCount = parseNonNegativeEnvInt(process.env.PRESCAN_CHAPTER_COUNT, 10);
     const localChars = getCharacters(projectName);
     const characterContext = buildCharacterContext(localChars);
 
