@@ -959,6 +959,26 @@ function buildEmotionAudioMapForVoiceActor(audioId) {
   return Object.keys(emotionMap).length ? emotionMap : null;
 }
 
+function buildGlobalBindingPayloadFromEmotionMap(emotionMap) {
+  if (!emotionMap || typeof emotionMap !== "object") return null;
+  const payload = {};
+
+  Object.keys(emotionLabelMap).forEach((emotion) => {
+    const conf = emotionMap[emotion];
+    if (!conf?.id) {
+      payload[emotion] = null;
+      return;
+    }
+    payload[emotion] = {
+      id: conf.id,
+      mode: conf.mode || 1,
+      emoWeight: conf.emoWeight ?? 0.65,
+    };
+  });
+
+  return payload;
+}
+
 function pickReferenceAudioByEmotion(emotionMap, emotion) {
   if (!emotionMap || typeof emotionMap !== "object") return null;
   const normalizedEmotion = normalizeAudioEmotion(emotion);
@@ -1116,6 +1136,19 @@ async function syncRoleOverrideForSegment(segment, audioId) {
   });
 }
 
+async function syncGlobalBindingsForRole(role, emotionMap) {
+  if (!role || role === "旁白") return;
+  const bindingPayload = buildGlobalBindingPayloadFromEmotionMap(emotionMap);
+  if (!bindingPayload) return;
+
+  await axios.post(`${API}/api/audio/global-roles`, {
+    bindings: {
+      [role]: bindingPayload,
+    },
+  });
+  await fetchGlobalBindings();
+}
+
 async function saveSegmentEdit() {
   if (editingSegmentIndex.value < 0) return;
   isSavingSegmentEdit.value = true;
@@ -1164,6 +1197,7 @@ async function saveSegmentEdit() {
 
     stopListenForManualEdit();
     await syncRoleOverrideForSegment(nextSegment, selectedSegmentAudioId.value);
+    await syncGlobalBindingsForRole(nextRole, manualEmotionMap);
     await persistChapterEdits([...new Set(invalidatedIndexes)]);
     segmentEditorVisible.value = false;
     ElMessage.success(
@@ -1229,12 +1263,12 @@ async function handleAudioSetupSaved(bindings) {
   await axios
     .post(`${API}/api/listen-book/invalidate-cache`, {
       projectName: listenProjectName.value,
-      fromChapterIndex: currentChapterIndex.value,
+      fromChapterIndex: currentChapterIndex.value + 1,
     })
     .catch(() => {});
   await persistChapterEdits([]);
-  await markListenDirty();
-  ElMessage.success("角色全局情绪音频已更新，当前章节需重新生成听书");
+  stopListenForManualEdit();
+  ElMessage.success("角色全局情绪音频已更新，当前章节已同步，后续章节会按新配置生成");
 }
 
 // ── 重置听书状态（并发通知后端取消任务）──
