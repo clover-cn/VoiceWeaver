@@ -5,6 +5,7 @@ const dataDir = path.join(__dirname, "../data");
 const projectsDir = path.join(dataDir, "projects");
 const legacyCachePath = path.join(dataDir, "listen_book_cache.json");
 const cacheFileName = "listen_book_cache.json";
+const previewRoutePrefix = "/api/tts/preview/";
 
 function readJson(filePath, fallback) {
   try {
@@ -42,6 +43,41 @@ function getProjectDir(projectName) {
 
 function getProjectListenCachePath(projectName) {
   return path.join(getProjectDir(projectName), cacheFileName);
+}
+
+function getProjectTempDir(projectName) {
+  return path.join(getProjectDir(projectName), "temp");
+}
+
+function resolvePreviewAudioPath(projectName, audioUrl) {
+  if (!audioUrl) return null;
+
+  const safeProjectName = sanitizeProjectName(projectName);
+  const normalizedUrl = String(audioUrl).split("?")[0];
+  const expectedPrefix = `${previewRoutePrefix}${safeProjectName}/`;
+  if (!normalizedUrl.startsWith(expectedPrefix)) return null;
+
+  const fileName = path.basename(normalizedUrl);
+  if (!fileName) return null;
+  return path.join(getProjectTempDir(projectName), fileName);
+}
+
+function removePreviewAudioFile(projectName, audioUrl) {
+  const filePath = resolvePreviewAudioPath(projectName, audioUrl);
+  if (!filePath || !fs.existsSync(filePath)) return false;
+
+  try {
+    fs.unlinkSync(filePath);
+    return true;
+  } catch (error) {
+    console.warn(`删除听书缓存音频失败: ${filePath}`, error.message);
+    return false;
+  }
+}
+
+function collectEntryAudioUrls(entry) {
+  if (!entry || !Array.isArray(entry.segments)) return [];
+  return entry.segments.map((segment) => segment?.audioUrl).filter(Boolean);
 }
 
 function readLegacyCache() {
@@ -111,14 +147,20 @@ function writeProjectListenCache(projectName, cache) {
 function clearProjectListenCache(projectName, fromChapterIndex = 0) {
   const cache = readProjectListenCache(projectName);
   let changed = false;
+  const staleAudioUrls = new Set();
 
   Object.keys(cache).forEach((key) => {
     const [cachedProjectName, cachedChapterIndex] = key.split("__");
     if (cachedProjectName !== projectName) return;
     const idx = Number(cachedChapterIndex);
     if (!Number.isFinite(idx) || idx < fromChapterIndex) return;
+    collectEntryAudioUrls(cache[key]).forEach((audioUrl) => staleAudioUrls.add(audioUrl));
     delete cache[key];
     changed = true;
+  });
+
+  staleAudioUrls.forEach((audioUrl) => {
+    removePreviewAudioFile(projectName, audioUrl);
   });
 
   if (changed) {
@@ -166,4 +208,5 @@ module.exports = {
   writeProjectListenCache,
   clearProjectListenCache,
   findListenCacheByTaskId,
+  removePreviewAudioFile,
 };

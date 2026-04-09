@@ -11,6 +11,7 @@ const {
   writeProjectListenCache,
   clearProjectListenCache,
   findListenCacheByTaskId,
+  removePreviewAudioFile,
 } = require("../services/listenBookCacheService");
 
 // ─────────────────────────────────────────────
@@ -194,6 +195,11 @@ function updateChapterCacheEntry(projectName, chapterIndex, updater) {
   }
   writeProjectListenCache(projectName, cache);
   return nextEntry;
+}
+
+function removeSegmentPreviewAudio(projectName, segment) {
+  if (!segment?.audioUrl) return false;
+  return removePreviewAudioFile(projectName, segment.audioUrl);
 }
 
 // ─────────────────────────────────────────────
@@ -707,6 +713,9 @@ router.post("/chapter-edits", (req, res) => {
 
     const existingSegments = normalizeSegments(current.segments, parsedCards.length);
     const existingSegmentMap = new Map(existingSegments.map((segment) => [segment.index, segment]));
+    invalidatedIndexSet.forEach((index) => {
+      removeSegmentPreviewAudio(projectName, existingSegmentMap.get(index));
+    });
     const nextSegments = parsedCards.map((card, index) => {
       const cachedSegment = existingSegmentMap.get(index);
       const nextSegment = buildSegmentForCache(card, index, cachedSegment);
@@ -757,6 +766,9 @@ router.post("/regenerate-segment", async (req, res) => {
   }
 
   try {
+    const currentSegments = normalizeSegments(cacheEntry?.segments, parsedCards.length);
+    const previousSegment = currentSegments.find((segment) => segment.index === normalizedSegmentIndex) || null;
+    const previousAudioUrl = previousSegment?.audioUrl || null;
     const ttsResp = await axios.post(
       `${baseUrl()}/api/tts/generate-single`,
       {
@@ -792,6 +804,10 @@ router.post("/regenerate-segment", async (req, res) => {
         updatedAt: new Date().toISOString(),
       };
     });
+
+    if (previousAudioUrl && previousAudioUrl !== ttsResp.data.audioUrl) {
+      removePreviewAudioFile(projectName, previousAudioUrl);
+    }
 
     const nextSegments = normalizeSegments(updatedEntry?.segments, parsedCards.length);
     return res.json({
