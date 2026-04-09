@@ -217,13 +217,13 @@
               <option value="fallback_neutral" class="text-black">回退模式：没有对应情绪音频时，自动使用平静音频</option>
             </select>
           </div>
-          <button
+          <!-- <button
             v-if="segments.length"
             class="px-3.5 py-1.5 bg-[rgba(255,191,94,0.12)] border border-[rgba(255,191,94,0.28)] rounded-lg text-[#ffd480] text-[13px] cursor-pointer transition-colors duration-200 whitespace-nowrap hover:bg-[rgba(255,191,94,0.22)]"
             @click="openRoleSetup"
           >
             当前书角色配置
-          </button>
+          </button> -->
           <!-- 听书控制区 -->
           <div class="flex items-center gap-2">
             <!-- idle: 显示听书按钮 -->
@@ -461,7 +461,7 @@
     <template #footer>
       <div class="flex justify-end gap-3">
         <el-button @click="segmentEditorVisible = false">取消</el-button>
-        <el-button @click="openRoleSetup">编辑当前书角色音频</el-button>
+        <!-- <el-button @click="openRoleSetup">编辑当前书角色音频</el-button> -->
         <el-button type="primary" :loading="isSavingSegmentEdit" @click="saveSegmentEdit">保存片段修改</el-button>
       </div>
     </template>
