@@ -196,7 +196,7 @@ router.get("/role-audio-override", (req, res) => {
 
 router.post("/role-audio-override", (req, res) => {
   try {
-    const { projectName, role, audioId, chapterIndex = 0 } = req.body || {};
+    const { projectName, role, audioId, chapterIndex = 0, skipCacheInvalidation = false } = req.body || {};
 
     if (!projectName || !role) {
       return res.status(400).json({ error: "缺少 projectName 或 role" });
@@ -211,7 +211,9 @@ router.post("/role-audio-override", (req, res) => {
         delete casting.roleAssignments[role];
       }
       saveProjectCasting(projectName, casting);
-      clearListenBookCache(projectName, Number(chapterIndex) || 0);
+      if (!skipCacheInvalidation) {
+        clearListenBookCache(projectName, Number(chapterIndex) || 0);
+      }
       return res.json({
         success: true,
         role,
@@ -239,7 +241,9 @@ router.post("/role-audio-override", (req, res) => {
     };
 
     saveProjectCasting(projectName, casting);
-    clearListenBookCache(projectName, Number(chapterIndex) || 0);
+    if (!skipCacheInvalidation) {
+      clearListenBookCache(projectName, Number(chapterIndex) || 0);
+    }
 
     res.json({
       success: true,

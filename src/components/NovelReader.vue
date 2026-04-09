@@ -473,7 +473,7 @@
 <script setup>
 import { ref, computed, nextTick, onMounted, onBeforeUnmount } from "vue";
 import axios from "axios";
-import { ElMessage } from "element-plus";
+import { ElLoading, ElMessage } from "element-plus";
 import RoleAudioSetupDialog from "./RoleAudioSetupDialog.vue";
 import { Search, ArrowLeft, ArrowRight, WarnTriangleFilled } from "@element-plus/icons-vue";
 const API = "http://localhost:3000";
@@ -1140,6 +1140,7 @@ async function syncRoleOverrideForSegment(segment, audioId) {
     role: segment.role,
     audioId,
     chapterIndex: currentChapterIndex.value + 1,
+    skipCacheInvalidation: true,
   });
 }
 
@@ -1155,6 +1156,59 @@ async function syncGlobalBindingsForRole(role, emotionMap) {
     },
   });
   await fetchGlobalBindings();
+}
+
+function buildFutureRoleUpdatePayload(role, audioId, emotionMap, voiceActor) {
+  if (!audioId || !role || role === "旁白") return null;
+  return {
+    role,
+    audioId,
+    emotionMap: emotionMap ? cloneConfig(emotionMap) : null,
+    voiceActor: voiceActor || null,
+  };
+}
+
+async function autoRegenerateAfterSegmentEdit(invalidatedIndexes, futureRoleUpdate = null) {
+  const loading = ElLoading.service({
+    lock: true,
+    text: "正在重新生成当前章节音频，请稍候…",
+    background: "rgba(10, 10, 20, 0.72)",
+  });
+
+  try {
+    stopCurrentAudio();
+    isPlaying.value = false;
+
+    const res = await axios.post(`${API}/api/listen-book/auto-regenerate-after-edit`, {
+      projectName: listenProjectName.value,
+      currentChapterIndex: currentChapterIndex.value,
+      invalidatedSegmentIndexes: invalidatedIndexes,
+      futureRoleUpdate,
+    });
+
+    if (Array.isArray(res.data?.segments)) {
+      segments.value = res.data.segments;
+    }
+    listenState.value = "ready";
+    isGenerationComplete.value = true;
+
+    const failedIndexes = Array.isArray(res.data?.failedIndexes) ? res.data.failedIndexes : [];
+    const queuedFutureChapters = Array.isArray(res.data?.queuedFutureChapters) ? res.data.queuedFutureChapters : [];
+
+    if (failedIndexes.length) {
+      ElMessage.warning(`当前章节有 ${failedIndexes.length} 个片段自动生成失败，请手动重试。`);
+      return;
+    }
+
+    if (queuedFutureChapters.length) {
+      ElMessage.success(`当前章节已自动重生成，后续 ${queuedFutureChapters.length} 个已缓存章节正在后台静默更新。`);
+      return;
+    }
+
+    ElMessage.success("当前章节受影响片段已自动重生成完成。");
+  } finally {
+    loading.close();
+  }
 }
 
 async function saveSegmentEdit() {
@@ -1206,16 +1260,16 @@ async function saveSegmentEdit() {
     stopListenForManualEdit();
     await syncRoleOverrideForSegment(nextSegment, selectedSegmentAudioId.value);
     await syncGlobalBindingsForRole(nextRole, manualEmotionMap);
-    await persistChapterEdits([...new Set(invalidatedIndexes)]);
+    const normalizedInvalidatedIndexes = [...new Set(invalidatedIndexes)];
+    await persistChapterEdits(normalizedInvalidatedIndexes);
     segmentEditorVisible.value = false;
-    ElMessage.success(
-      selectedSegmentAudioId.value && nextSegment.type === "dialogue"
-        ? "当前章节同角色片段已同步更新，可逐段点击“音频待生成”重新生成"
-        : "片段修改已保存，可点击“音频待生成”重新生成当前段",
+    await autoRegenerateAfterSegmentEdit(
+      normalizedInvalidatedIndexes,
+      buildFutureRoleUpdatePayload(nextRole, selectedSegmentAudioId.value, manualEmotionMap, nextVoiceActor),
     );
   } catch (e) {
     console.error("保存片段修改失败", e);
-    ElMessage.error("保存失败，请稍后重试");
+    ElMessage.error(e.response?.data?.error || "保存失败，请稍后重试");
   } finally {
     isSavingSegmentEdit.value = false;
   }

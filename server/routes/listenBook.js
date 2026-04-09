@@ -175,6 +175,54 @@ function countCompletedSegments(segments) {
   return normalizeSegments(segments).filter((segment) => Boolean(segment.audioUrl)).length;
 }
 
+function cloneData(data) {
+  return data ? JSON.parse(JSON.stringify(data)) : data;
+}
+
+function normalizeSegmentIndexes(indexes, maxLength) {
+  return [...new Set((Array.isArray(indexes) ? indexes : []).map((index) => Number(index)).filter((index) => Number.isInteger(index) && index >= 0 && index < maxLength))]
+    .sort((a, b) => a - b);
+}
+
+function normalizeEmotionKey(emotion) {
+  const raw = String(emotion || "").trim().toLowerCase();
+  const map = {
+    happy: "happy",
+    开心: "happy",
+    高兴: "happy",
+    angry: "angry",
+    生气: "angry",
+    愤怒: "angry",
+    sad: "sad",
+    悲伤: "sad",
+    fearful: "fearful",
+    害怕: "fearful",
+    恐惧: "fearful",
+    disgusted: "disgusted",
+    厌恶: "disgusted",
+    melancholy: "melancholy",
+    忧郁: "melancholy",
+    忧伤: "melancholy",
+    surprised: "surprised",
+    惊讶: "surprised",
+    neutral: "neutral",
+    平静: "neutral",
+  };
+  return map[raw] || "neutral";
+}
+
+function pickReferenceAudioByEmotion(emotionMap, emotion) {
+  if (!emotionMap || typeof emotionMap !== "object") return null;
+  const normalizedEmotion = normalizeEmotionKey(emotion);
+  if (emotionMap[normalizedEmotion]) {
+    return cloneData(emotionMap[normalizedEmotion]);
+  }
+  if (emotionMap.neutral) {
+    return cloneData(emotionMap.neutral);
+  }
+  return null;
+}
+
 function readChapterCacheEntry(projectName, chapterIndex) {
   const key = cacheKey(projectName, chapterIndex);
   const cache = readProjectListenCache(projectName);
@@ -200,6 +248,177 @@ function updateChapterCacheEntry(projectName, chapterIndex, updater) {
 function removeSegmentPreviewAudio(projectName, segment) {
   if (!segment?.audioUrl) return false;
   return removePreviewAudioFile(projectName, segment.audioUrl);
+}
+
+function updateRoleAudioForCard(card, roleUpdate) {
+  if (!card || !roleUpdate?.role) return { changed: false, card };
+  if (card.type !== "dialogue" || card.role !== roleUpdate.role) {
+    return { changed: false, card };
+  }
+
+  const nextCard = { ...card };
+  if (roleUpdate.emotionMap && typeof roleUpdate.emotionMap === "object") {
+    nextCard.autoEmotionAudioMap = cloneData(roleUpdate.emotionMap);
+    nextCard.referenceAudio = pickReferenceAudioByEmotion(roleUpdate.emotionMap, nextCard.emotion);
+  } else if (roleUpdate.audioId) {
+    nextCard.autoEmotionAudioMap = null;
+    nextCard.referenceAudio = { id: roleUpdate.audioId, mode: 1, emoWeight: 0.65 };
+  }
+
+  if (roleUpdate.voiceActor) {
+    nextCard.autoAssignedVoiceActor = roleUpdate.voiceActor;
+  }
+  nextCard.manualAssigned = true;
+
+  const changed =
+    JSON.stringify(card.referenceAudio || null) !== JSON.stringify(nextCard.referenceAudio || null) ||
+    JSON.stringify(card.autoEmotionAudioMap || null) !== JSON.stringify(nextCard.autoEmotionAudioMap || null) ||
+    (card.autoAssignedVoiceActor || null) !== (nextCard.autoAssignedVoiceActor || null) ||
+    Boolean(card.manualAssigned) !== Boolean(nextCard.manualAssigned);
+
+  return { changed, card: nextCard };
+}
+
+function applyRoleUpdateToCachedChapter(projectName, chapterIndex, roleUpdate) {
+  const cacheEntry = readChapterCacheEntry(projectName, chapterIndex).entry;
+  if (!cacheEntry || !Array.isArray(cacheEntry.parsedCards) || !cacheEntry.parsedCards.length) {
+    return { targetIndexes: [], entry: cacheEntry };
+  }
+
+  const currentSegments = normalizeSegments(cacheEntry.segments, cacheEntry.parsedCards.length);
+  const segmentMap = new Map(currentSegments.map((segment) => [segment.index, segment]));
+  const targetIndexes = [];
+  const nextParsedCards = cacheEntry.parsedCards.map((card, index) => {
+    const result = updateRoleAudioForCard(card, roleUpdate);
+    if (result.changed) {
+      targetIndexes.push(index);
+    }
+    return result.card;
+  });
+
+  if (!targetIndexes.length) {
+    return { targetIndexes: [], entry: cacheEntry };
+  }
+
+  const targetIndexSet = new Set(targetIndexes);
+  const nextSegments = nextParsedCards.map((card, index) => {
+    const cachedSegment = segmentMap.get(index);
+    const nextSegment = buildSegmentForCache(card, index, cachedSegment);
+    if (targetIndexSet.has(index)) {
+      removeSegmentPreviewAudio(projectName, cachedSegment);
+      nextSegment.audioUrl = null;
+    }
+    return nextSegment;
+  });
+
+  const updatedEntry = updateChapterCacheEntry(projectName, chapterIndex, (current) => ({
+    ...(current || {}),
+    parsedCards: nextParsedCards,
+    segments: nextSegments,
+    phase: "done",
+    totalSegments: nextParsedCards.length,
+    completedSegments: countCompletedSegments(nextSegments),
+    updatedAt: new Date().toISOString(),
+  }));
+
+  return { targetIndexes, entry: updatedEntry };
+}
+
+async function regenerateSegmentIndexesForChapter(projectName, chapterIndex, indexes, { logPrefix = "listenBook:auto" } = {}) {
+  const cacheEntry = readChapterCacheEntry(projectName, chapterIndex).entry;
+  const parsedCards = Array.isArray(cacheEntry?.parsedCards) ? cacheEntry.parsedCards : [];
+  if (!parsedCards.length) {
+    return { segments: [], completedSegments: 0, regeneratedIndexes: [], failedIndexes: indexes || [] };
+  }
+
+  const targetIndexes = normalizeSegmentIndexes(indexes, parsedCards.length);
+  if (!targetIndexes.length) {
+    const currentSegments = normalizeSegments(cacheEntry?.segments, parsedCards.length);
+    return {
+      segments: currentSegments,
+      completedSegments: countCompletedSegments(currentSegments),
+      regeneratedIndexes: [],
+      failedIndexes: [],
+    };
+  }
+
+  let latestEntry = cacheEntry;
+  const failedIndexes = [];
+
+  for (const segmentIndex of targetIndexes) {
+    const currentSegments = normalizeSegments(latestEntry?.segments, parsedCards.length);
+    const previousSegment = currentSegments.find((segment) => segment.index === segmentIndex) || null;
+    const previousAudioUrl = previousSegment?.audioUrl || null;
+    const card = parsedCards[segmentIndex];
+
+    try {
+      const ttsResp = await axios.post(
+        `${baseUrl()}/api/tts/generate-single`,
+        {
+          dialogue: card,
+          projectName,
+        },
+        { timeout: getListenBookTtsTimeout() },
+      );
+
+      latestEntry = updateChapterCacheEntry(projectName, chapterIndex, (current) => {
+        if (!current || !Array.isArray(current.parsedCards)) return current;
+        const existingSegments = normalizeSegments(current.segments, current.parsedCards.length);
+        const segmentMap = new Map(existingSegments.map((segment) => [segment.index, segment]));
+        const nextSegments = current.parsedCards.map((item, index) => {
+          const nextSegment = buildSegmentForCache(item, index, segmentMap.get(index));
+          if (index === segmentIndex) {
+            nextSegment.audioUrl = ttsResp.data.audioUrl || null;
+          }
+          return nextSegment;
+        });
+
+        return {
+          ...current,
+          phase: "done",
+          segments: nextSegments,
+          totalSegments: current.parsedCards.length,
+          completedSegments: countCompletedSegments(nextSegments),
+          updatedAt: new Date().toISOString(),
+        };
+      });
+
+      if (previousAudioUrl && previousAudioUrl !== ttsResp.data.audioUrl) {
+        removePreviewAudioFile(projectName, previousAudioUrl);
+      }
+    } catch (error) {
+      failedIndexes.push(segmentIndex);
+      console.warn(`[${logPrefix}] 章节 ${chapterIndex} 片段 ${segmentIndex} 重生成失败: ${error.message}`);
+      latestEntry = updateChapterCacheEntry(projectName, chapterIndex, (current) => {
+        if (!current || !Array.isArray(current.parsedCards)) return current;
+        const existingSegments = normalizeSegments(current.segments, current.parsedCards.length);
+        const segmentMap = new Map(existingSegments.map((segment) => [segment.index, segment]));
+        const nextSegments = current.parsedCards.map((item, index) => {
+          const nextSegment = buildSegmentForCache(item, index, segmentMap.get(index));
+          if (index === segmentIndex) {
+            nextSegment.audioUrl = null;
+          }
+          return nextSegment;
+        });
+        return {
+          ...current,
+          phase: "done",
+          segments: nextSegments,
+          totalSegments: current.parsedCards.length,
+          completedSegments: countCompletedSegments(nextSegments),
+          updatedAt: new Date().toISOString(),
+        };
+      });
+    }
+  }
+
+  const finalSegments = normalizeSegments(latestEntry?.segments, parsedCards.length);
+  return {
+    segments: finalSegments,
+    completedSegments: countCompletedSegments(finalSegments),
+    regeneratedIndexes: targetIndexes.filter((index) => !failedIndexes.includes(index)),
+    failedIndexes,
+  };
 }
 
 // ─────────────────────────────────────────────
@@ -737,6 +956,98 @@ router.post("/chapter-edits", (req, res) => {
   });
 
   res.json({ success: true });
+});
+
+router.post("/auto-regenerate-after-edit", async (req, res) => {
+  const {
+    projectName,
+    currentChapterIndex,
+    invalidatedSegmentIndexes = [],
+    futureRoleUpdate = null,
+  } = req.body || {};
+
+  if (!projectName || currentChapterIndex === undefined) {
+    return res.status(400).json({ error: "缺少 projectName / currentChapterIndex" });
+  }
+
+  const normalizedChapterIndex = Number(currentChapterIndex);
+  if (!Number.isInteger(normalizedChapterIndex) || normalizedChapterIndex < 0) {
+    return res.status(400).json({ error: "currentChapterIndex 非法" });
+  }
+
+  const currentEntry = readChapterCacheEntry(projectName, normalizedChapterIndex).entry;
+  const parsedCards = Array.isArray(currentEntry?.parsedCards) ? currentEntry.parsedCards : [];
+  if (!parsedCards.length) {
+    return res.status(409).json({ error: "当前章节尚未解析，无法自动重生成" });
+  }
+
+  const normalizedIndexes = normalizeSegmentIndexes(invalidatedSegmentIndexes, parsedCards.length);
+
+  Object.values(tasks).forEach((task) => {
+    if (task.projectName !== projectName) return;
+    if (Number(task.chapterIndex) < normalizedChapterIndex) return;
+    cancelTask(task);
+  });
+
+  try {
+    const currentResult = await regenerateSegmentIndexesForChapter(projectName, normalizedChapterIndex, normalizedIndexes, {
+      logPrefix: "listenBook:auto-current",
+    });
+
+    const cache = readProjectListenCache(projectName);
+    const futureChapterIndexes = Object.keys(cache)
+      .map((key) => {
+        const [cachedProjectName, cachedChapterIndex] = key.split("__");
+        if (cachedProjectName !== projectName) return null;
+        const index = Number(cachedChapterIndex);
+        if (!Number.isInteger(index) || index <= normalizedChapterIndex) return null;
+        return index;
+      })
+      .filter((index) => index !== null)
+      .sort((a, b) => a - b);
+
+    const queuedFutureChapters = [];
+    if (futureRoleUpdate?.role) {
+      futureChapterIndexes.forEach((chapterIndex) => {
+        const { targetIndexes } = applyRoleUpdateToCachedChapter(projectName, chapterIndex, futureRoleUpdate);
+        if (targetIndexes.length) {
+          queuedFutureChapters.push({ chapterIndex, targetIndexes });
+        }
+      });
+    }
+
+    res.json({
+      success: true,
+      currentChapterIndex: normalizedChapterIndex,
+      segments: currentResult.segments,
+      completedSegments: currentResult.completedSegments,
+      regeneratedIndexes: currentResult.regeneratedIndexes,
+      failedIndexes: currentResult.failedIndexes,
+      queuedFutureChapters: queuedFutureChapters.map((item) => item.chapterIndex),
+    });
+
+    if (queuedFutureChapters.length) {
+      setImmediate(async () => {
+        for (const item of queuedFutureChapters) {
+          const result = await regenerateSegmentIndexesForChapter(projectName, item.chapterIndex, item.targetIndexes, {
+            logPrefix: "listenBook:auto-future",
+          }).catch((error) => {
+            console.warn(`[listenBook:auto-future] 章节 ${item.chapterIndex} 静默重生成失败: ${error.message}`);
+            return null;
+          });
+
+          if (result?.failedIndexes?.length) {
+            console.warn(
+              `[listenBook:auto-future] 章节 ${item.chapterIndex} 仍有失败片段: ${result.failedIndexes.join(", ")}`,
+            );
+          }
+        }
+      });
+    }
+  } catch (error) {
+    console.error("编辑后自动重生成失败:", error);
+    return res.status(500).json({ error: error.message || "编辑后自动重生成失败" });
+  }
 });
 
 router.post("/regenerate-segment", async (req, res) => {
