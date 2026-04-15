@@ -149,6 +149,91 @@ router.get("/getBookContent", async (req, res) => {
   }
 });
 
+/**
+ * 获取该小说的所有书源
+ * 参数: url, lastIndex
+ */
+router.get("/searchBookSource", async (req, res) => {
+  try {
+    const { url, lastIndex = 0 } = req.query;
+
+    if (!url) {
+      return res.status(400).json({ error: "缺少必需的查询参数: url" });
+    }
+
+    const response = await axios.get(`${TARGET_BASE_URL}/searchBookSource`, {
+      params: {
+        url,
+        lastIndex,
+      },
+    });
+
+    res.json(response.data);
+  } catch (error) {
+    console.error("/searchBookSource 代理出错：", error.message);
+    res.status(500).json({
+      error: "代理错误",
+      details: error.response?.data || error.message,
+    });
+  }
+});
+
+/**
+ * 获取所有书源列表
+ * 参数: simple
+ */
+router.get("/getBookSources", async (req, res) => {
+  try {
+    const { simple = 1 } = req.query;
+
+    const response = await axios.get(`${TARGET_BASE_URL}/getBookSources`, {
+      params: {
+        simple,
+      },
+    });
+
+    res.json(response.data);
+  } catch (error) {
+    console.error("/getBookSources 代理出错：", error.message);
+    res.status(500).json({
+      error: "代理错误",
+      details: error.response?.data || error.message,
+    });
+  }
+});
+
+/**
+ * 新增/更新书源
+ */
+router.post("/saveBookSources", async (req, res) => {
+  try {
+    const response = await axios.post(`${TARGET_BASE_URL}/saveBookSources`, req.body);
+    res.json(response.data);
+  } catch (error) {
+    console.error("/saveBookSources 代理出错：", error.message);
+    res.status(500).json({
+      error: "代理错误",
+      details: error.response?.data || error.message,
+    });
+  }
+});
+
+/**
+ * 书源删除
+ */
+router.post("/deleteBookSources", async (req, res) => {
+  try {
+    const response = await axios.post(`${TARGET_BASE_URL}/deleteBookSources`, req.body);
+    res.json(response.data);
+  } catch (error) {
+    console.error("/deleteBookSources 代理出错：", error.message);
+    res.status(500).json({
+      error: "代理错误",
+      details: error.response?.data || error.message,
+    });
+  }
+});
+
 router.get("/role-audio-override", (req, res) => {
   try {
     const { projectName, role } = req.query;

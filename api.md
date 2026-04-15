@@ -130,3 +130,158 @@ http://154.58.233.231:9080/reader3/getBookContent
 }
 ```
 
+## 获取该小说的所有书源
+
+```
+http://154.58.233.231:9080/reader3/searchBookSource
+```
+
+请求方式：GET
+
+请求参数：
+
+| 参数          | 示例                                | 说明                                |
+| :------------ | :---------------------------------- | :---------------------------------- |
+| **url**       | https://www.biqugem.cc/book/129964/ | 来自getChapterList接口的bookUrl字段 |
+| **lastIndex** | 0                                   | 来默认为0可以不用传                 |
+
+响应参数：
+
+```
+{
+    "isSuccess": true,
+    "errorMsg": "",
+    "data": {
+        "lastIndex": 67,
+        "list": [
+            {
+                "bookUrl": "https://www.ipaoshubaxs.net/170035/",
+                "origin": "http://www.paoshubaxs.com",
+                "originName": "泡书吧",
+                "type": 0,
+                "name": "我的郁金香小姐",
+                "author": "超级大坦克科比",
+                "coverUrl": "https://img.ipaoshubaxs.net/170035/218440.jpg",
+                "intro": "深圳顶级二代，艺术学院千金校花，当红女主播，青梅指腹为婚海归女博士！开局没钱？别慌熬一熬，亿万老妈马上来！一男多女主极品爽文，一切尽在——",
+                "wordCount": "",
+                "latestChapterTitle": "第589章 后记（大结局）",
+                "tocUrl": "",
+                "time": 928,
+                "originOrder": 2,
+                "infoHtml": "",
+                "tocHtml": ""
+            }
+        ]
+    }
+}
+```
+
+
+
+## 获取所有书源列表
+
+```
+http://154.58.233.231:9080/reader3/getBookSources
+```
+
+请求方式：GET
+
+请求参数：
+
+| 参数       | 示例 | 说明        |
+| :--------- | :--- | :---------- |
+| **simple** | 1    | 固定为1即可 |
+
+响应参数：
+
+```
+{
+    "isSuccess": true,
+    "errorMsg": "",
+    "data": [
+        {
+            "bookSourceUrl": "https://www.deqixs.org",
+            "bookSourceName": "得奇",
+            "bookSourceGroup": "小说",
+            "exploreUrl": true
+        },
+    ]
+}
+```
+
+
+
+## 新增/更新书源
+
+```
+http://154.58.233.231:9080/reader3/saveBookSources
+```
+
+请求方式：POST
+
+请求参数，上传json数据，数组里面一个对象代表一个书源，已有书源如果已经存在就会更新，不存在就会新增：
+
+```json
+[
+    {
+        "bookSourceGroup": "精品",
+        "bookSourceName": "速读谷",
+        "bookSourceType": 0,
+        "bookSourceUrl": "https:\/\/www.sudugu.org",
+        "customOrder": 4,
+        "enabled": true,
+        "enabledCookieJar": false,
+        "enabledExplore": true,
+        "lastUpdateTime": "1774021771937",
+        "respondTime": 180000,
+        "searchUrl": "\/i\/sor.aspx?key={{key}}",
+        "weight": 0
+        ...省去一部分...
+    }
+]
+```
+
+响应参数：
+
+```
+{
+    "isSuccess": true,
+    "errorMsg": "新增0条书源，更新1条书源",
+    "data": ""
+}
+```
+
+
+
+## 书源删除
+
+```
+http://154.58.233.231:9080/reader3/deleteBookSources
+```
+
+请求方式：POST
+
+请求参数，上传json数据，数组里面一个对象代表一个书源，这里直接放入getBookSources书源列表里面的书源对象即可删除
+
+```json
+[
+        {
+            "bookSourceUrl": "https://www.deqixs.org",
+            "bookSourceName": "得奇",
+            "bookSourceGroup": "小说",
+            "exploreUrl": true
+        }
+]
+```
+
+响应参数：
+
+```
+{
+    "isSuccess": true,
+    "errorMsg": "",
+    "data": ""
+}
+```
+
+## 
