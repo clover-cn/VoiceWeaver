@@ -821,6 +821,7 @@ router.get("/status/:taskId", (req, res) => {
     progress: task.progress,
     ttsProgress: task.ttsProgress || null,
     segments: task.segments,
+    failedIndexes: task.failedIndexes || [],
     error: task.error || null,
   });
 });
@@ -990,9 +991,7 @@ router.post("/auto-regenerate-after-edit", async (req, res) => {
   });
 
   try {
-    const currentResult = await regenerateSegmentIndexesForChapter(projectName, normalizedChapterIndex, normalizedIndexes, {
-      logPrefix: "listenBook:auto-current",
-    });
+    const taskId = uuidv4();
 
     const cache = readProjectListenCache(projectName);
     const futureChapterIndexes = Object.keys(cache)
@@ -1016,34 +1015,66 @@ router.post("/auto-regenerate-after-edit", async (req, res) => {
       });
     }
 
+    // 初始化任务状态
+    tasks[taskId] = {
+      taskId,
+      projectName,
+      chapterIndex: normalizedChapterIndex,
+      phase: "running",
+      progress: 0,
+      segments: currentEntry.segments,
+      error: null,
+      cancelled: false,
+      controller: new AbortController(),
+    };
+
+    // 立即返回 taskId
     res.json({
       success: true,
-      currentChapterIndex: normalizedChapterIndex,
-      segments: currentResult.segments,
-      completedSegments: currentResult.completedSegments,
-      regeneratedIndexes: currentResult.regeneratedIndexes,
-      failedIndexes: currentResult.failedIndexes,
+      taskId,
       queuedFutureChapters: queuedFutureChapters.map((item) => item.chapterIndex),
     });
 
-    if (queuedFutureChapters.length) {
-      setImmediate(async () => {
-        for (const item of queuedFutureChapters) {
-          const result = await regenerateSegmentIndexesForChapter(projectName, item.chapterIndex, item.targetIndexes, {
-            logPrefix: "listenBook:auto-future",
-          }).catch((error) => {
-            console.warn(`[listenBook:auto-future] 章节 ${item.chapterIndex} 静默重生成失败: ${error.message}`);
-            return null;
-          });
+    // 后台异步执行重生成
+    setImmediate(async () => {
+      try {
+        const currentResult = await regenerateSegmentIndexesForChapter(projectName, normalizedChapterIndex, normalizedIndexes, {
+          logPrefix: "listenBook:auto-current",
+        });
 
-          if (result?.failedIndexes?.length) {
-            console.warn(
-              `[listenBook:auto-future] 章节 ${item.chapterIndex} 仍有失败片段: ${result.failedIndexes.join(", ")}`,
-            );
+        if (queuedFutureChapters.length) {
+          for (const item of queuedFutureChapters) {
+            const result = await regenerateSegmentIndexesForChapter(projectName, item.chapterIndex, item.targetIndexes, {
+              logPrefix: "listenBook:auto-future",
+            }).catch((error) => {
+              console.warn(`[listenBook:auto-future] 章节 ${item.chapterIndex} 静默重生成失败: ${error.message}`);
+              return null;
+            });
+
+            if (result?.failedIndexes?.length) {
+              console.warn(
+                `[listenBook:auto-future] 章节 ${item.chapterIndex} 仍有失败片段: ${result.failedIndexes.join(", ")}`,
+              );
+            }
           }
         }
-      });
-    }
+
+        const task = tasks[taskId];
+        if (task) {
+          task.phase = "done";
+          task.progress = 100;
+          task.segments = currentResult.segments;
+          task.failedIndexes = currentResult.failedIndexes || [];
+        }
+      } catch (error) {
+        console.error("编辑后自动重生成后台任务失败:", error);
+        const task = tasks[taskId];
+        if (task) {
+          task.phase = "error";
+          task.error = error.message;
+        }
+      }
+    });
   } catch (error) {
     console.error("编辑后自动重生成失败:", error);
     return res.status(500).json({ error: error.message || "编辑后自动重生成失败" });

@@ -1186,14 +1186,46 @@ async function autoRegenerateAfterSegmentEdit(invalidatedIndexes, futureRoleUpda
       futureRoleUpdate,
     });
 
-    if (Array.isArray(res.data?.segments)) {
-      segments.value = res.data.segments;
+    const taskId = res.data?.taskId;
+    if (!taskId) {
+      throw new Error("后台重生成任务创建失败");
+    }
+
+    // 轮询重生成状态
+    const pollResult = await new Promise((resolve, reject) => {
+      let attempts = 0;
+      const timer = setInterval(async () => {
+        try {
+          const statusRes = await axios.get(`${API}/api/listen-book/status/${taskId}`);
+          if (statusRes.data.phase === "done") {
+            clearInterval(timer);
+            resolve(statusRes.data);
+          } else if (statusRes.data.phase === "error") {
+            clearInterval(timer);
+            reject(new Error(statusRes.data.error || "重生成失败"));
+          } else {
+            attempts++;
+            if (attempts > 300) { // 约 10 分钟超时
+              clearInterval(timer);
+              reject(new Error("重生成超时"));
+            }
+          }
+        } catch (e) {
+          // 忽略偶发的网络错误，继续轮询
+          console.warn("轮询状态失败:", e);
+        }
+      }, 2000);
+    });
+
+    if (Array.isArray(pollResult.segments)) {
+      segments.value = pollResult.segments;
     }
     listenState.value = "ready";
     isGenerationComplete.value = true;
 
-    const failedIndexes = Array.isArray(res.data?.failedIndexes) ? res.data.failedIndexes : [];
+    // 获取之前 POST 响应中的排队信息
     const queuedFutureChapters = Array.isArray(res.data?.queuedFutureChapters) ? res.data.queuedFutureChapters : [];
+    const failedIndexes = Array.isArray(pollResult.failedIndexes) ? pollResult.failedIndexes : [];
 
     if (failedIndexes.length) {
       ElMessage.warning(`当前章节有 ${failedIndexes.length} 个片段自动生成失败，请手动重试。`);
