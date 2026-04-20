@@ -140,7 +140,7 @@ const fetchAudioList = async () => {
 // 保存参考文本（失焦或 Ctrl+Enter 触发）
 const handleSampleTextSave = async (row) => {
   try {
-    const res = await axios.patch(`http://localhost:3000/api/audio/${row.id}/sample-text`, {
+    const res = await axios.post(`http://localhost:3000/api/audio/${row.id}/sample-text`, {
       sampleText: row.sampleText || "",
     });
     if (res.data.success) {
@@ -154,7 +154,7 @@ const handleSampleTextSave = async (row) => {
 // 保存备注（失焦或 Ctrl+Enter 触发）
 const handleRemarkSave = async (row) => {
   try {
-    const res = await axios.patch(`http://localhost:3000/api/audio/${row.id}/remark`, {
+    const res = await axios.post(`http://localhost:3000/api/audio/${row.id}/remark`, {
       remark: row.remark || "",
     });
     if (res.data.success) {

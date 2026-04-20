@@ -301,7 +301,7 @@ router.post("/global-roles", (req, res) => {
 });
 
 // 6. 更新参考音频的备注
-router.patch("/:id/remark", (req, res) => {
+router.post("/:id/remark", (req, res) => {
   try {
     const { id } = req.params;
     const { remark } = req.body;
@@ -327,7 +327,7 @@ router.patch("/:id/remark", (req, res) => {
 });
 
 // 7. 更新参考音频的参考文本（siliconflow 模式专用）
-router.patch("/:id/sample-text", (req, res) => {
+router.post("/:id/sample-text", (req, res) => {
   try {
     const { id } = req.params;
     const { sampleText } = req.body;
