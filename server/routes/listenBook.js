@@ -6,6 +6,7 @@ const axios = require("axios");
 const { v4: uuidv4 } = require("uuid");
 const {
   cacheKey,
+  parseCacheKey,
   getProjectDir,
   readProjectListenCache,
   writeProjectListenCache,
@@ -996,11 +997,10 @@ router.post("/auto-regenerate-after-edit", async (req, res) => {
     const cache = readProjectListenCache(projectName);
     const futureChapterIndexes = Object.keys(cache)
       .map((key) => {
-        const [cachedProjectName, cachedChapterIndex] = key.split("__");
-        if (cachedProjectName !== projectName) return null;
-        const index = Number(cachedChapterIndex);
-        if (!Number.isInteger(index) || index <= normalizedChapterIndex) return null;
-        return index;
+        const parsed = parseCacheKey(key);
+        if (!parsed || parsed.projectName !== projectName) return null;
+        if (parsed.chapterIndex <= normalizedChapterIndex) return null;
+        return parsed.chapterIndex;
       })
       .filter((index) => index !== null)
       .sort((a, b) => a - b);

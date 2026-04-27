@@ -728,8 +728,20 @@ const backToChapters = async () => {
 // 听书功能
 // ════════════════════════════════════════════════════════════
 
-// 项目名以书名命名（避免与手动项目冲突）
-const listenProjectName = computed(() => `reader_${selectedBook.value?.name || "unknown"}`);
+function normalizeListenCacheIdentityPart(value) {
+  return String(value || "")
+    .trim()
+    .replace(/\s+/g, " ");
+}
+
+// 项目名以“书名 + 作者”命名，避免同名不同作者命中同一缓存。
+const listenProjectName = computed(() => {
+  const bookName = normalizeListenCacheIdentityPart(selectedBook.value?.name);
+  if (!bookName) return "reader_unknown";
+
+  const authorName = normalizeListenCacheIdentityPart(selectedBook.value?.author) || "unknown_author";
+  return `reader_${bookName}__${authorName}`;
+});
 
 // 状态
 const listenState = ref("idle"); // idle | loading | ready | error

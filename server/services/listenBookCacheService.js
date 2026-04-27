@@ -6,6 +6,7 @@ const projectsDir = path.join(dataDir, "projects");
 const legacyCachePath = path.join(dataDir, "listen_book_cache.json");
 const cacheFileName = "listen_book_cache.json";
 const previewRoutePrefix = "/api/tts/preview/";
+const cacheKeySeparator = "__";
 
 function readJson(filePath, fallback) {
   try {
@@ -29,7 +30,24 @@ function sanitizeProjectName(projectName) {
 }
 
 function cacheKey(projectName, chapterIndex) {
-  return `${projectName}__${chapterIndex}`;
+  return `${projectName}${cacheKeySeparator}${chapterIndex}`;
+}
+
+function parseCacheKey(key) {
+  const rawKey = String(key || "");
+  const separatorIndex = rawKey.lastIndexOf(cacheKeySeparator);
+  if (separatorIndex <= 0) return null;
+
+  const projectName = rawKey.slice(0, separatorIndex);
+  const chapterIndexRaw = rawKey.slice(separatorIndex + cacheKeySeparator.length);
+  const chapterIndex = Number(chapterIndexRaw);
+
+  if (!Number.isInteger(chapterIndex) || chapterIndex < 0) return null;
+
+  return {
+    projectName,
+    chapterIndex,
+  };
 }
 
 function getProjectDir(projectName) {
@@ -93,10 +111,9 @@ function pickLegacyProjectCache(projectName) {
   const cache = readLegacyCache();
 
   Object.keys(cache).forEach((key) => {
-    const [cachedProjectName] = key.split("__");
-    if (cachedProjectName === projectName) {
-      output[key] = cache[key];
-    }
+    const parsed = parseCacheKey(key);
+    if (!parsed || parsed.projectName !== projectName) return;
+    output[key] = cache[key];
   });
 
   return output;
@@ -109,8 +126,8 @@ function removeLegacyProjectCache(projectName) {
   let changed = false;
 
   Object.keys(cache).forEach((key) => {
-    const [cachedProjectName] = key.split("__");
-    if (cachedProjectName !== projectName) return;
+    const parsed = parseCacheKey(key);
+    if (!parsed || parsed.projectName !== projectName) return;
     delete cache[key];
     changed = true;
   });
@@ -150,10 +167,9 @@ function clearProjectListenCache(projectName, fromChapterIndex = 0) {
   const staleAudioUrls = new Set();
 
   Object.keys(cache).forEach((key) => {
-    const [cachedProjectName, cachedChapterIndex] = key.split("__");
-    if (cachedProjectName !== projectName) return;
-    const idx = Number(cachedChapterIndex);
-    if (!Number.isFinite(idx) || idx < fromChapterIndex) return;
+    const parsed = parseCacheKey(key);
+    if (!parsed || parsed.projectName !== projectName) return;
+    if (parsed.chapterIndex < fromChapterIndex) return;
     collectEntryAudioUrls(cache[key]).forEach((audioUrl) => staleAudioUrls.add(audioUrl));
     delete cache[key];
     changed = true;
@@ -202,6 +218,7 @@ function findListenCacheByTaskId(taskId, { phase } = {}) {
 
 module.exports = {
   cacheKey,
+  parseCacheKey,
   getProjectDir,
   getProjectListenCachePath,
   readProjectListenCache,
