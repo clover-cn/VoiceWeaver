@@ -477,6 +477,7 @@ import { ElLoading, ElMessage } from "element-plus";
 import RoleAudioSetupDialog from "./RoleAudioSetupDialog.vue";
 import { Search, ArrowLeft, ArrowRight, WarnTriangleFilled } from "@element-plus/icons-vue";
 const API = "http://localhost:3000";
+const READER_API = "http://154.58.233.231:9080/reader3";
 
 // ── 状态机 ──
 const viewState = ref("search"); // 'search' | 'chapters' | 'reading'
@@ -575,6 +576,41 @@ function reuseSearchKeyword(keyword) {
   doSearch();
 }
 
+function parseSearchBookResponse(data) {
+  if (data && typeof data === "object" && !Array.isArray(data)) {
+    return {
+      lastIndex: data.lastIndex ?? -1,
+      data: Array.isArray(data.data) ? data.data : [],
+    };
+  }
+
+  const rawText = String(data || "");
+  const resultList = [];
+  let finalLastIndex = -1;
+  rawText.split(/\r?\n/).forEach((line) => {
+    const trimmed = line.trim();
+    if (!trimmed.startsWith("data:")) return;
+    const jsonStr = trimmed.slice(5).trim();
+    if (!jsonStr) return;
+    try {
+      const parsed = JSON.parse(jsonStr);
+      if (Array.isArray(parsed.data)) {
+        resultList.push(...parsed.data);
+      }
+      if (parsed.lastIndex !== undefined) {
+        finalLastIndex = parsed.lastIndex;
+      }
+    } catch {
+      // 第三方 SSE 中的单行异常数据不影响其它结果。
+    }
+  });
+
+  return {
+    lastIndex: finalLastIndex,
+    data: resultList,
+  };
+}
+
 const doSearch = async () => {
   const key = searchKeyword.value.trim();
   if (!key) return;
@@ -582,10 +618,11 @@ const doSearch = async () => {
   hasSearched.value = false;
   searchResults.value = [];
   try {
-    const res = await axios.get(`${API}/api/reader/searchBookMultiSSE`, {
+    const res = await axios.get(`${READER_API}/searchBookMultiSSE`, {
       params: { key, concurrentCount: 4 },
+      responseType: "text",
     });
-    searchResults.value = res.data.data || [];
+    searchResults.value = parseSearchBookResponse(res.data).data || [];
     saveSearchHistory(key);
   } catch (e) {
     console.error("搜索失败", e);
@@ -600,14 +637,18 @@ const doSearch = async () => {
 const selectedBook = ref(null);
 const chapterList = ref([]);
 const isLoadingChapters = ref(false);
+const currentChapterText = ref("");
+const chapterTextCache = new Map();
 
 const selectBook = async (book) => {
   selectedBook.value = book;
   viewState.value = "chapters";
   chapterList.value = [];
+  chapterTextCache.clear();
+  currentChapterText.value = "";
   isLoadingChapters.value = true;
   try {
-    const res = await axios.get(`${API}/api/reader/getChapterList`, {
+    const res = await axios.get(`${READER_API}/getChapterList`, {
       params: { url: book.bookUrl, bookSourceUrl: book.origin },
     });
     if (res.data.isSuccess) {
@@ -662,6 +703,33 @@ const contentParagraphs = ref([]);
 const isLoadingContent = ref(false);
 const readingBody = ref(null);
 
+function getReaderChapterIndex(chap, fallbackIndex) {
+  const parsed = Number(chap?.index);
+  return Number.isInteger(parsed) && parsed >= 0 ? parsed : fallbackIndex;
+}
+
+function getChapterCacheKey(chap, idx) {
+  return `${getReaderChapterIndex(chap, idx)}::${chap?.bookUrl || ""}`;
+}
+
+async function fetchChapterText(chap, idx) {
+  const cacheKey = getChapterCacheKey(chap, idx);
+  if (chapterTextCache.has(cacheKey)) {
+    return chapterTextCache.get(cacheKey);
+  }
+
+  const res = await axios.get(`${READER_API}/getBookContent`, {
+    params: { url: chap.bookUrl, index: getReaderChapterIndex(chap, idx) },
+  });
+  if (!res.data.isSuccess) {
+    throw new Error(res.data.errorMsg || "获取章节正文失败");
+  }
+
+  const text = String(res.data.data || "");
+  chapterTextCache.set(cacheKey, text);
+  return text;
+}
+
 const selectChapter = async (chap, idx) => {
   resetListen();
   selectedChapter.value = chap;
@@ -679,16 +747,13 @@ const fetchContent = async (chap, idx) => {
   await nextTick();
   if (readingBody.value) readingBody.value.scrollTop = 0;
   try {
-    const res = await axios.get(`${API}/api/reader/getBookContent`, {
-      params: { url: chap.bookUrl, index: idx },
-    });
-    if (res.data.isSuccess) {
-      contentParagraphs.value = (res.data.data || "")
-        .split("\n")
-        .map((p) => p.trim())
-        .filter((p) => p.length > 0);
-      saveReadingHistory();
-    }
+    const text = await fetchChapterText(chap, idx);
+    currentChapterText.value = text;
+    contentParagraphs.value = text
+      .split("\n")
+      .map((p) => p.trim())
+      .filter((p) => p.length > 0);
+    saveReadingHistory();
   } catch (e) {
     console.error("获取正文失败", e);
   } finally {
@@ -806,6 +871,70 @@ const phaseTextMap = {
   done: "",
 };
 const listenPhaseText = computed(() => phaseTextMap[listenPhase.value] || "处理中…");
+
+async function createTextHash(text) {
+  const value = String(text || "");
+  if (typeof crypto !== "undefined" && crypto.subtle && typeof TextEncoder !== "undefined") {
+    const encoded = new TextEncoder().encode(value);
+    const digest = await crypto.subtle.digest("SHA-256", encoded);
+    return Array.from(new Uint8Array(digest))
+      .map((byte) => byte.toString(16).padStart(2, "0"))
+      .join("");
+  }
+
+  return null;
+}
+
+async function fetchListenConfig() {
+  const configRes = await axios.get(`${API}/api/listen-book/config`);
+  return {
+    prefetchCount: Number.isFinite(configRes.data.prefetchCount) ? Math.max(0, configRes.data.prefetchCount) : 2,
+    prescanCount: Number.isFinite(configRes.data.prescanCount) ? Math.max(0, configRes.data.prescanCount) : 10,
+  };
+}
+
+async function buildPrescanTexts(startIndex, count) {
+  if (count <= 0) return [];
+
+  const output = [];
+  for (let i = 0; i < count; i++) {
+    const chapterIndex = startIndex + i;
+    if (chapterIndex >= chapterList.value.length) break;
+
+    const chap = chapterList.value[chapterIndex];
+    if (!chap || chap.isVolume) continue;
+
+    try {
+      const text = await fetchChapterText(chap, chapterIndex);
+      if (text.trim()) {
+        output.push({
+          chapterIndex,
+          chapterTitle: chap.title || "",
+          text,
+        });
+      }
+    } catch (e) {
+      console.warn(`预扫描正文获取失败: ${chapterIndex}`, e.message);
+    }
+  }
+
+  return output;
+}
+
+async function buildListenGeneratePayload(chap, chapterIndex, { includePrescan = true } = {}) {
+  const chapterText = await fetchChapterText(chap, chapterIndex);
+  const config = includePrescan ? await fetchListenConfig() : { prescanCount: 0 };
+  const prescanTexts = includePrescan ? await buildPrescanTexts(chapterIndex, config.prescanCount) : [];
+
+  return {
+    projectName: listenProjectName.value,
+    chapterIndex,
+    chapterTitle: chap?.title || "",
+    chapterText,
+    contentHash: await createTextHash(chapterText),
+    prescanTexts,
+  };
+}
 
 async function fetchAudioRecords() {
   try {
@@ -1431,9 +1560,11 @@ async function cancelListenTasks({ useBeacon = false } = {}) {
 // ── 检查缓存（进入阅读视图时自动调用）──
 async function checkListenCache() {
   try {
+    const chapterText = currentChapterText.value || (selectedChapter.value ? await fetchChapterText(selectedChapter.value, currentChapterIndex.value) : "");
     const res = await axios.post(`${API}/api/listen-book/check`, {
       projectName: listenProjectName.value,
       chapterIndex: currentChapterIndex.value,
+      contentHash: chapterText ? await createTextHash(chapterText) : undefined,
     });
     if (res.data.exists) {
       segments.value = res.data.segments || [];
@@ -1457,12 +1588,8 @@ async function startListening() {
   listenPhase.value = "waiting";
 
   try {
-    const res = await axios.post(`${API}/api/listen-book/generate`, {
-      projectName: listenProjectName.value,
-      chapterIndex: currentChapterIndex.value,
-      chapterUrl: selectedChapter.value.bookUrl,
-      chapterList: chapterList.value,
-    });
+    const payload = await buildListenGeneratePayload(selectedChapter.value, currentChapterIndex.value);
+    const res = await axios.post(`${API}/api/listen-book/generate`, payload);
 
     if (res.data.alreadyDone) {
       listenTaskId.value = res.data.taskId || null;
@@ -1727,23 +1854,17 @@ function scrollToSeg(idx) {
 // ── 后台预生成后续章节（fire-and-forget）──
 async function triggerPrefetch() {
   try {
-    const configRes = await axios.get(`${API}/api/listen-book/config`);
-    const prefetchCount = Number.isFinite(configRes.data.prefetchCount)
-      ? Math.max(0, configRes.data.prefetchCount)
-      : 2;
+    const config = await fetchListenConfig();
+    const prefetchCount = config.prefetchCount;
 
     for (let i = 1; i <= prefetchCount; i++) {
       const nextIdx = currentChapterIndex.value + i;
       if (nextIdx >= chapterList.value.length) break;
       const nextChap = chapterList.value[nextIdx];
-      // 静默触发，不 await，不报错阻塞
-      axios
-        .post(`${API}/api/listen-book/generate`, {
-          projectName: listenProjectName.value,
-          chapterIndex: nextIdx,
-          chapterUrl: nextChap.bookUrl,
-          chapterList: chapterList.value,
-        })
+      if (!nextChap || nextChap.isVolume) continue;
+
+      buildListenGeneratePayload(nextChap, nextIdx, { includePrescan: false })
+        .then((payload) => axios.post(`${API}/api/listen-book/generate`, payload))
         .then((res) => {
           const taskId = res.data?.taskId;
           if (taskId && !prefetchTaskIds.value.includes(taskId)) {

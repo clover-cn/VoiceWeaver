@@ -23,6 +23,29 @@ function writeJson(filePath, data) {
   fs.writeFileSync(filePath, JSON.stringify(data, null, 2), "utf8");
 }
 
+function sanitizeListenCache(cache) {
+  let changed = false;
+  const nextCache = {};
+
+  Object.entries(cache || {}).forEach(([key, entry]) => {
+    if (!entry || typeof entry !== "object") {
+      nextCache[key] = entry;
+      return;
+    }
+
+    const nextEntry = { ...entry };
+    ["chapterText", "prescanTexts", "combinedText", "chapterUrl", "chapterList"].forEach((field) => {
+      if (Object.prototype.hasOwnProperty.call(nextEntry, field)) {
+        delete nextEntry[field];
+        changed = true;
+      }
+    });
+    nextCache[key] = nextEntry;
+  });
+
+  return { cache: nextCache, changed };
+}
+
 function sanitizeProjectName(projectName) {
   return String(projectName || "")
     .trim()
@@ -142,10 +165,14 @@ function removeLegacyProjectCache(projectName) {
 function readProjectListenCache(projectName) {
   const cachePath = getProjectListenCachePath(projectName);
   if (fs.existsSync(cachePath)) {
-    return readJson(cachePath, {});
+    const { cache, changed } = sanitizeListenCache(readJson(cachePath, {}));
+    if (changed) {
+      writeJson(cachePath, cache);
+    }
+    return cache;
   }
 
-  const migratedCache = pickLegacyProjectCache(projectName);
+  const { cache: migratedCache } = sanitizeListenCache(pickLegacyProjectCache(projectName));
   if (Object.keys(migratedCache).length > 0) {
     writeJson(cachePath, migratedCache);
     removeLegacyProjectCache(projectName);
@@ -157,7 +184,7 @@ function readProjectListenCache(projectName) {
 
 function writeProjectListenCache(projectName, cache) {
   const cachePath = getProjectListenCachePath(projectName);
-  writeJson(cachePath, cache);
+  writeJson(cachePath, sanitizeListenCache(cache).cache);
   removeLegacyProjectCache(projectName);
 }
 

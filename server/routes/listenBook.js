@@ -3,6 +3,7 @@ const router = express.Router();
 const fs = require("fs");
 const path = require("path");
 const axios = require("axios");
+const crypto = require("crypto");
 const { v4: uuidv4 } = require("uuid");
 const {
   cacheKey,
@@ -18,8 +19,6 @@ const {
 // ─────────────────────────────────────────────
 // 路径常量
 // ─────────────────────────────────────────────
-const dataDir = path.join(__dirname, "../data");
-
 // ─────────────────────────────────────────────
 // 内存任务表（服务重启后丢失，已完成的靠 cache 恢复）
 // ─────────────────────────────────────────────
@@ -151,6 +150,67 @@ function normalizeSegments(segments, maxLength = Number.POSITIVE_INFINITY) {
     .map((segment) => ({ ...segment }));
 }
 
+function normalizeChapterText(value) {
+  return typeof value === "string" ? value.trim() : "";
+}
+
+function createContentHash(text) {
+  return crypto.createHash("sha256").update(String(text || ""), "utf8").digest("hex");
+}
+
+function normalizePrescanTexts(prescanTexts, chapterText, chapterIndex, prescanCount) {
+  if (prescanCount <= 0) return [];
+
+  const normalized = (Array.isArray(prescanTexts) ? prescanTexts : [])
+    .map((item, offset) => {
+      if (typeof item === "string") {
+        return {
+          chapterIndex: chapterIndex + offset,
+          chapterTitle: "",
+          text: normalizeChapterText(item),
+        };
+      }
+      return {
+        chapterIndex: Number.isInteger(Number(item?.chapterIndex)) ? Number(item.chapterIndex) : chapterIndex + offset,
+        chapterTitle: typeof item?.chapterTitle === "string" ? item.chapterTitle : "",
+        text: normalizeChapterText(item?.text),
+      };
+    })
+    .filter((item) => item.text);
+
+  if (!normalized.length && chapterText) {
+    normalized.push({
+      chapterIndex,
+      chapterTitle: "",
+      text: chapterText,
+    });
+  }
+
+  return normalized.slice(0, prescanCount);
+}
+
+function buildPrescanCombinedText(prescanTexts) {
+  return (Array.isArray(prescanTexts) ? prescanTexts : [])
+    .map((item) => {
+      const title = item.chapterTitle ? `${item.chapterTitle}\n` : "";
+      return `${title}${item.text || ""}`.trim();
+    })
+    .filter(Boolean)
+    .join("\n\n")
+    .trim();
+}
+
+function stripRawNovelText(entry) {
+  if (!entry) return entry;
+  const next = { ...entry };
+  delete next.chapterText;
+  delete next.prescanTexts;
+  delete next.combinedText;
+  delete next.chapterUrl;
+  delete next.chapterList;
+  return next;
+}
+
 function buildSegmentFromCard(card, index, audioUrl) {
   return {
     index,
@@ -240,7 +300,7 @@ function updateChapterCacheEntry(projectName, chapterIndex, updater) {
   if (!nextEntry) {
     delete cache[key];
   } else {
-    cache[key] = nextEntry;
+    cache[key] = stripRawNovelText(nextEntry);
   }
   writeProjectListenCache(projectName, cache);
   return nextEntry;
@@ -434,12 +494,12 @@ function checkCancelled(task, taskId, projectName, chapterIndex) {
   }
 }
 
-async function runPipeline(taskId, { projectName, chapterIndex, chapterUrl, chapterList }) {
+async function runPipeline(taskId, { projectName, chapterIndex, chapterTitle, chapterText, prescanTexts, contentHash }) {
   const task = tasks[taskId];
   const BASE = baseUrl();
   const signal = task.controller.signal;
   const ttsTimeout = getListenBookTtsTimeout();
-  const cacheIdentity = { projectName, chapterIndex, chapterUrl };
+  const cacheIdentity = { projectName, chapterIndex, chapterTitle: chapterTitle || "", contentHash };
 
   try {
     let cacheEntry = readChapterCacheEntry(projectName, chapterIndex).entry || {};
@@ -449,7 +509,7 @@ async function runPipeline(taskId, { projectName, chapterIndex, chapterUrl, chap
       // ── 阶段 1: 预扫描（调用现有 /api/llm/prescan-characters）──
       task.phase = "prescan";
       task.progress = 0;
-      console.log('预扫描的章节数',process.env.PRESCAN_CHAPTER_COUNT);
+      console.log("预扫描的章节数", process.env.PRESCAN_CHAPTER_COUNT);
       
       if (process.env.PRESCAN_CHAPTER_COUNT > 0) {
         console.log(`[listenBook][${taskId}] 预扫描开始`);
@@ -464,21 +524,7 @@ async function runPipeline(taskId, { projectName, chapterIndex, chapterUrl, chap
       }));
 
       const prescanCount = parseNonNegativeEnvInt(process.env.PRESCAN_CHAPTER_COUNT, 10);
-      const scanChapters = chapterList.slice(chapterIndex, chapterIndex + prescanCount);
-
-      const contentTexts = await Promise.all(
-        scanChapters.map((chap, i) =>
-          axios
-            .get(`${BASE}/api/reader/getBookContent`, {
-              params: { url: chap.bookUrl, index: chapterIndex + i },
-              timeout: 30000,
-              signal,
-            })
-            .then((r) => (r.data.isSuccess ? r.data.data || "" : ""))
-            .catch(() => ""),
-        ),
-      );
-      const combinedText = contentTexts.join("\n\n").trim();
+      const combinedText = buildPrescanCombinedText(normalizePrescanTexts(prescanTexts, chapterText, chapterIndex, prescanCount));
       checkCancelled(task, taskId, projectName, chapterIndex);
 
       if (combinedText) {
@@ -503,26 +549,19 @@ async function runPipeline(taskId, { projectName, chapterIndex, chapterUrl, chap
       task.progress = 15;
       console.log(`[listenBook][${taskId}] LLM 解析开始`);
 
-      let chapterText = typeof cacheEntry.chapterText === "string" ? cacheEntry.chapterText : "";
       if (!chapterText) {
-        const contentResp = await axios.get(`${BASE}/api/reader/getBookContent`, {
-          params: { url: chapterUrl, index: chapterIndex },
-          timeout: 30000,
-          signal,
-        });
-        if (!contentResp.data.isSuccess) throw new Error("获取章节正文失败");
-        chapterText = contentResp.data.data || "";
-        updateChapterCacheEntry(projectName, chapterIndex, (current) => ({
-          ...(current || {}),
-          ...cacheIdentity,
-          taskId,
-          phase: "parse",
-          chapterText,
-          segments: normalizeSegments(current?.segments),
-          createdAt: current?.createdAt || new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        }));
+        throw new Error("缺少章节正文，后端不会主动请求小说内容");
       }
+
+      updateChapterCacheEntry(projectName, chapterIndex, (current) => ({
+        ...(current || {}),
+        ...cacheIdentity,
+        taskId,
+        phase: "parse",
+        segments: normalizeSegments(current?.segments),
+        createdAt: current?.createdAt || new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      }));
       checkCancelled(task, taskId, projectName, chapterIndex);
 
       task.phase = "assign";
@@ -544,7 +583,6 @@ async function runPipeline(taskId, { projectName, chapterIndex, chapterUrl, chap
         ...cacheIdentity,
         taskId,
         phase: "assign",
-        chapterText,
         parsedCards: cards,
         segments: normalizeSegments(current?.segments, cards.length),
         totalSegments: cards.length,
@@ -565,7 +603,6 @@ async function runPipeline(taskId, { projectName, chapterIndex, chapterUrl, chap
       ...cacheIdentity,
       taskId,
       phase: "tts",
-      chapterText: current?.chapterText || cacheEntry?.chapterText || "",
       parsedCards: cards,
       segments: normalizeSegments(task.segments, cards.length),
       totalSegments: cards.length,
@@ -616,7 +653,6 @@ async function runPipeline(taskId, { projectName, chapterIndex, chapterUrl, chap
         ...cacheIdentity,
         taskId,
         phase: "tts",
-        chapterText: current?.chapterText || cacheEntry?.chapterText || "",
         parsedCards: cards,
         segments: task.segments,
         totalSegments: cards.length,
@@ -636,7 +672,6 @@ async function runPipeline(taskId, { projectName, chapterIndex, chapterUrl, chap
       ...cacheIdentity,
       taskId,
       phase: "done",
-      chapterText: current?.chapterText || cacheEntry?.chapterText || "",
       parsedCards: cards,
       segments: normalizeSegments(task.segments, cards.length),
       totalSegments: cards.length,
@@ -693,59 +728,87 @@ router.get("/config", (req, res) => {
 /**
  * POST /api/listen-book/check
  * 检查章节是否已有完整 segments，防止重复生成
- * Body: { projectName, chapterIndex }
+ * Body: { projectName, chapterIndex, contentHash? }
  */
 router.post("/check", (req, res) => {
-  const { projectName, chapterIndex } = req.body;
+  const { projectName, chapterIndex, contentHash } = req.body;
   if (!projectName || chapterIndex === undefined) {
     return res.status(400).json({ error: "缺少 projectName 或 chapterIndex" });
   }
 
-  const key = cacheKey(projectName, chapterIndex);
+  const normalizedChapterIndex = Number(chapterIndex);
+  if (!Number.isInteger(normalizedChapterIndex) || normalizedChapterIndex < 0) {
+    return res.status(400).json({ error: "chapterIndex 非法" });
+  }
+
+  const key = cacheKey(projectName, normalizedChapterIndex);
   const cache = readProjectListenCache(projectName);
+  const entry = cache[key];
+
+  if (contentHash && entry && entry.contentHash !== contentHash) {
+    return res.json({ exists: false, stale: true, resumable: false, phase: null, segments: [] });
+  }
 
   // 已完成
-  if (cache[key] && cache[key].phase === "done") {
-    return res.json({ exists: true, segments: cache[key].segments });
+  if (entry && entry.phase === "done") {
+    return res.json({ exists: true, segments: entry.segments });
   }
 
   // 正在进行中
-  if (cache[key] && cache[key].taskId) {
-    const t = tasks[cache[key].taskId];
+  if (entry && entry.taskId) {
+    const t = tasks[entry.taskId];
     if (t && t.phase !== "error" && t.phase !== "done" && t.phase !== "cancelled") {
-      return res.json({ exists: false, taskId: cache[key].taskId, inProgress: true });
+      return res.json({ exists: false, taskId: entry.taskId, inProgress: true });
     }
   }
 
   res.json({
     exists: false,
-    resumable: Boolean(cache[key]?.parsedCards || cache[key]?.chapterText || cache[key]?.segments?.length),
-    phase: cache[key]?.phase || null,
-    segments: normalizeSegments(cache[key]?.segments),
+    resumable: Boolean(entry?.parsedCards || entry?.segments?.length),
+    phase: entry?.phase || null,
+    segments: normalizeSegments(entry?.segments),
   });
 });
 
 /**
  * POST /api/listen-book/generate
  * 启动后台 Pipeline，立即返回 taskId
- * Body: { projectName, chapterIndex, chapterUrl, chapterList }
+ * Body: { projectName, chapterIndex, chapterTitle?, chapterText, prescanTexts? }
  */
 router.post("/generate", (req, res) => {
-  const { projectName, chapterIndex, chapterUrl, chapterList } = req.body;
-  if (!projectName || chapterIndex === undefined || !chapterUrl || !Array.isArray(chapterList)) {
-    return res.status(400).json({ error: "缺少必要参数：projectName / chapterIndex / chapterUrl / chapterList" });
+  const { projectName, chapterIndex, chapterTitle = "", prescanTexts = [] } = req.body || {};
+  const chapterText = normalizeChapterText(req.body?.chapterText);
+  if (!projectName || chapterIndex === undefined || !chapterText) {
+    return res.status(400).json({ error: "缺少必要参数：projectName / chapterIndex / chapterText" });
   }
 
-  const key = cacheKey(projectName, chapterIndex);
-  const cache = readProjectListenCache(projectName);
+  const normalizedChapterIndex = Number(chapterIndex);
+  if (!Number.isInteger(normalizedChapterIndex) || normalizedChapterIndex < 0) {
+    return res.status(400).json({ error: "chapterIndex 非法" });
+  }
+
+  const contentHash = createContentHash(chapterText);
+  let cache = readProjectListenCache(projectName);
+  let key = cacheKey(projectName, normalizedChapterIndex);
+
+  if (cache[key] && cache[key].contentHash !== contentHash) {
+    Object.values(tasks).forEach((task) => {
+      if (task.projectName === projectName && Number(task.chapterIndex) >= normalizedChapterIndex) {
+        cancelTask(task);
+      }
+    });
+    clearProjectCacheFromChapter(projectName, normalizedChapterIndex);
+    cache = readProjectListenCache(projectName);
+    key = cacheKey(projectName, normalizedChapterIndex);
+  }
 
   // 已完成 → 直接返回
-  if (cache[key] && cache[key].phase === "done") {
+  if (cache[key] && cache[key].phase === "done" && cache[key].contentHash === contentHash) {
     return res.json({ taskId: cache[key].taskId, alreadyDone: true, segments: cache[key].segments });
   }
 
   // 正在进行中 → 返回已有 taskId
-  if (cache[key] && cache[key].taskId) {
+  if (cache[key] && cache[key].taskId && cache[key].contentHash === contentHash) {
     const t = tasks[cache[key].taskId];
     if (t && t.phase !== "error" && t.phase !== "done" && t.phase !== "cancelled") {
       return res.json({ taskId: cache[key].taskId, inProgress: true });
@@ -758,7 +821,7 @@ router.post("/generate", (req, res) => {
   tasks[taskId] = {
     taskId,
     projectName,
-    chapterIndex,
+    chapterIndex: normalizedChapterIndex,
     phase: "waiting",
     progress: 0,
     segments: resumedSegments,
@@ -767,12 +830,13 @@ router.post("/generate", (req, res) => {
     controller: new AbortController(),
   };
 
-  // 写入 cache 标记进行中；若存在中断缓存则沿用其章节文本、LLM 结果与已完成片段。
+  // 写入 cache 标记进行中；正文只在本次任务内使用，不进入持久缓存。
   cache[key] = {
     ...(cache[key] || {}),
     taskId,
     phase: resumedSegments.length ? "resuming" : "running",
-    chapterUrl,
+    chapterTitle,
+    contentHash,
     segments: resumedSegments,
     createdAt: cache[key]?.createdAt || new Date().toISOString(),
     updatedAt: new Date().toISOString(),
@@ -780,7 +844,14 @@ router.post("/generate", (req, res) => {
   writeProjectListenCache(projectName, cache);
 
   // 异步启动，不阻塞响应
-  runPipeline(taskId, { projectName, chapterIndex, chapterUrl, chapterList }).catch((e) => {
+  runPipeline(taskId, {
+    projectName,
+    chapterIndex: normalizedChapterIndex,
+    chapterTitle,
+    chapterText,
+    prescanTexts,
+    contentHash,
+  }).catch((e) => {
     console.error(`[listenBook] Pipeline uncaught error: ${e.message}`);
   });
 

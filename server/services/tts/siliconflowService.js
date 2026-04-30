@@ -85,7 +85,7 @@ async function generate({ dialogue, projectName, tempFilename, localChars, signa
             const UPLOAD_URL = "https://api.siliconflow.cn/v1/uploads/audio/voice";
             const formData = new FormData();
             formData.append("file", fs.createReadStream(filePath));
-            formData.append("model", "IndexTeam/IndexTTS-2");
+            formData.append("model", AUDIO_MODEL);
 
             const safeVoiceName = "voice_" + audioId.replace(/-/g, "_");
             formData.append("customName", safeVoiceName);
@@ -132,6 +132,7 @@ async function generate({ dialogue, projectName, tempFilename, localChars, signa
 
   // 调用 SiliconFlow API 单句生成
   const TTS_URL = process.env.TTS_ENDPOINT || "https://api.siliconflow.cn/v1/audio/speech";
+  const AUDIO_MODEL = process.env.AUDIO_MODEL;
 
   const response = await axios({
     method: "POST",
@@ -141,7 +142,7 @@ async function generate({ dialogue, projectName, tempFilename, localChars, signa
       "Content-Type": "application/json",
     },
     data: {
-      model: "IndexTeam/IndexTTS-2",
+      model: AUDIO_MODEL,
       input: dialogue.text,
       voice: targetVoice,
       response_format: "mp3",
