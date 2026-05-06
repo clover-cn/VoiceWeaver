@@ -54,13 +54,13 @@ function sanitizeProjectName(projectName) {
     .replace(/[\\/:*?"<>|]/g, "");
 }
 
-function getProjectGlobalRolesPath(projectName) {
+function getProjectGlobalRolesPath(projectName, { ensureExists = false } = {}) {
   const safeProjectName = sanitizeProjectName(projectName);
   if (!safeProjectName) {
     throw new Error("projectName 不能为空");
   }
   const projectDir = path.join(projectsDir, safeProjectName);
-  if (!fs.existsSync(projectDir)) {
+  if (ensureExists && !fs.existsSync(projectDir)) {
     fs.mkdirSync(projectDir, { recursive: true });
   }
   return path.join(projectDir, "global_roles.json");
@@ -79,7 +79,7 @@ function getProjectGlobalRoles(projectName) {
   }
 }
 function saveProjectGlobalRoles(projectName, roles) {
-  const globalRolesPath = getProjectGlobalRolesPath(projectName);
+  const globalRolesPath = getProjectGlobalRolesPath(projectName, { ensureExists: true });
   fs.writeFileSync(globalRolesPath, JSON.stringify(roles, null, 2), "utf8");
 }
 

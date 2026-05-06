@@ -8,7 +8,6 @@ const { v4: uuidv4 } = require("uuid");
 const {
   cacheKey,
   parseCacheKey,
-  getProjectDir,
   readProjectListenCache,
   writeProjectListenCache,
   clearProjectListenCache,
@@ -19,6 +18,8 @@ const {
 // ─────────────────────────────────────────────
 // 路径常量
 // ─────────────────────────────────────────────
+const dataDir = path.join(__dirname, "../data");
+const projectsDir = path.join(dataDir, "projects");
 // ─────────────────────────────────────────────
 // 内存任务表（服务重启后丢失，已完成的靠 cache 恢复）
 // ─────────────────────────────────────────────
@@ -39,8 +40,23 @@ function parseNonNegativeEnvInt(value, fallback) {
 // ─────────────────────────────────────────────
 // 工具函数
 // ─────────────────────────────────────────────
-function getChapterEditsPath(projectName) {
-  return path.join(getProjectDir(projectName), "reader_edits.json");
+function sanitizeProjectName(projectName) {
+  return String(projectName || "")
+    .trim()
+    .replace(/[\\/:*?"<>|]/g, "");
+}
+
+function getChapterEditsPath(projectName, { ensureExists = false } = {}) {
+  const safeProjectName = sanitizeProjectName(projectName);
+  if (!safeProjectName) {
+    throw new Error("projectName 不能为空");
+  }
+
+  const projectDir = path.join(projectsDir, safeProjectName);
+  if (ensureExists && !fs.existsSync(projectDir)) {
+    fs.mkdirSync(projectDir, { recursive: true });
+  }
+  return path.join(projectDir, "reader_edits.json");
 }
 
 function readChapterEdits(projectName) {
@@ -55,7 +71,7 @@ function readChapterEdits(projectName) {
 }
 
 function writeChapterEdits(projectName, edits) {
-  const fp = getChapterEditsPath(projectName);
+  const fp = getChapterEditsPath(projectName, { ensureExists: true });
   fs.writeFileSync(fp, JSON.stringify(edits, null, 2), "utf8");
 }
 

@@ -132,22 +132,31 @@ function decideRoleGender(genderStats) {
   return result;
 }
 
-function getProjectCastingPath(projectName) {
+function resolveProjectDir(projectName) {
   const safe = sanitizeProjectName(projectName);
-  const projectDir = path.join(projectsDir, safe);
-  if (!fs.existsSync(projectDir)) {
-    fs.mkdirSync(projectDir, { recursive: true });
-  }
-  return path.join(projectDir, "voice_casting.json");
+  if (!safe) return null;
+  return path.join(projectsDir, safe);
 }
 
-function getProjectReaderSettingsPath(projectName) {
-  const safe = sanitizeProjectName(projectName);
-  const projectDir = path.join(projectsDir, safe);
+function ensureProjectDir(projectName) {
+  const projectDir = resolveProjectDir(projectName);
+  if (!projectDir) {
+    throw new Error("projectName 不能为空");
+  }
   if (!fs.existsSync(projectDir)) {
     fs.mkdirSync(projectDir, { recursive: true });
   }
-  return path.join(projectDir, "reader_settings.json");
+  return projectDir;
+}
+
+function getProjectCastingPath(projectName, { ensureExists = false } = {}) {
+  const projectDir = ensureExists ? ensureProjectDir(projectName) : resolveProjectDir(projectName);
+  return projectDir ? path.join(projectDir, "voice_casting.json") : null;
+}
+
+function getProjectReaderSettingsPath(projectName, { ensureExists = false } = {}) {
+  const projectDir = ensureExists ? ensureProjectDir(projectName) : resolveProjectDir(projectName);
+  return projectDir ? path.join(projectDir, "reader_settings.json") : null;
 }
 
 function loadProjectReaderSettings(projectName) {
@@ -160,7 +169,7 @@ function loadProjectReaderSettings(projectName) {
 }
 
 function saveProjectReaderSettings(projectName, settings) {
-  const fp = getProjectReaderSettingsPath(projectName);
+  const fp = getProjectReaderSettingsPath(projectName, { ensureExists: true });
   writeJson(fp, {
     ...DEFAULT_READER_SETTINGS,
     ...(settings && typeof settings === "object" ? settings : {}),
@@ -178,7 +187,7 @@ function loadProjectCasting(projectName) {
 }
 
 function saveProjectCasting(projectName, casting) {
-  const fp = getProjectCastingPath(projectName);
+  const fp = getProjectCastingPath(projectName, { ensureExists: true });
   writeJson(fp, {
     version: 2,
     updatedAt: new Date().toISOString(),

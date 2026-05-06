@@ -52,6 +52,23 @@ function sanitizeProjectName(projectName) {
     .replace(/[\\/:*?"<>|]/g, "");
 }
 
+function resolveProjectDir(projectName) {
+  const safeProjectName = sanitizeProjectName(projectName);
+  if (!safeProjectName) return null;
+  return path.join(projectsDir, safeProjectName);
+}
+
+function ensureProjectDir(projectName) {
+  const projectDir = resolveProjectDir(projectName);
+  if (!projectDir) {
+    throw new Error("projectName 不能为空");
+  }
+  if (!fs.existsSync(projectDir)) {
+    fs.mkdirSync(projectDir, { recursive: true });
+  }
+  return projectDir;
+}
+
 function cacheKey(projectName, chapterIndex) {
   return `${projectName}${cacheKeySeparator}${chapterIndex}`;
 }
@@ -74,20 +91,17 @@ function parseCacheKey(key) {
 }
 
 function getProjectDir(projectName) {
-  const safeProjectName = sanitizeProjectName(projectName);
-  const projectDir = path.join(projectsDir, safeProjectName);
-  if (!fs.existsSync(projectDir)) {
-    fs.mkdirSync(projectDir, { recursive: true });
-  }
-  return projectDir;
+  return ensureProjectDir(projectName);
 }
 
-function getProjectListenCachePath(projectName) {
-  return path.join(getProjectDir(projectName), cacheFileName);
+function getProjectListenCachePath(projectName, { ensureExists = false } = {}) {
+  const projectDir = ensureExists ? ensureProjectDir(projectName) : resolveProjectDir(projectName);
+  return projectDir ? path.join(projectDir, cacheFileName) : null;
 }
 
-function getProjectTempDir(projectName) {
-  return path.join(getProjectDir(projectName), "temp");
+function getProjectTempDir(projectName, { ensureExists = false } = {}) {
+  const projectDir = ensureExists ? ensureProjectDir(projectName) : resolveProjectDir(projectName);
+  return projectDir ? path.join(projectDir, "temp") : null;
 }
 
 function resolvePreviewAudioPath(projectName, audioUrl) {
@@ -164,7 +178,7 @@ function removeLegacyProjectCache(projectName) {
 
 function readProjectListenCache(projectName) {
   const cachePath = getProjectListenCachePath(projectName);
-  if (fs.existsSync(cachePath)) {
+  if (cachePath && fs.existsSync(cachePath)) {
     const { cache, changed } = sanitizeListenCache(readJson(cachePath, {}));
     if (changed) {
       writeJson(cachePath, cache);
@@ -172,18 +186,11 @@ function readProjectListenCache(projectName) {
     return cache;
   }
 
-  const { cache: migratedCache } = sanitizeListenCache(pickLegacyProjectCache(projectName));
-  if (Object.keys(migratedCache).length > 0) {
-    writeJson(cachePath, migratedCache);
-    removeLegacyProjectCache(projectName);
-    return migratedCache;
-  }
-
-  return {};
+  return sanitizeListenCache(pickLegacyProjectCache(projectName)).cache;
 }
 
 function writeProjectListenCache(projectName, cache) {
-  const cachePath = getProjectListenCachePath(projectName);
+  const cachePath = getProjectListenCachePath(projectName, { ensureExists: true });
   writeJson(cachePath, sanitizeListenCache(cache).cache);
   removeLegacyProjectCache(projectName);
 }
