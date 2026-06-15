@@ -69,7 +69,8 @@ router.post("/generate-single", async (req, res) => {
       fs.mkdirSync(tempDir, { recursive: true });
     }
 
-    const fileName = `${uuidv4()}.mp3`;
+    const fileExt = ttsProvider === "mimoTTS" ? "wav" : "mp3";
+    const fileName = `${uuidv4()}.${fileExt}`;
     tempFilename = path.join(tempDir, fileName);
 
     // 将请求转发至 TTS 调度工厂

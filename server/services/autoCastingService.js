@@ -12,7 +12,7 @@ const DEFAULT_READER_SETTINGS = {
   missingEmotionPolicy: "fallback_neutral",
 };
 
-const SUPPORTED_PROVIDERS = new Set(["indextts2", "siliconflow"]);
+const SUPPORTED_PROVIDERS = new Set(["indextts2", "siliconflow", "mimoTTS"]);
 
 const EMOTION_ALIASES = {
   happy: "happy",

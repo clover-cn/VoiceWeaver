@@ -62,6 +62,12 @@ npm install
 npm start
 ```
 
+### 小米 MimoTTS 配置
+
+如需使用小米 MimoTTS 声音克隆，将 `server/.env` 中的 `TTS_DEFAULT_PROVIDER` 设置为 `mimoTTS`，并配置 `MIMO_API_KEY`。语音风格通过 `MIMO_TTS_STYLE_PROMPT` 配置，例如“保持样本声线，减少夸张表演，语气清楚、平稳、贴近真实说话。”；该自然语言指令只对 MimoTTS 生效。
+
+MimoTTS 当前按非流式接口调用，后端会请求 `pcm16` 并封装为 WAV 临时音频，以兼容现有试听和合并流程。
+
 ### indexTTs2中转
 
 将api_server.py文件放入indextts2根目录
