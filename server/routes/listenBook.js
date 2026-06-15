@@ -129,6 +129,25 @@ function getListenBookTtsTimeout() {
   return Number.isFinite(parsed) && parsed >= 0 ? parsed : 0;
 }
 
+function getListenBookLlmParseTimeout() {
+  const raw = process.env.LISTEN_BOOK_LLM_PARSE_TIMEOUT_MS;
+  if (raw === undefined || raw === null || String(raw).trim() === "") {
+    // 听书 Pipeline 是后台异步任务，默认不限时，仅依赖 AbortController signal 取消。
+    return 0;
+  }
+  const parsed = Number(raw);
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : 0;
+}
+
+function getListenBookPrescanTimeout() {
+  const raw = process.env.LISTEN_BOOK_PRESCAN_TIMEOUT_MS;
+  if (raw === undefined || raw === null || String(raw).trim() === "") {
+    return 0;
+  }
+  const parsed = Number(raw);
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : 0;
+}
+
 function isCancelledError(err) {
   return Boolean(err && (err.cancelled || err.code === "ERR_CANCELED" || err.name === "CanceledError"));
 }
@@ -515,6 +534,8 @@ async function runPipeline(taskId, { projectName, chapterIndex, chapterTitle, ch
   const BASE = baseUrl();
   const signal = task.controller.signal;
   const ttsTimeout = getListenBookTtsTimeout();
+  const llmParseTimeout = getListenBookLlmParseTimeout();
+  const prescanTimeout = getListenBookPrescanTimeout();
   const cacheIdentity = { projectName, chapterIndex, chapterTitle: chapterTitle || "", contentHash };
 
   try {
@@ -551,7 +572,7 @@ async function runPipeline(taskId, { projectName, chapterIndex, chapterTitle, ch
               combinedText,
               projectName,
             },
-            { timeout: 120000, signal },
+            { timeout: prescanTimeout, signal },
           )
           .catch((e) => {
             if (isCancelledError(e)) throw createCancelledError();
@@ -588,7 +609,7 @@ async function runPipeline(taskId, { projectName, chapterIndex, chapterTitle, ch
           text: chapterText,
           projectName,
         },
-        { timeout: 180000, signal },
+        { timeout: llmParseTimeout, signal },
       );
       checkCancelled(task, taskId, projectName, chapterIndex);
 
