@@ -4,7 +4,7 @@ const multer = require("multer");
 const axios = require("axios");
 const path = require("path");
 const fs = require("fs");
-const { v4: uuidv4 } = require("uuid");
+const { randomUUID } = require("crypto");
 
 // 确保目录存在
 const uploadDir = path.join(__dirname, "../uploads/reference_audios");
@@ -33,7 +33,7 @@ const storage = multer.diskStorage({
   },
   filename: function (req, file, cb) {
     const ext = path.extname(file.originalname);
-    const uniqueName = uuidv4() + ext;
+    const uniqueName = randomUUID() + ext;
     cb(null, uniqueName);
   },
 });
@@ -98,7 +98,7 @@ router.post("/upload", upload.single("file"), (req, res) => {
     const customName = req.body.name || decodedOriginalName.replace(path.extname(decodedOriginalName), "");
 
     const newRecord = {
-      id: uuidv4(),
+      id: randomUUID(),
       name: customName,
       fileName: req.file.filename,
       originalName: decodedOriginalName,

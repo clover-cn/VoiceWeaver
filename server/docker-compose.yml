@@ -1,0 +1,20 @@
+services:
+  voiceweaver-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: voiceweaver-server:local
+    container_name: voiceweaver-server
+    env_file:
+      - ./.env
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./data:/app/data
+      - ./uploads:/app/uploads
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped

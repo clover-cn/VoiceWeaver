@@ -5,7 +5,7 @@ const fs = require("fs");
 const axios = require("axios");
 const FormData = require("form-data");
 const { mergeAudioFiles, cleanUpTempFiles } = require("../utils/ffmpeg-merge");
-const { v4: uuidv4 } = require("uuid");
+const { randomUUID } = require("crypto");
 
 const { generateAudio } = require("../services/tts/ttsFactory");
 const projectsDir = path.join(__dirname, "../data/projects");
@@ -70,7 +70,7 @@ router.post("/generate-single", async (req, res) => {
     }
 
     const fileExt = ttsProvider === "mimoTTS" ? "wav" : "mp3";
-    const fileName = `${uuidv4()}.${fileExt}`;
+    const fileName = `${randomUUID()}.${fileExt}`;
     tempFilename = path.join(tempDir, fileName);
 
     // 将请求转发至 TTS 调度工厂

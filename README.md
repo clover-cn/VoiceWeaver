@@ -55,11 +55,45 @@ pnpm run build
 ```
 
 ### 后端配置
+
+#### 本地运行
+
 ```bash
 cd server
 npm install
-# 配置 .env 文件 (参考 .env.example)
+cp .env.example .env
+# 编辑 .env，填入真实 LLM / TTS 配置
 npm start
+```
+
+后端默认监听 `http://localhost:3000`，健康检查地址：
+
+```bash
+curl http://localhost:3000/api/health
+```
+
+#### Docker 运行
+
+`docker-compose.yml` 位于 `server` 目录，服务器只需要部署整个 `server` 目录即可。
+
+```bash
+cd server
+cp .env.example .env
+# 编辑 .env，填入真实 LLM / TTS 配置
+docker compose up --build
+```
+
+Docker 服务默认映射到 `http://localhost:3000`，运行时数据直接挂载到 `server` 目录内，方便复用和备份已有音频数据：
+
+- `./data:/app/data`：保存项目数据、音频记录、草稿、角色配置、听书缓存和输出音频。
+- `./uploads:/app/uploads`：保存上传的参考音频。
+
+如果你把已有的 `server/data/audio_records.json`、`server/data/projects` 和 `server/uploads/reference_audios` 一起上传到服务器，容器启动后会直接复用这些数据，不需要重新上传音频。
+
+停止服务但保留数据：
+
+```bash
+docker compose down
 ```
 
 ### 小米 MimoTTS 配置
@@ -70,7 +104,7 @@ MimoTTS 当前按非流式接口调用，后端会请求 `pcm16` 并封装为 WA
 
 ### indexTTs2中转
 
-将api_server.py文件放入indextts2根目录
+将 `api_server.py` 文件放入 IndexTTS2 根目录。
 
 ```bash
 # 标准启动（兼容性强、高稳定性启动模式）
@@ -78,5 +112,21 @@ uv run api_server.py
 
 # 开启半精度推理启动（推荐有支持 FP16 计算能力的显卡环境使用，能显著提速并节省约一半的显存）
 uv run api_server.py --fp16
+```
+
+如果后端运行在 Docker 容器中，`TTS_ENDPOINT=http://127.0.0.1:8000/...` 会指向后端容器自身，不会指向宿主机。
+
+宿主机运行 IndexTTS2 时，请配置：
+
+```dotenv
+TTS_DEFAULT_PROVIDER=indextts2
+TTS_ENDPOINT=http://host.docker.internal:8000/api/tts/upload
+```
+
+如果 IndexTTS2 也在同一个 Docker Compose 网络中，请使用服务名：
+
+```dotenv
+TTS_DEFAULT_PROVIDER=indextts2
+TTS_ENDPOINT=http://indextts2:8000/api/tts/upload
 ```
 

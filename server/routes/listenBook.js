@@ -4,7 +4,6 @@ const fs = require("fs");
 const path = require("path");
 const axios = require("axios");
 const crypto = require("crypto");
-const { v4: uuidv4 } = require("uuid");
 const {
   cacheKey,
   parseCacheKey,
@@ -853,7 +852,7 @@ router.post("/generate", (req, res) => {
   }
 
   // 新建任务
-  const taskId = uuidv4();
+  const taskId = crypto.randomUUID();
   const resumedSegments = normalizeSegments(cache[key]?.segments, cache[key]?.totalSegments || Number.POSITIVE_INFINITY);
   tasks[taskId] = {
     taskId,
@@ -1100,7 +1099,7 @@ router.post("/auto-regenerate-after-edit", async (req, res) => {
   });
 
   try {
-    const taskId = uuidv4();
+    const taskId = crypto.randomUUID();
 
     const cache = readProjectListenCache(projectName);
     const futureChapterIndexes = Object.keys(cache)
