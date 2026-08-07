@@ -4,6 +4,7 @@ const axios = require("axios");
 const FormData = require("form-data");
 
 const audioRecordsPath = path.join(__dirname, "../../data/audio_records.json");
+const projectsDir = path.join(__dirname, "../../data/projects");
 const globalRolesPath = path.join(__dirname, "../../data/global_roles.json");
 const uploadsDir = path.join(__dirname, "../../uploads/reference_audios");
 
@@ -16,10 +17,29 @@ function getAudioRecords() {
   }
 }
 
-function getGlobalRoles() {
+function getGlobalRoles(projectName) {
+  const safeProjectName = String(projectName || "")
+    .trim()
+    .replace(/[\\/:*?"<>|]/g, "");
+
+  // 手动绑定由 /api/audio/global-roles 保存到项目目录，优先读取项目配置。
+  if (safeProjectName) {
+    const projectGlobalRolesPath = path.join(projectsDir, safeProjectName, "global_roles.json");
+    if (fs.existsSync(projectGlobalRolesPath)) {
+      try {
+        const projectRoles = JSON.parse(fs.readFileSync(projectGlobalRolesPath, "utf8"));
+        if (projectRoles && typeof projectRoles === "object") return projectRoles;
+      } catch (e) {
+        console.warn(`项目 ${projectName} 的 global_roles.json 读取失败，将尝试旧版全局配置:`, e.message);
+      }
+    }
+  }
+
+  // 兼容历史版本保存于 data/global_roles.json 的配置。
   if (!fs.existsSync(globalRolesPath)) return {};
   try {
-    return JSON.parse(fs.readFileSync(globalRolesPath, "utf8"));
+    const legacyRoles = JSON.parse(fs.readFileSync(globalRolesPath, "utf8"));
+    return legacyRoles && typeof legacyRoles === "object" ? legacyRoles : {};
   } catch (e) {
     return {};
   }
@@ -30,10 +50,10 @@ function saveAudioRecords(records) {
 }
 
 async function generate({ dialogue, projectName, tempFilename, localChars, signal }) {
-  let targetVoice = "fnlp/MOSS-TTSD-v0.5:alex";
   const API_KEY = process.env.SILICONFLOW_API_KEY;
+  const AUDIO_MODEL = process.env.AUDIO_MODEL;
 
-  const globalRoles = getGlobalRoles();
+  const globalRoles = getGlobalRoles(projectName);
   const roleName = dialogue.role || "未知角色";
   const currentEmotion = dialogue.emotion || "neutral";
 
@@ -66,65 +86,67 @@ async function generate({ dialogue, projectName, tempFilename, localChars, signa
     audioId = baseAudioId;
   }
 
-  // --- 参考音频克隆优先 ---
-  // 旁白也允许使用参考音频
-  if (audioId) {
-    const records = getAudioRecords();
-    const record = records.find((r) => r.id === audioId);
-
-    if (record) {
-      if (record.siliconUri) {
-        targetVoice = record.siliconUri;
-        console.log(`使用缓存的参考音频克隆音色: ${targetVoice}`);
-      } else {
-        // 不存在缓存 URI，通过 API 上传并创建
-        const filePath = path.join(uploadsDir, record.fileName);
-        if (fs.existsSync(filePath)) {
-          console.log(`正在上传参考音频至 SiliconFlow 进行发声克隆: ${record.fileName}`);
-          try {
-            const UPLOAD_URL = "https://api.siliconflow.cn/v1/uploads/audio/voice";
-            const formData = new FormData();
-            formData.append("file", fs.createReadStream(filePath));
-            formData.append("model", AUDIO_MODEL);
-
-            const safeVoiceName = "voice_" + audioId.replace(/-/g, "_");
-            formData.append("customName", safeVoiceName);
-            // 从音频记录中读取用户配置的参考文本
-            const sampleText = record.sampleText || "";
-            if (sampleText) {
-              console.log("参考音频文本：", sampleText);
-              formData.append("text", sampleText);
-            }
-
-            const uploadRes = await axios.post(UPLOAD_URL, formData, {
-              headers: {
-                ...formData.getHeaders(),
-                Authorization: `Bearer ${API_KEY}`,
-              },
-            });
-
-            if (uploadRes.data && uploadRes.data.uri) {
-              targetVoice = uploadRes.data.uri;
-              // 把 targetVoice 更新为 records
-              record.siliconUri = targetVoice;
-              saveAudioRecords(records);
-              console.log(`音色克隆成功并保存缓存，URI: ${targetVoice}`);
-            }
-          } catch (err) {
-            console.error("上传参考音频失败:", err.response ? JSON.stringify(err.response.data) : err.message);
-          }
-        } else {
-          console.log(`找不到参考音频文件: ${filePath}`);
-        }
-      }
-    }
+  if (!audioId) {
+    throw new Error(`角色 "${roleName}" 尚未绑定参考音频，无法使用 SiliconFlow 进行声音克隆。请先在配置面板中为该角色选择参考音频。`);
   }
 
-  // --- 若未使用参考音频或失败，则退回配置的音色或默认音色 ---
-  if (targetVoice === "fnlp/MOSS-TTSD-v0.5:alex" && dialogue.type === "dialogue" && dialogue.role) {
-    const matchedChar = localChars[dialogue.role];
-    if (matchedChar && matchedChar.voice && matchedChar.voice !== "default_voice") {
-      targetVoice = matchedChar.voice;
+  const records = getAudioRecords();
+  const record = records.find((r) => r.id === audioId);
+  if (!record) {
+    throw new Error(`SiliconFlow 找不到参考音频记录: ${audioId}`);
+  }
+
+  let targetVoice = String(record.siliconUri || "").trim();
+  if (targetVoice) {
+    console.log(`使用缓存的参考音频克隆音色: ${targetVoice}`);
+  } else {
+    // 没有缓存 URI 时上传参考音频；上传失败不能再静默回退到默认音色。
+    const filePath = path.join(uploadsDir, record.fileName);
+    if (!fs.existsSync(filePath)) {
+      throw new Error(`SiliconFlow 参考音频文件不存在: ${filePath}`);
+    }
+    if (!API_KEY) {
+      throw new Error("缺少 SILICONFLOW_API_KEY，无法上传参考音频进行声音克隆。");
+    }
+    if (!AUDIO_MODEL) {
+      throw new Error("缺少 AUDIO_MODEL，无法上传参考音频进行声音克隆。");
+    }
+
+    console.log(`正在上传参考音频至 SiliconFlow 进行发声克隆: ${record.fileName}`);
+    try {
+      const UPLOAD_URL = "https://api.siliconflow.cn/v1/uploads/audio/voice";
+      const formData = new FormData();
+      formData.append("file", fs.createReadStream(filePath));
+      formData.append("model", AUDIO_MODEL);
+
+      const safeVoiceName = "voice_" + audioId.replace(/-/g, "_");
+      formData.append("customName", safeVoiceName);
+      // 从音频记录中读取用户配置的参考文本
+      const sampleText = record.sampleText || "";
+      if (sampleText) {
+        console.log("参考音频文本：", sampleText);
+        formData.append("text", sampleText);
+      }
+
+      const uploadRes = await axios.post(UPLOAD_URL, formData, {
+        headers: {
+          ...formData.getHeaders(),
+          Authorization: `Bearer ${API_KEY}`,
+        },
+      });
+
+      targetVoice = String(uploadRes.data?.uri || "").trim();
+      if (!targetVoice) {
+        throw new Error("上传响应中缺少音色 URI");
+      }
+
+      // 将 SiliconFlow 返回的 URI 缓存到音频记录，后续请求直接复用。
+      record.siliconUri = targetVoice;
+      saveAudioRecords(records);
+      console.log(`音色克隆成功并保存缓存，URI: ${targetVoice}`);
+    } catch (err) {
+      const detail = err.response ? JSON.stringify(err.response.data) : err.message;
+      throw new Error(`SiliconFlow 参考音频上传失败: ${detail}`);
     }
   }
 
@@ -132,7 +154,6 @@ async function generate({ dialogue, projectName, tempFilename, localChars, signa
 
   // 调用 SiliconFlow API 单句生成
   const TTS_URL = process.env.TTS_ENDPOINT || "https://api.siliconflow.cn/v1/audio/speech";
-  const AUDIO_MODEL = process.env.AUDIO_MODEL;
 
   const response = await axios({
     method: "POST",
