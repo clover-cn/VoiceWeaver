@@ -5,7 +5,6 @@ const FormData = require("form-data");
 
 const audioRecordsPath = path.join(__dirname, "../../data/audio_records.json");
 const projectsDir = path.join(__dirname, "../../data/projects");
-const globalRolesPath = path.join(__dirname, "../../data/global_roles.json");
 const uploadsDir = path.join(__dirname, "../../uploads/reference_audios");
 
 function getAudioRecords() {
@@ -30,19 +29,12 @@ function getGlobalRoles(projectName) {
         const projectRoles = JSON.parse(fs.readFileSync(projectGlobalRolesPath, "utf8"));
         if (projectRoles && typeof projectRoles === "object") return projectRoles;
       } catch (e) {
-        console.warn(`项目 ${projectName} 的 global_roles.json 读取失败，将尝试旧版全局配置:`, e.message);
+        console.warn(`项目 ${projectName} 的 global_roles.json 读取失败，将使用空配置:`, e.message);
       }
     }
   }
 
-  // 兼容历史版本保存于 data/global_roles.json 的配置。
-  if (!fs.existsSync(globalRolesPath)) return {};
-  try {
-    const legacyRoles = JSON.parse(fs.readFileSync(globalRolesPath, "utf8"));
-    return legacyRoles && typeof legacyRoles === "object" ? legacyRoles : {};
-  } catch (e) {
-    return {};
-  }
+  return {};
 }
 
 function saveAudioRecords(records) {

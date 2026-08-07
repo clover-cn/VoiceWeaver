@@ -3,7 +3,6 @@ const fs = require("fs");
 const axios = require("axios");
 
 const audioRecordsPath = path.join(__dirname, "../../data/audio_records.json");
-const legacyGlobalRolesPath = path.join(__dirname, "../../data/global_roles.json");
 const projectsDir = path.join(__dirname, "../../data/projects");
 const uploadsDir = path.join(__dirname, "../../uploads/reference_audios");
 
@@ -39,12 +38,10 @@ function sanitizeProjectName(projectName) {
 
 function getGlobalRoles(projectName) {
   const safeProjectName = sanitizeProjectName(projectName);
-  if (safeProjectName) {
-    const projectGlobalRolesPath = path.join(projectsDir, safeProjectName, "global_roles.json");
-    const projectRoles = readJson(projectGlobalRolesPath, null);
-    if (projectRoles && typeof projectRoles === "object") return projectRoles;
-  }
-  return readJson(legacyGlobalRolesPath, {});
+  if (!safeProjectName) return {};
+
+  const projectGlobalRolesPath = path.join(projectsDir, safeProjectName, "global_roles.json");
+  return readJson(projectGlobalRolesPath, {});
 }
 
 function normalizeAudioConfig(config) {

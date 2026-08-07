@@ -4,7 +4,7 @@ const axios = require("axios");
 const FormData = require("form-data");
 
 const audioRecordsPath = path.join(__dirname, "../../data/audio_records.json");
-const globalRolesPath = path.join(__dirname, "../../data/global_roles.json");
+const projectsDir = path.join(__dirname, "../../data/projects");
 const uploadsDir = path.join(__dirname, "../../uploads/reference_audios");
 
 function getAudioRecords() {
@@ -16,10 +16,18 @@ function getAudioRecords() {
   }
 }
 
-function getGlobalRoles() {
-  if (!fs.existsSync(globalRolesPath)) return {};
+function getGlobalRoles(projectName) {
+  const safeProjectName = String(projectName || "")
+    .trim()
+    .replace(/[\\/:*?"<>|]/g, "");
+  if (!safeProjectName) return {};
+
+  const projectGlobalRolesPath = path.join(projectsDir, safeProjectName, "global_roles.json");
+  if (!fs.existsSync(projectGlobalRolesPath)) return {};
+
   try {
-    return JSON.parse(fs.readFileSync(globalRolesPath, "utf8"));
+    const projectRoles = JSON.parse(fs.readFileSync(projectGlobalRolesPath, "utf8"));
+    return projectRoles && typeof projectRoles === "object" ? projectRoles : {};
   } catch (e) {
     return {};
   }
@@ -42,7 +50,7 @@ async function generate({ dialogue, projectName, tempFilename, localChars, signa
 
   const UPLOAD_URL = process.env.TTS_ENDPOINT || "http://127.0.0.1:8000/api/tts/upload";
   const records = getAudioRecords();
-  const globalRoles = getGlobalRoles();
+  const globalRoles = getGlobalRoles(projectName);
 
   const roleName = dialogue.role || "未知角色";
   const currentEmotion = dialogue.emotion || "neutral";
