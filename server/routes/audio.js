@@ -5,6 +5,7 @@ const axios = require("axios");
 const path = require("path");
 const fs = require("fs");
 const { randomUUID } = require("crypto");
+const { normalizeVoicePool, parseAudioRecordName } = require("../services/autoCastingService");
 
 // 确保目录存在
 const uploadDir = path.join(__dirname, "../uploads/reference_audios");
@@ -42,7 +43,16 @@ const upload = multer({ storage: storage });
 // 辅助函数：读取和写入记录
 function getAudioRecords() {
   const data = fs.readFileSync(audioRecordsPath, "utf8");
-  return JSON.parse(data);
+  const records = JSON.parse(data);
+  return Array.isArray(records)
+    ? records.map((record) => {
+        const { voiceTags: _legacyVoiceTags, ...cleanRecord } = record || {};
+        return {
+          ...cleanRecord,
+          voicePool: normalizeVoicePool(record?.voicePool),
+        };
+      })
+    : [];
 }
 function saveAudioRecords(records) {
   fs.writeFileSync(audioRecordsPath, JSON.stringify(records, null, 2), "utf8");
@@ -106,6 +116,7 @@ router.post("/upload", upload.single("file"), (req, res) => {
       createTime: new Date().toISOString(),
       url: `/uploads/reference_audios/${req.file.filename}`,
       remark: "",
+      voicePool: "general",
     };
 
     const records = getAudioRecords();
@@ -132,7 +143,47 @@ router.get("/list", (req, res) => {
   }
 });
 
-// 3. 删除参考音频
+// 3. 按声线更新音频池（同一 voiceActor 的整套情绪音频一次性同步）
+router.patch("/voice-actor/:voiceActor/pool", (req, res) => {
+  try {
+    const voiceActor = String(req.params.voiceActor || "").trim();
+    if (!voiceActor) {
+      return res.status(400).json({ error: "voiceActor 不能为空" });
+    }
+
+    const { voicePool = "general" } = req.body || {};
+    const normalizedPool = normalizeVoicePool(voicePool);
+    if (normalizedPool !== voicePool && String(voicePool || "general").trim().toLowerCase() !== normalizedPool) {
+      return res.status(400).json({ error: "voicePool 必须是 general、bystander 或 protected" });
+    }
+
+    const records = getAudioRecords();
+    const affectedRecords = records.filter((record) => parseAudioRecordName(record.name)?.voiceActor === voiceActor);
+    if (!affectedRecords.length) {
+      return res.status(404).json({ error: `未找到声线「${voiceActor}」的音频` });
+    }
+
+    affectedRecords.forEach((record) => {
+      record.voicePool = normalizedPool;
+    });
+    saveAudioRecords(records);
+
+    res.json({
+      success: true,
+      data: {
+        voiceActor,
+        voicePool: normalizedPool,
+        affectedAudioIds: affectedRecords.map((record) => record.id),
+        affectedCount: affectedRecords.length,
+      },
+    });
+  } catch (error) {
+    console.error("更新音频池错误:", error);
+    res.status(500).json({ error: "更新音频池失败" });
+  }
+});
+
+// 4. 删除参考音频
 router.delete("/:id", async (req, res) => {
   try {
     const { id } = req.params;

@@ -1,7 +1,14 @@
 const express = require("express");
 const fs = require("fs");
 const path = require("path");
-const { loadProjectCasting, saveProjectCasting, parseAudioRecordName, loadProjectReaderSettings, saveProjectReaderSettings } = require("../services/autoCastingService");
+const {
+  loadProjectCasting,
+  saveProjectCasting,
+  parseAudioRecordName,
+  normalizeVoicePool,
+  loadProjectReaderSettings,
+  saveProjectReaderSettings,
+} = require("../services/autoCastingService");
 const { clearProjectListenCache } = require("../services/listenBookCacheService");
 
 const router = express.Router();
@@ -13,7 +20,16 @@ function getAudioRecords() {
   try {
     if (!fs.existsSync(audioRecordsPath)) return [];
     const raw = fs.readFileSync(audioRecordsPath, "utf8").trim();
-    return raw ? JSON.parse(raw) : [];
+    const records = raw ? JSON.parse(raw) : [];
+    return Array.isArray(records)
+      ? records.map((record) => {
+          const { voiceTags: _legacyVoiceTags, ...cleanRecord } = record || {};
+          return {
+            ...cleanRecord,
+            voicePool: normalizeVoicePool(record?.voicePool),
+          };
+        })
+      : [];
   } catch {
     return [];
   }
@@ -63,6 +79,7 @@ router.get("/role-audio-override", (req, res) => {
             id: audio.id,
             name: audio.name,
             url: audio.url,
+            voicePool: audio.voicePool,
           }
         : null,
     });
@@ -133,6 +150,7 @@ router.post("/role-audio-override", (req, res) => {
         id: targetAudio.id,
         name: targetAudio.name,
         url: targetAudio.url,
+        voicePool: targetAudio.voicePool,
       },
     });
   } catch (error) {

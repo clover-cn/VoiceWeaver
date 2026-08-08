@@ -3,7 +3,7 @@ const router = express.Router();
 const fs = require("fs");
 const path = require("path");
 const axios = require("axios");
-const { autoAssignReferenceAudios, normalizeGender } = require("../services/autoCastingService");
+const { autoAssignReferenceAudios, normalizeGender, mergeProjectRoleActivity } = require("../services/autoCastingService");
 const { log } = require("console");
 
 const projectsDir = path.join(__dirname, "../data/projects");
@@ -41,6 +41,40 @@ function parseNonNegativeEnvInt(value, fallback) {
   const parsed = Number.parseInt(value, 10);
   if (Number.isNaN(parsed)) return fallback;
   return Math.max(0, parsed);
+}
+
+function parseOptionalChapterIndex(value) {
+  if (value === undefined || value === null || value === "") return null;
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed) || parsed < 0) return null;
+  return parsed;
+}
+
+function normalizePrescanChapters(chapters, combinedText, chapterCount) {
+  const normalized = (Array.isArray(chapters) ? chapters : [])
+    .map((item, offset) => ({
+      chapterIndex: Number.isInteger(Number(item?.chapterIndex)) ? Number(item.chapterIndex) : offset,
+      chapterTitle: typeof item?.chapterTitle === "string" ? item.chapterTitle.trim() : "",
+      text: typeof item?.text === "string" ? item.text.trim() : "",
+    }))
+    .filter((item) => item.text)
+    .slice(0, chapterCount);
+
+  if (normalized.length) return normalized;
+  if (!combinedText) return [];
+  return [{ chapterIndex: null, chapterTitle: "", text: String(combinedText).trim() }];
+}
+
+function buildPrescanInputText(chapters) {
+  return chapters
+    .map((item) => {
+      const title = item.chapterTitle ? `${item.chapterTitle}\n` : "";
+      const index = Number.isInteger(item.chapterIndex) ? `[章节 ${item.chapterIndex}]\n` : "";
+      return `${index}${title}${item.text}`.trim();
+    })
+    .filter(Boolean)
+    .join("\n\n")
+    .trim();
 }
 
 // 构建角色别名上下文信息
@@ -106,12 +140,15 @@ router.post("/parse", async (req, res) => {
     }
   });
   try {
-    const { text, projectName } = req.body;
+    const { text, projectName, chapterIndex } = req.body;
     if (!text) {
       return res.status(400).json({ error: "请求体中缺失的文本" });
     }
     if (!projectName) {
       return res.status(400).json({ error: "请先选择或创建一个小说项目" });
+    }
+    if (chapterIndex !== undefined && chapterIndex !== null && parseOptionalChapterIndex(chapterIndex) === null) {
+      return res.status(400).json({ error: "chapterIndex 非法" });
     }
 
     const localChars = getCharacters(projectName);
@@ -330,6 +367,7 @@ router.post("/parse", async (req, res) => {
       parsedCards: normalizedData,
       projectName,
       provider,
+      chapterIndex: parseOptionalChapterIndex(chapterIndex),
     });
 
     res.json({
@@ -357,15 +395,20 @@ router.post("/parse", async (req, res) => {
 // 预扫描第一阶段
 router.post("/prescan-characters", async (req, res) => {
   try {
-    const { combinedText, projectName } = req.body;
-    if (!combinedText || !projectName) {
-      return res.status(400).json({ error: "缺少 combinedText 或 projectName" });
+    const { combinedText, chapters, projectName } = req.body;
+    if ((!combinedText && !Array.isArray(chapters)) || !projectName) {
+      return res.status(400).json({ error: "缺少 combinedText/chapters 或 projectName" });
     }
 
     const prescanModel = process.env.PRESCAN_LLM_MODEL || process.env.LLM_MODEL || "deepseek-chat";
     const apiKey = process.env.LLM_API_KEY;
     const aiEndpoint = process.env.LLM_ENDPOINT || "https://api.deepseek.com/v1/chat/completions";
     const chapterCount = parseNonNegativeEnvInt(process.env.PRESCAN_CHAPTER_COUNT, 10);
+    const normalizedChapters = normalizePrescanChapters(chapters, combinedText, chapterCount);
+    const prescanInputText = buildPrescanInputText(normalizedChapters);
+    if (!prescanInputText) {
+      return res.status(400).json({ error: "没有可用于预扫描的章节文本" });
+    }
     const localChars = getCharacters(projectName);
     const characterContext = buildCharacterContext(localChars);
 
@@ -373,7 +416,7 @@ router.post("/prescan-characters", async (req, res) => {
 
     const prescanPrompt = `
   你是一个专业的小说角色分析与指代消解专家。
-  任务：阅读这篇小说的前 ${chapterCount} 章内容，提取所有核心角色的全局映射表。
+  任务：阅读传入的章节窗口，提取角色全局映射和角色生命周期信息。
   本项目之前已出现的角色有：${characterContext}
 
   【重点要求】
@@ -387,12 +430,12 @@ router.post("/prescan-characters", async (req, res) => {
   * 反面例子：文本说“陈艺这个小丫头真像一个小毛贼一样”。这里的“小毛贼”是比喻，“小丫头”是身份描述，它们**绝对不能**被提取为别名！
   * 正面例子：文本出现对话“小艺艺，你快过来”，或者旁白长期用“白裙姑娘”作为主语行动。这里的“小艺艺”和“白裙姑娘”才能作为别名。
 
-  【过滤规则 - 非常重要】
-  请忽略以下类型的“背景板角色”或“工具人”：
-  1. 仅被提及名字但从未出场互动的角色（如回忆中的路人）。
-  2. 仅执行单一功能性动作且没有后续剧情的龙套（如：服务员端茶、出租车司机），除非他们有持续对话或对剧情产生重要影响。
-  3. 仅作为群体出现的角色（如：围观群众）。
-  *判定标准：该角色是否至少有一句直接引语（对话），或者名字/代称在不同段落中重复出现超过3次。*
+  【角色生命周期规则】
+  1. 不要忽略有对白的临时角色，例如导购、服务员、司机、路人甲；这些角色需要被记录并标记为 temporary。
+  2. 只被提及且没有对白的背景人物，可以标记为 unknown 或不输出。
+  3. 出现在多个章节、对白较多、推动剧情或属于主线的角色，标记为 core。
+  4. 其他有对白但重要性一般的角色，标记为 supporting。
+  5. 只能根据提供的章节窗口判断，不能臆测窗口之外的出场情况。
 
   【输出格式】
   必须返回严格的 JSON 格式（不要包含任何 Markdown 标记或代码块，纯 JSON）：
@@ -404,6 +447,16 @@ router.post("/prescan-characters", async (req, res) => {
         "aliases": ["仅限文中明确叫出口的称呼、或者不知道真名时的固定指代，严禁包含比喻或临时形容词"],
         "description": "简短描述该角色的身份或外貌特征，不超过30字"
       }
+    ],
+    "roleActivity": [
+      {
+        "standardName": "角色标准名",
+        "gender": "male | female | unknown",
+        "importance": "core | supporting | temporary | unknown",
+        "chapterStats": [
+          { "chapterIndex": 1, "dialogueCount": 2, "mentionCount": 3 }
+        ]
+      }
     ]
   }
 `;
@@ -413,7 +466,7 @@ router.post("/prescan-characters", async (req, res) => {
         model: prescanModel,
         messages: [
           { role: "system", content: prescanPrompt },
-          { role: "user", content: `小说前文内容如下：\n\n${combinedText}` },
+          { role: "user", content: `小说章节窗口如下：\n\n${prescanInputText}` },
         ],
         temperature: 0.1,
         response_format: { type: "json_object" },
@@ -478,7 +531,24 @@ router.post("/prescan-characters", async (req, res) => {
       saveCharacters(projectName, existingCharacters);
     }
 
-    res.json({ success: true, data: existingCharacters });
+    const roleActivityAvailable = Array.isArray(parsedData.roleActivity);
+    const roleActivity = roleActivityAvailable ? parsedData.roleActivity : [];
+    const observedChapterIndexes = normalizedChapters
+      .map((item) => item.chapterIndex)
+      .filter((item) => Number.isInteger(item) && item >= 0);
+    const lifecycle = mergeProjectRoleActivity(projectName, roleActivity, observedChapterIndexes, {
+      complete: roleActivityAvailable && observedChapterIndexes.length > 0,
+    });
+
+    res.json({
+      success: true,
+      data: existingCharacters,
+      roleActivity,
+      lifecycle: {
+        roleStats: lifecycle.roleStats,
+        observation: lifecycle.observation,
+      },
+    });
     console.log("LLM预扫描完成");
   } catch (error) {
     console.error("预扫描失败:", error.message);

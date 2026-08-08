@@ -4,6 +4,11 @@ const path = require("path");
 const dataDir = path.join(__dirname, "../data");
 const projectsDir = path.join(dataDir, "projects");
 const audioRecordsPath = path.join(dataDir, "audio_records.json");
+
+const CASTING_VERSION = 3;
+const ALLOCATION_POLICY_VERSION = "lifecycle-v1";
+const VOICE_POOL_VALUES = new Set(["general", "bystander", "protected"]);
+const ROLE_CLASS_VALUES = new Set(["core", "supporting", "temporary"]);
 const DEFAULT_READER_SETTINGS = {
   /**
    * strict: 严格模式：没有对应情绪音频时，直接显示未配置
@@ -41,7 +46,7 @@ const EMOTION_ALIASES = {
 
 function readJson(filePath, fallback) {
   try {
-    if (!fs.existsSync(filePath)) return fallback;
+    if (!filePath || !fs.existsSync(filePath)) return fallback;
     const raw = fs.readFileSync(filePath, "utf8").trim();
     if (!raw) return fallback;
     return JSON.parse(raw);
@@ -60,6 +65,11 @@ function sanitizeProjectName(projectName) {
     .replace(/[\\/:*?"<>|]/g, "");
 }
 
+function parseFiniteInt(value, fallback = null) {
+  const parsed = Number.parseInt(value, 10);
+  return Number.isFinite(parsed) ? parsed : fallback;
+}
+
 function normalizeEmotion(emotion) {
   if (!emotion) return "neutral";
   return EMOTION_ALIASES[String(emotion).trim().toLowerCase()] || "neutral";
@@ -72,6 +82,18 @@ function normalizeGender(gender) {
   if (val === "男" || val === "male" || val === "m") return "male";
   if (val === "女" || val === "female" || val === "f") return "female";
   return "unknown";
+}
+
+function normalizeVoicePool(pool) {
+  const value = String(pool || "general").trim().toLowerCase();
+  return VOICE_POOL_VALUES.has(value) ? value : "general";
+}
+
+function normalizeRoleClass(roleClass) {
+  const value = String(roleClass || "").trim().toLowerCase();
+  if (value === "main") return "core";
+  if (value === "temp") return "temporary";
+  return ROLE_CLASS_VALUES.has(value) ? value : null;
 }
 
 function parseAudioRecordName(recordName) {
@@ -107,10 +129,13 @@ function getRoleGenderStats(cards) {
   for (const item of cards || []) {
     if (!item || item.type !== "dialogue" || !item.role || item.role === "旁白") continue;
     if (!stats[item.role]) {
-      stats[item.role] = { male: 0, female: 0, unknown: 0 };
+      stats[item.role] = { male: 0, female: 0, unknown: 0, dialogueCount: 0, emotions: {} };
     }
     const g = normalizeGender(item.gender);
     stats[item.role][g] += 1;
+    stats[item.role].dialogueCount += 1;
+    const emotion = normalizeEmotion(item.emotion);
+    stats[item.role].emotions[emotion] = (stats[item.role].emotions[emotion] || 0) + 1;
   }
   return stats;
 }
@@ -159,6 +184,21 @@ function getProjectReaderSettingsPath(projectName, { ensureExists = false } = {}
   return projectDir ? path.join(projectDir, "reader_settings.json") : null;
 }
 
+function getAllocationPolicy() {
+  const lookahead = Math.max(
+    1,
+    parseFiniteInt(process.env.VOICE_ALLOCATION_LOOKAHEAD_CHAPTERS, parseFiniteInt(process.env.PRESCAN_CHAPTER_COUNT, 10)) || 10,
+  );
+  return {
+    version: ALLOCATION_POLICY_VERSION,
+    lookaheadChapters: lookahead,
+    coreMinChapterCount: Math.max(1, parseFiniteInt(process.env.VOICE_ALLOCATION_CORE_MIN_CHAPTERS, 3) || 3),
+    coreMinDialogueCount: Math.max(1, parseFiniteInt(process.env.VOICE_ALLOCATION_CORE_MIN_DIALOGUE_COUNT, 8) || 8),
+    temporaryMaxChapterCount: Math.max(1, parseFiniteInt(process.env.VOICE_ALLOCATION_TEMPORARY_MAX_CHAPTERS, 1) || 1),
+    temporaryMaxDialogueCount: Math.max(1, parseFiniteInt(process.env.VOICE_ALLOCATION_TEMPORARY_MAX_DIALOGUE_COUNT, 3) || 3),
+  };
+}
+
 function loadProjectReaderSettings(projectName) {
   const fp = getProjectReaderSettingsPath(projectName);
   const data = readJson(fp, {});
@@ -177,23 +217,257 @@ function saveProjectReaderSettings(projectName, settings) {
   });
 }
 
+function normalizeAssignment(config) {
+  if (!config || typeof config !== "object") return null;
+  if (!config.voiceActor) return null;
+  return {
+    ...config,
+    voiceActor: String(config.voiceActor),
+    gender: normalizeGender(config.gender),
+    manualOverride: Boolean(config.manualOverride),
+    allocationType: normalizeRoleClass(config.allocationType),
+    lastAssignedChapter: Number.isInteger(Number(config.lastAssignedChapter)) ? Number(config.lastAssignedChapter) : null,
+  };
+}
+
+function normalizeRoleStat(stat) {
+  const source = stat && typeof stat === "object" ? stat : {};
+  const { semanticTags: _legacySemanticTags, tags: _legacyTags, voiceTags: _legacyVoiceTags, ...cleanSource } = source;
+  const chapterActivity = {};
+  if (source.chapterActivity && typeof source.chapterActivity === "object") {
+    Object.entries(source.chapterActivity).forEach(([chapter, value]) => {
+      const chapterIndex = Number(chapter);
+      if (!Number.isInteger(chapterIndex) || chapterIndex < 0) return;
+      const item = value && typeof value === "object" ? value : {};
+      chapterActivity[String(chapterIndex)] = {
+        dialogueCount: Math.max(0, parseFiniteInt(item.dialogueCount, 0) || 0),
+        mentionCount: Math.max(0, parseFiniteInt(item.mentionCount, 0) || 0),
+      };
+    });
+  }
+
+  if (!Object.keys(chapterActivity).length && Array.isArray(source.chapterIndexes)) {
+    source.chapterIndexes.forEach((chapter) => {
+      const chapterIndex = Number(chapter);
+      if (Number.isInteger(chapterIndex) && chapterIndex >= 0) {
+        chapterActivity[String(chapterIndex)] = { dialogueCount: 0, mentionCount: 1 };
+      }
+    });
+  }
+
+  const chapterIndexes = Object.keys(chapterActivity).map(Number).sort((a, b) => a - b);
+  const dialogueCount = chapterIndexes.reduce((sum, chapter) => sum + chapterActivity[String(chapter)].dialogueCount, 0);
+  const mentionCount = chapterIndexes.reduce((sum, chapter) => sum + chapterActivity[String(chapter)].mentionCount, 0);
+
+  return {
+    ...cleanSource,
+    firstSeenChapter: chapterIndexes.length ? chapterIndexes[0] : null,
+    lastSeenChapter: chapterIndexes.length ? chapterIndexes[chapterIndexes.length - 1] : null,
+    chapterIndexes,
+    chapterCount: chapterIndexes.length,
+    dialogueCount,
+    mentionCount,
+    gender: normalizeGender(source.gender),
+    importance: normalizeRoleClass(source.importance),
+    chapterActivity,
+  };
+}
+
 function loadProjectCasting(projectName) {
   const fp = getProjectCastingPath(projectName);
   const data = readJson(fp, {});
+  const rawAssignments = data.roleAssignments && typeof data.roleAssignments === "object" ? data.roleAssignments : {};
+  const rawStats = data.roleStats && typeof data.roleStats === "object" ? data.roleStats : {};
+  const roleAssignments = {};
+  const roleStats = {};
+
+  Object.entries(rawAssignments).forEach(([role, config]) => {
+    const normalized = normalizeAssignment(config);
+    if (normalized) roleAssignments[role] = normalized;
+  });
+  Object.entries(rawStats).forEach(([role, stat]) => {
+    roleStats[role] = normalizeRoleStat(stat);
+  });
+
+  const observation = data.observation && typeof data.observation === "object" ? data.observation : {};
+  const observedChapterIndexes = Array.isArray(observation.observedChapterIndexes)
+    ? [...new Set(observation.observedChapterIndexes.map(Number).filter((x) => Number.isInteger(x) && x >= 0))].sort((a, b) => a - b)
+    : [];
+
   return {
+    version: Number(data.version) || 2,
     narratorAudioId: data.narratorAudioId || null,
-    roleAssignments: data.roleAssignments && typeof data.roleAssignments === "object" ? data.roleAssignments : {},
+    roleAssignments,
+    roleStats,
+    observation: {
+      observedChapterIndexes,
+      observedThroughChapter: Number.isInteger(Number(observation.observedThroughChapter)) ? Number(observation.observedThroughChapter) : null,
+      complete: Boolean(observation.complete),
+      updatedAt: observation.updatedAt || null,
+    },
   };
 }
 
 function saveProjectCasting(projectName, casting) {
   const fp = getProjectCastingPath(projectName, { ensureExists: true });
   writeJson(fp, {
-    version: 2,
+    version: CASTING_VERSION,
+    policyVersion: ALLOCATION_POLICY_VERSION,
     updatedAt: new Date().toISOString(),
     narratorAudioId: casting.narratorAudioId || null,
     roleAssignments: casting.roleAssignments || {},
+    roleStats: casting.roleStats || {},
+    observation: casting.observation || {
+      observedChapterIndexes: [],
+      observedThroughChapter: null,
+      complete: false,
+    },
   });
+}
+
+function normalizeActivityItem(item) {
+  if (!item || typeof item !== "object") return null;
+  const standardName = String(item.standardName || item.role || "").trim();
+  if (!standardName || standardName === "旁白") return null;
+
+  const chapterStats = [];
+  if (Array.isArray(item.chapterStats)) {
+    item.chapterStats.forEach((chapter) => {
+      const chapterIndex = Number(chapter?.chapterIndex);
+      if (!Number.isInteger(chapterIndex) || chapterIndex < 0) return;
+      chapterStats.push({
+        chapterIndex,
+        dialogueCount: Math.max(0, parseFiniteInt(chapter.dialogueCount, 0) || 0),
+        mentionCount: Math.max(0, parseFiniteInt(chapter.mentionCount, 0) || 0),
+      });
+    });
+  }
+
+  if (!chapterStats.length && Array.isArray(item.chapterIndexes)) {
+    item.chapterIndexes.forEach((chapter) => {
+      const chapterIndex = Number(chapter);
+      if (Number.isInteger(chapterIndex) && chapterIndex >= 0) {
+        chapterStats.push({ chapterIndex, dialogueCount: 0, mentionCount: 1 });
+      }
+    });
+  }
+
+  return {
+    standardName,
+    gender: normalizeGender(item.gender),
+    importance: normalizeRoleClass(item.importance),
+    chapterStats,
+  };
+}
+
+function applyRoleActivityToCasting(casting, activities, observedChapterIndexes = [], { complete = false } = {}) {
+  if (!casting.roleStats || typeof casting.roleStats !== "object") casting.roleStats = {};
+
+  for (const rawItem of activities || []) {
+    const item = normalizeActivityItem(rawItem);
+    if (!item) continue;
+
+    const current = normalizeRoleStat(casting.roleStats[item.standardName] || {});
+    const chapterActivity = { ...current.chapterActivity };
+    item.chapterStats.forEach((chapter) => {
+      const key = String(chapter.chapterIndex);
+      const previous = chapterActivity[key] || { dialogueCount: 0, mentionCount: 0 };
+      chapterActivity[key] = {
+        dialogueCount: Math.max(previous.dialogueCount, chapter.dialogueCount),
+        mentionCount: Math.max(previous.mentionCount, chapter.mentionCount),
+      };
+    });
+
+    casting.roleStats[item.standardName] = normalizeRoleStat({
+      ...current,
+      gender: item.gender !== "unknown" ? item.gender : current.gender,
+      importance: item.importance || current.importance,
+      chapterActivity,
+    });
+  }
+
+  const observed = new Set(casting.observation?.observedChapterIndexes || []);
+  (observedChapterIndexes || []).forEach((chapter) => {
+    const chapterIndex = Number(chapter);
+    if (Number.isInteger(chapterIndex) && chapterIndex >= 0) observed.add(chapterIndex);
+  });
+  const sortedObserved = [...observed].sort((a, b) => a - b);
+  casting.observation = {
+    observedChapterIndexes: sortedObserved,
+    observedThroughChapter: sortedObserved.length ? sortedObserved[sortedObserved.length - 1] : null,
+    complete: Boolean(complete) || Boolean(casting.observation?.complete),
+    updatedAt: new Date().toISOString(),
+  };
+  return casting;
+}
+
+function mergeProjectRoleActivity(projectName, activities, observedChapterIndexes = [], options = {}) {
+  const casting = loadProjectCasting(projectName);
+  applyRoleActivityToCasting(casting, activities, observedChapterIndexes, options);
+  saveProjectCasting(projectName, casting);
+  return casting;
+}
+
+function buildCurrentRoleActivities(cards, chapterIndex) {
+  const normalizedChapterIndex = Number(chapterIndex);
+  if (!Number.isInteger(normalizedChapterIndex) || normalizedChapterIndex < 0) return [];
+
+  const grouped = {};
+  for (const item of cards || []) {
+    if (!item || item.type !== "dialogue" || !item.role || item.role === "旁白") continue;
+    if (!grouped[item.role]) {
+      grouped[item.role] = {
+        standardName: item.role,
+        gender: "unknown",
+        chapterStats: [{ chapterIndex: normalizedChapterIndex, dialogueCount: 0, mentionCount: 0 }],
+      };
+    }
+    const group = grouped[item.role];
+    const chapter = group.chapterStats[0];
+    chapter.dialogueCount += 1;
+    chapter.mentionCount += 1;
+    const gender = normalizeGender(item.gender);
+    if (gender !== "unknown") group.gender = gender;
+  }
+  return Object.values(grouped);
+}
+
+function getPolicyRoleClass(role, casting, currentStats, assignment, policy) {
+  if (assignment?.manualOverride) return "core";
+  const stored = casting.roleStats?.[role] ? normalizeRoleStat(casting.roleStats[role]) : null;
+  const stats = stored || {};
+  const importance = normalizeRoleClass(stats.importance);
+  if (importance === "core") return "core";
+  if (importance === "temporary") return "temporary";
+  if ((stats.chapterCount || 0) >= policy.coreMinChapterCount || (stats.dialogueCount || 0) >= policy.coreMinDialogueCount) {
+    return "core";
+  }
+  if (
+    (stats.chapterCount || 0) > 0 &&
+    (stats.chapterCount || 0) <= policy.temporaryMaxChapterCount &&
+    (stats.dialogueCount || 0) <= policy.temporaryMaxDialogueCount
+  ) {
+    return "temporary";
+  }
+  if (currentStats && currentStats.dialogueCount <= policy.temporaryMaxDialogueCount && !stats.chapterCount) return "temporary";
+  return "supporting";
+}
+
+function getRoleStats(casting, role) {
+  return casting.roleStats?.[role] ? normalizeRoleStat(casting.roleStats[role]) : null;
+}
+
+function roleAppearsInRange(stats, startChapter, endChapter) {
+  if (!stats || !Array.isArray(stats.chapterIndexes)) return false;
+  return stats.chapterIndexes.some((chapter) => chapter >= startChapter && chapter <= endChapter);
+}
+
+function hasCompleteLookahead(casting, chapterIndex, lookaheadChapters) {
+  if (!Number.isInteger(Number(chapterIndex))) return false;
+  const endChapter = Number(chapterIndex) + lookaheadChapters - 1;
+  const observation = casting.observation || {};
+  if (!observation.complete || !Number.isInteger(Number(observation.observedThroughChapter))) return false;
+  return Number(observation.observedThroughChapter) >= endChapter;
 }
 
 function buildVoicePool(records) {
@@ -201,7 +475,11 @@ function buildVoicePool(records) {
   const narratorCandidates = [];
   const sorted = [...(records || [])].sort((a, b) => new Date(b.createTime || 0) - new Date(a.createTime || 0));
 
-  for (const rec of sorted) {
+  for (const rawRecord of sorted) {
+    const rec = {
+      ...rawRecord,
+      voicePool: normalizeVoicePool(rawRecord.voicePool),
+    };
     const parsed = parseAudioRecordName(rec.name);
     if (!parsed) continue;
 
@@ -215,32 +493,82 @@ function buildVoicePool(records) {
     if (!actorPool[parsed.voiceActor]) {
       actorPool[parsed.voiceActor] = {
         gender: parsed.gender,
+        voicePool: rec.voicePool,
         emotions: {},
       };
     }
 
     const actor = actorPool[parsed.voiceActor];
-    if (!actor.emotions[parsed.emotion]) {
-      actor.emotions[parsed.emotion] = rec.id;
-    }
+    if (actor.voicePool !== "protected" && rec.voicePool === "protected") actor.voicePool = "protected";
+    else if (actor.voicePool === "general" && rec.voicePool === "bystander") actor.voicePool = "bystander";
+    if (!actor.emotions[parsed.emotion]) actor.emotions[parsed.emotion] = rec.id;
   }
 
+  return { actorPool, narratorCandidates };
+}
+
+function getPoolRank(roleClass, pool) {
+  if (roleClass === "temporary") {
+    return { bystander: 0, general: 1, protected: 3 }[pool] ?? 4;
+  }
+  return { protected: 0, general: 1, bystander: 2 }[pool] ?? 4;
+}
+
+function getEmotionCoverage(requiredEmotions, actor) {
+  if (!requiredEmotions || !requiredEmotions.size) return 0;
+  return [...requiredEmotions].filter((emotion) => Boolean(actor.emotions[emotion])).length;
+}
+
+function getUsageCount(activeUsage, actorName) {
+  return activeUsage.get(actorName)?.length || 0;
+}
+
+function chooseActor({ roleClass, roleGender, requiredEmotions, actorPool, activeUsage }) {
+  if (roleGender !== "male" && roleGender !== "female") return null;
+
+  const allCandidates = Object.entries(actorPool)
+    .filter(([, actor]) => actor.gender === roleGender)
+    .map(([actorName, actor]) => ({ actorName, actor }));
+  if (!allCandidates.length) return null;
+
+  const preferredCandidates = allCandidates.filter(({ actor }) => {
+    if (roleClass === "temporary") return actor.voicePool !== "protected";
+    return actor.voicePool !== "bystander" || !allCandidates.some((item) => item.actor.voicePool !== "bystander");
+  });
+  const poolCandidates = preferredCandidates.length ? preferredCandidates : allCandidates;
+  const idleCandidates = poolCandidates.filter(({ actorName }) => !activeUsage.has(actorName));
+  const candidates = idleCandidates.length ? idleCandidates : poolCandidates;
+
+  candidates.sort((left, right) => {
+    const poolDiff = getPoolRank(roleClass, left.actor.voicePool) - getPoolRank(roleClass, right.actor.voicePool);
+    if (poolDiff !== 0) return poolDiff;
+    const coverageDiff = getEmotionCoverage(requiredEmotions, right.actor) - getEmotionCoverage(requiredEmotions, left.actor);
+    if (coverageDiff !== 0) return coverageDiff;
+    const usageDiff = getUsageCount(activeUsage, left.actorName) - getUsageCount(activeUsage, right.actorName);
+    if (usageDiff !== 0) return usageDiff;
+    return left.actorName.localeCompare(right.actorName, "zh-CN");
+  });
+
+  const selected = candidates[0];
   return {
-    actorPool,
-    narratorCandidates,
+    actorName: selected.actorName,
+    shared: activeUsage.has(selected.actorName),
+    actor: selected.actor,
   };
 }
 
-function pickNewActor(roleGender, actorPool, usedActors) {
-  if (roleGender !== "male" && roleGender !== "female") return null;
+function addUsage(activeUsage, actorName, role) {
+  if (!actorName) return;
+  if (!activeUsage.has(actorName)) activeUsage.set(actorName, []);
+  const roles = activeUsage.get(actorName);
+  if (!roles.includes(role)) roles.push(role);
+}
 
-  const candidates = Object.keys(actorPool).filter((actorName) => {
-    const actor = actorPool[actorName];
-    return actor && actor.gender === roleGender && !usedActors.has(actorName);
-  });
-
-  if (candidates.length === 0) return null;
-  return candidates[0];
+function removeUsage(activeUsage, actorName, role) {
+  if (!actorName || !activeUsage.has(actorName)) return;
+  const roles = activeUsage.get(actorName).filter((item) => item !== role);
+  if (roles.length) activeUsage.set(actorName, roles);
+  else activeUsage.delete(actorName);
 }
 
 function attachAutoCastingToCards(cards, casting, actorPool, readerSettings = DEFAULT_READER_SETTINGS) {
@@ -264,13 +592,7 @@ function attachAutoCastingToCards(cards, casting, actorPool, readerSettings = DE
     }
 
     const roleCasting = casting.roleAssignments[card.role];
-    if (!roleCasting) {
-      delete card.referenceAudio;
-      output.push(card);
-      continue;
-    }
-
-    if (!roleCasting.voiceActor) {
+    if (!roleCasting || !roleCasting.voiceActor) {
       delete card.referenceAudio;
       output.push(card);
       continue;
@@ -289,6 +611,9 @@ function attachAutoCastingToCards(cards, casting, actorPool, readerSettings = DE
     card.autoAssignedVoiceActor = roleCasting.voiceActor;
     card.autoEmotionAudioMap = {};
     card.manualAssigned = Boolean(roleCasting.manualOverride);
+    card.voiceAllocationType = roleCasting.allocationType || "supporting";
+    card.voicePool = actor.voicePool;
+    card.sharedVoice = Boolean(roleCasting.sharedVoice);
     card.missingEmotionPolicy = readerSettings.missingEmotionPolicy;
     card.referenceAudioFallback = !actor.emotions[emo] && Boolean(audioId) && allowNeutralFallback ? "neutral" : null;
 
@@ -316,7 +641,7 @@ function attachAutoCastingToCards(cards, casting, actorPool, readerSettings = DE
   return output;
 }
 
-function autoAssignReferenceAudios({ parsedCards, projectName, provider }) {
+function autoAssignReferenceAudios({ parsedCards, projectName, provider, chapterIndex = null }) {
   if (!SUPPORTED_PROVIDERS.has(provider)) {
     return {
       cards: parsedCards || [],
@@ -332,76 +657,190 @@ function autoAssignReferenceAudios({ parsedCards, projectName, provider }) {
   const roleGenderStats = getRoleGenderStats(parsedCards);
   const roleGenders = decideRoleGender(roleGenderStats);
   const readerSettings = loadProjectReaderSettings(projectName);
-
+  const policy = getAllocationPolicy();
   const casting = loadProjectCasting(projectName);
-  const usedActors = new Set();
-  const validatedRoleAssignments = {};
+  const normalizedChapterIndex = Number.isInteger(Number(chapterIndex)) ? Number(chapterIndex) : null;
 
-  Object.keys(casting.roleAssignments || {}).forEach((role) => {
-    const conf = casting.roleAssignments[role];
-    if (!conf) return;
-    if (!conf.voiceActor) return;
-    const actor = actorPool[conf.voiceActor];
-    if (!actor) return;
-    const expectedGender = roleGenders[role];
-    if (!conf.manualOverride && expectedGender && expectedGender !== "unknown" && actor.gender !== expectedGender) return;
-    if (!conf.manualOverride && usedActors.has(conf.voiceActor)) return;
-    validatedRoleAssignments[role] = {
-      voiceActor: conf.voiceActor,
-      gender: actor.gender,
-      manualOverride: Boolean(conf.manualOverride),
-    };
-    usedActors.add(conf.voiceActor);
+  if (normalizedChapterIndex !== null) {
+    applyRoleActivityToCasting(casting, buildCurrentRoleActivities(parsedCards, normalizedChapterIndex), [normalizedChapterIndex]);
+  }
+
+  const rolesInCards = [...new Set(
+    (parsedCards || [])
+      .filter((x) => x && x.type === "dialogue" && x.role && x.role !== "旁白")
+      .map((x) => x.role),
+  )];
+  const roleClassifications = {};
+  rolesInCards.forEach((role) => {
+    roleClassifications[role] = getPolicyRoleClass(role, casting, roleGenderStats[role], casting.roleAssignments[role], policy);
   });
 
-  const rolesInCards = [...new Set((parsedCards || []).filter((x) => x && x.type === "dialogue" && x.role && x.role !== "旁白").map((x) => x.role))];
+  const activeRoles = new Set(rolesInCards);
+  const lookaheadComplete = hasCompleteLookahead(casting, normalizedChapterIndex, policy.lookaheadChapters);
+  const lookaheadEnd = normalizedChapterIndex === null ? null : normalizedChapterIndex + policy.lookaheadChapters - 1;
 
-  for (const role of rolesInCards) {
-    if (validatedRoleAssignments[role]) continue;
-    const roleGender = roleGenders[role] || "unknown";
-    const actorName = pickNewActor(roleGender, actorPool, usedActors);
-    if (!actorName) continue;
-    validatedRoleAssignments[role] = {
-      voiceActor: actorName,
-      gender: actorPool[actorName].gender,
+  Object.entries(casting.roleAssignments || {}).forEach(([role, config]) => {
+    const normalized = normalizeAssignment(config);
+    if (!normalized) return;
+    // 没有完整的未来章节窗口时保守处理，不回收任何历史自动分配。
+    if (!lookaheadComplete || normalizedChapterIndex === null) {
+      activeRoles.add(role);
+      return;
+    }
+    const roleClass = roleClassifications[role] || getPolicyRoleClass(role, casting, null, normalized, policy);
+    if (normalized.manualOverride || roleClass === "core") {
+      activeRoles.add(role);
+      return;
+    }
+    if (lookaheadComplete && normalizedChapterIndex !== null && roleAppearsInRange(getRoleStats(casting, role), normalizedChapterIndex, lookaheadEnd)) {
+      activeRoles.add(role);
+    }
+  });
+
+  const previousAssignments = {};
+  Object.entries(casting.roleAssignments || {}).forEach(([role, config]) => {
+    const normalized = normalizeAssignment(config);
+    if (normalized) previousAssignments[role] = { ...normalized };
+  });
+
+  const finalRoleAssignments = {};
+  const activeUsage = new Map();
+  Object.entries(previousAssignments).forEach(([role, config]) => {
+    const actor = actorPool[config.voiceActor];
+    if (!actor) return;
+    const expectedGender = roleGenders[role] || getRoleStats(casting, role)?.gender || config.gender;
+    const isActive = activeRoles.has(role);
+    if (isActive && !config.manualOverride && expectedGender !== "unknown" && actor.gender !== expectedGender) return;
+    finalRoleAssignments[role] = {
+      ...config,
+      gender: actor.gender,
+      allocationType: config.allocationType || (config.manualOverride ? "core" : null),
+      voicePool: actor.voicePool,
     };
-    usedActors.add(actorName);
+    if (isActive) addUsage(activeUsage, config.voiceActor, role);
+  });
+
+  const orderedRoles = rolesInCards.slice().sort((left, right) => {
+    const rank = { core: 0, supporting: 1, temporary: 2 };
+    return (rank[roleClassifications[left]] ?? 1) - (rank[roleClassifications[right]] ?? 1) || left.localeCompare(right, "zh-CN");
+  });
+  const sharedActors = [];
+  const voiceChanges = [];
+
+  for (const role of orderedRoles) {
+    const roleClass = roleClassifications[role];
+    const roleStats = getRoleStats(casting, role);
+    const roleGender = roleGenders[role] || roleStats?.gender || "unknown";
+    const currentAssignment = finalRoleAssignments[role] || null;
+    if (currentAssignment) removeUsage(activeUsage, currentAssignment.voiceActor, role);
+
+    const existingActor = currentAssignment ? actorPool[currentAssignment.voiceActor] : null;
+    const expectedGenderMatches = existingActor && (roleGender === "unknown" || existingActor.gender === roleGender);
+    const actorAlreadyUsedByOtherRole = currentAssignment && activeUsage.has(currentAssignment.voiceActor);
+    let selected = null;
+
+    if (existingActor && expectedGenderMatches && (!actorAlreadyUsedByOtherRole || currentAssignment.manualOverride)) {
+      selected = {
+        actorName: currentAssignment.voiceActor,
+        actor: existingActor,
+        shared: Boolean(actorAlreadyUsedByOtherRole),
+      };
+    } else {
+      const requiredEmotions = new Set(Object.keys(roleGenderStats[role]?.emotions || {}));
+      selected = chooseActor({
+        roleClass,
+        roleGender,
+        requiredEmotions,
+        actorPool,
+        activeUsage,
+      });
+    }
+
+    if (!selected) {
+      if (currentAssignment) addUsage(activeUsage, currentAssignment.voiceActor, role);
+      continue;
+    }
+
+    const previousActorName = previousAssignments[role]?.voiceActor || null;
+    const nextAssignment = {
+      ...(currentAssignment || {}),
+      voiceActor: selected.actorName,
+      gender: selected.actor.gender,
+      manualOverride: Boolean(currentAssignment?.manualOverride),
+      allocationType: roleClass,
+      voicePool: selected.actor.voicePool,
+      lastAssignedChapter: normalizedChapterIndex,
+      sharedVoice: Boolean(selected.shared),
+    };
+    finalRoleAssignments[role] = nextAssignment;
+    addUsage(activeUsage, selected.actorName, role);
+
+    if (previousActorName && previousActorName !== selected.actorName) {
+      voiceChanges.push({ role, from: previousActorName, to: selected.actorName });
+    }
   }
 
-  let narratorAudioId = null;
-  if (casting.narratorAudioId) {
-    const exists = narratorCandidates.some((x) => x.id === casting.narratorAudioId);
-    if (exists) narratorAudioId = casting.narratorAudioId;
-  }
-  if (!narratorAudioId && narratorCandidates.length > 0) {
-    narratorAudioId = narratorCandidates[0].id;
-  }
+  const previousAutoActors = new Set(
+    Object.entries(previousAssignments)
+      .filter(([role, config]) => !config.manualOverride && !activeRoles.has(role))
+      .map(([, config]) => config.voiceActor),
+  );
+  const activeActors = new Set(activeUsage.keys());
+  const releasedActors = [...previousAutoActors].filter((actorName) => !activeActors.has(actorName));
 
-  const finalCasting = {
-    narratorAudioId,
-    roleAssignments: validatedRoleAssignments,
-  };
+  activeUsage.forEach((roles, actorName) => {
+    if (roles.length > 1) {
+      sharedActors.push({
+        voiceActor: actorName,
+        roles: [...roles],
+        voicePool: actorPool[actorName]?.voicePool || "general",
+      });
+      roles.forEach((role) => {
+        if (finalRoleAssignments[role]) finalRoleAssignments[role].sharedVoice = true;
+      });
+    }
+  });
 
-  saveProjectCasting(projectName, finalCasting);
+  casting.roleAssignments = finalRoleAssignments;
+  saveProjectCasting(projectName, casting);
 
   return {
-    cards: attachAutoCastingToCards(parsedCards, finalCasting, actorPool, readerSettings),
+    cards: attachAutoCastingToCards(parsedCards, casting, actorPool, readerSettings),
     autoCasting: {
       enabled: true,
-      narratorAudioId: finalCasting.narratorAudioId,
-      roleAssignments: finalCasting.roleAssignments,
+      policyVersion: policy.version,
+      narratorAudioId: casting.narratorAudioId,
+      roleAssignments: casting.roleAssignments,
+      roleClassifications,
       roleGenders,
       availableVoiceActors: Object.keys(actorPool).length,
       missingEmotionPolicy: readerSettings.missingEmotionPolicy,
+      releasedActors,
+      sharedActors,
+      voiceChanges,
+      lookahead: {
+        chapterIndex: normalizedChapterIndex,
+        chapters: policy.lookaheadChapters,
+        complete: lookaheadComplete,
+        observedThroughChapter: casting.observation?.observedThroughChapter || null,
+      },
+      warnings: [
+        ...(sharedActors.length ? ["音频池不足，部分角色共享了同一声线"] : []),
+        ...(voiceChanges.length ? ["部分临时角色因声线已回收而重新分配"] : []),
+      ],
     },
   };
 }
 
 module.exports = {
+  ALLOCATION_POLICY_VERSION,
+  VOICE_POOL_VALUES,
   autoAssignReferenceAudios,
   normalizeGender,
+  normalizeVoicePool,
   loadProjectCasting,
   saveProjectCasting,
+  mergeProjectRoleActivity,
   parseAudioRecordName,
   loadProjectReaderSettings,
   saveProjectReaderSettings,

@@ -35,6 +35,49 @@
       <div class="text-xs text-blue-600 truncate">当前片段: {{ currentGeneratingText }}</div>
     </div>
 
+    <!-- 生命周期分配摘要：只提示，不阻断当前章节编辑和生成。 -->
+    <div v-if="autoCastingSummaryVisible" class="px-6 py-3 bg-indigo-50 border-b border-indigo-100 shrink-0">
+      <div class="flex flex-wrap items-center gap-2 text-sm text-indigo-900">
+        <span class="font-semibold">生命周期自动配音</span>
+        <el-tag size="small" type="info">{{ autoCasting.policyVersion || "lifecycle" }}</el-tag>
+        <el-tag v-if="autoCasting.lookahead" size="small" :type="autoCasting.lookahead.complete ? 'success' : 'warning'">
+          {{ autoCasting.lookahead.complete ? "预扫描窗口完整" : "预扫描窗口未完整" }}
+        </el-tag>
+        <span v-if="autoCasting.availableVoiceActors !== undefined" class="text-xs text-indigo-700">可用声线 {{ autoCasting.availableVoiceActors }}</span>
+        <el-button link type="primary" size="small" @click="showAllocationDetails = !showAllocationDetails">
+          {{ showAllocationDetails ? "收起详情" : "查看分配详情" }}
+        </el-button>
+      </div>
+
+      <div v-if="autoCastingWarnings.length" class="mt-2 space-y-1">
+        <div v-for="warning in autoCastingWarnings" :key="warning" class="text-xs text-amber-700 flex items-start gap-1">
+          <span>⚠</span><span>{{ warning }}</span>
+        </div>
+      </div>
+
+      <div v-if="showAllocationDetails" class="mt-3 grid gap-2 text-xs text-indigo-800 md:grid-cols-3">
+        <div v-if="releasedActors.length" class="rounded border border-indigo-100 bg-white/70 p-2">
+          <div class="font-semibold mb-1">已释放声线</div>
+          <div>{{ releasedActors.join("、") }}</div>
+        </div>
+        <div v-if="sharedActors.length" class="rounded border border-amber-100 bg-amber-50/70 p-2">
+          <div class="font-semibold mb-1">共享声线</div>
+          <div v-for="item in sharedActors" :key="`${item.voiceActor}-${item.roles?.join('-')}`">
+            {{ item.voiceActor }}：{{ (item.roles || []).join("、") }}
+          </div>
+        </div>
+        <div v-if="voiceChanges.length" class="rounded border border-purple-100 bg-purple-50/70 p-2">
+          <div class="font-semibold mb-1">声线变化</div>
+          <div v-for="item in voiceChanges" :key="`${item.role}-${item.from}-${item.to}`">
+            {{ item.role }}：{{ item.from || "未分配" }} → {{ item.to || "未分配" }}
+          </div>
+        </div>
+        <div v-if="!releasedActors.length && !sharedActors.length && !voiceChanges.length" class="text-indigo-600 md:col-span-3">
+          当前窗口没有需要提示的声线变化。
+        </div>
+      </div>
+    </div>
+
     <!-- 卡片列表 -->
     <div v-if="dialogueCards.length > 0" class="flex-1 p-6 overflow-y-auto space-y-4 pb-24 scroll-smooth">
       <div
@@ -72,6 +115,19 @@
             >
               <el-icon><Check /></el-icon
               >{{ ttsProvider === "indextts2" && card.referenceAudio && typeof card.referenceAudio === "object" && card.referenceAudio.mode === 3 ? "带向量控制" : "带参考音" }}
+            </div>
+
+            <div v-if="card.autoAssignedVoiceActor" class="mt-2 flex flex-col items-center gap-1 w-full">
+              <el-tag size="small" type="primary" class="max-w-full truncate" :title="card.autoAssignedVoiceActor">
+                声线：{{ card.autoAssignedVoiceActor }}
+              </el-tag>
+              <div class="flex flex-wrap justify-center gap-1">
+                <el-tag v-if="card.voiceAllocationType" size="small" effect="plain">{{ allocationTypeLabel(card.voiceAllocationType) }}</el-tag>
+                <el-tag v-if="card.voicePool" size="small" effect="plain" :type="card.voicePool === 'protected' ? 'danger' : card.voicePool === 'bystander' ? 'warning' : 'info'">
+                  {{ voicePoolLabel(card.voicePool) }}
+                </el-tag>
+                <el-tag v-if="card.sharedVoice" size="small" type="warning">共享</el-tag>
+              </div>
             </div>
           </div>
 
@@ -180,6 +236,10 @@ const props = defineProps({
     type: Object,
     default: () => ({}),
   },
+  autoCasting: {
+    type: Object,
+    default: null,
+  },
 });
 
 const dialogueCards = ref([]);
@@ -197,6 +257,31 @@ const roleAudioSetupDialogRef = ref(null);
 
 const globalAudioBindings = ref({});
 const ttsProvider = ref("siliconflow");
+const showAllocationDetails = ref(false);
+
+const autoCastingSummaryVisible = computed(() => Boolean(props.autoCasting && props.autoCasting.enabled !== false));
+const autoCastingWarnings = computed(() => (Array.isArray(props.autoCasting?.warnings) ? props.autoCasting.warnings : []).filter(Boolean));
+const releasedActors = computed(() => (Array.isArray(props.autoCasting?.releasedActors) ? props.autoCasting.releasedActors : []).filter(Boolean));
+const sharedActors = computed(() => (Array.isArray(props.autoCasting?.sharedActors) ? props.autoCasting.sharedActors : []).filter(Boolean));
+const voiceChanges = computed(() => (Array.isArray(props.autoCasting?.voiceChanges) ? props.autoCasting.voiceChanges : []).filter(Boolean));
+
+const allocationTypeLabel = (type) => {
+  const labels = {
+    core: "核心",
+    supporting: "支持",
+    temporary: "临时",
+  };
+  return labels[type] || type || "未分类";
+};
+
+const voicePoolLabel = (pool) => {
+  const labels = {
+    general: "通用池",
+    bystander: "路人池",
+    protected: "保护池",
+  };
+  return labels[pool] || pool || "通用池";
+};
 
 // 角色别名管理
 const aliasDialogVisible = ref(false);
@@ -290,6 +375,14 @@ const fetchGlobalBindings = async () => {
   }
   return null;
 };
+
+watch(
+  () => props.autoCasting,
+  () => {
+    showAllocationDetails.value = false;
+  },
+  { deep: true },
+);
 
 onMounted(() => {
   fetchProvider();

@@ -560,7 +560,8 @@ async function runPipeline(taskId, { projectName, chapterIndex, chapterTitle, ch
       }));
 
       const prescanCount = parseNonNegativeEnvInt(process.env.PRESCAN_CHAPTER_COUNT, 10);
-      const combinedText = buildPrescanCombinedText(normalizePrescanTexts(prescanTexts, chapterText, chapterIndex, prescanCount));
+      const prescanChapters = normalizePrescanTexts(prescanTexts, chapterText, chapterIndex, prescanCount);
+      const combinedText = buildPrescanCombinedText(prescanChapters);
       checkCancelled(task, taskId, projectName, chapterIndex);
 
       if (combinedText) {
@@ -569,6 +570,7 @@ async function runPipeline(taskId, { projectName, chapterIndex, chapterTitle, ch
             `${BASE}/api/llm/prescan-characters`,
             {
               combinedText,
+              chapters: prescanChapters,
               projectName,
             },
             { timeout: prescanTimeout, signal },
@@ -607,6 +609,7 @@ async function runPipeline(taskId, { projectName, chapterIndex, chapterTitle, ch
         {
           text: chapterText,
           projectName,
+          chapterIndex,
         },
         { timeout: llmParseTimeout, signal },
       );

@@ -85,7 +85,14 @@
 
       <!-- 右窗格：验证和仪表板（仅项目模式显示）-->
       <section v-if="currentAppMode === 'project'" class="lg:flex-1 w-full h-full relative shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.05)]" :class="{ 'opacity-20 pointer-events-none': !currentProject, 'z-0': currentProject }">
-        <RoleVerifyCard :projectName="currentProject" :initialCards="currentParsedList" :globalCharacters="globalChars" @onCardsChanged="handleCardsChanged" @onAliasesUpdated="handleAliasesUpdated" />
+        <RoleVerifyCard
+          :projectName="currentProject"
+          :initialCards="currentParsedList"
+          :globalCharacters="globalChars"
+          :autoCasting="autoCastingState"
+          @onCardsChanged="handleCardsChanged"
+          @onAliasesUpdated="handleAliasesUpdated"
+        />
       </section>
     </main>
   </div>
@@ -105,6 +112,7 @@ const currentAppMode = ref('project');
 
 const currentParsedList = ref([]);
 const globalChars = ref({});
+const autoCastingState = ref(null);
 
 // 项目状态
 const currentProject = ref(null);
@@ -176,6 +184,7 @@ const selectProject = async (name) => {
   // 切新项目清空
   currentParsedList.value = [];
   globalChars.value = {};
+  autoCastingState.value = null;
   currentNovelText.value = "";
 
   try {
@@ -247,9 +256,10 @@ const handlePrescanSuccess = (updatedCharacters) => {
   globalChars.value = updatedCharacters;
 };
 
-const handleParsedData = (dataList, characters) => {
+const handleParsedData = (dataList, characters, autoCasting) => {
   currentParsedList.value = dataList;
   globalChars.value = characters;
+  autoCastingState.value = autoCasting || null;
   saveDraft();
 };
 
