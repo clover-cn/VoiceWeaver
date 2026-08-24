@@ -151,6 +151,16 @@ function isCancelledError(err) {
   return Boolean(err && (err.cancelled || err.code === "ERR_CANCELED" || err.name === "CanceledError"));
 }
 
+function getErrorMessage(error, fallback = "请求失败") {
+  return error?.response?.data?.error || error?.message || String(error || fallback);
+}
+
+function createHttpError(message, status = 500) {
+  const err = new Error(message);
+  err.status = status;
+  return err;
+}
+
 function cancelTask(task) {
   if (!task || task.phase === "done" || task.phase === "error" || task.phase === "cancelled") {
     return false;
@@ -245,7 +255,7 @@ function stripRawNovelText(entry) {
   return next;
 }
 
-function buildSegmentFromCard(card, index, audioUrl) {
+function buildSegmentFromCard(card, index, audioUrl, generationError = null) {
   return {
     index,
     type: card.type,
@@ -256,6 +266,7 @@ function buildSegmentFromCard(card, index, audioUrl) {
     autoAssignedVoiceActor: card.autoAssignedVoiceActor || null,
     autoEmotionAudioMap: card.autoEmotionAudioMap || null,
     audioUrl: audioUrl || null,
+    generationError: generationError || null,
   };
 }
 
@@ -263,11 +274,101 @@ function buildSegmentForCache(card, index, currentSegment = null) {
   return {
     ...buildSegmentFromCard(card, index, currentSegment?.audioUrl || null),
     audioUrl: currentSegment?.audioUrl || null,
+    generationError: currentSegment?.audioUrl ? null : currentSegment?.generationError || null,
   };
 }
 
+function hasPlayableAudio(segment) {
+  return Boolean(typeof segment?.audioUrl === "string" && segment.audioUrl.trim());
+}
+
 function countCompletedSegments(segments) {
-  return normalizeSegments(segments).filter((segment) => Boolean(segment.audioUrl)).length;
+  return normalizeSegments(segments).filter(hasPlayableAudio).length;
+}
+
+function resolveTotalSegments(entryOrSegments, fallback = null) {
+  if (entryOrSegments && !Array.isArray(entryOrSegments)) {
+    const total = Number(entryOrSegments.totalSegments);
+    if (Number.isInteger(total) && total > 0) return total;
+    if (Array.isArray(entryOrSegments.parsedCards)) return entryOrSegments.parsedCards.length;
+    if (Array.isArray(entryOrSegments.segments)) return normalizeSegments(entryOrSegments.segments).length;
+    if (Number.isInteger(total) && total === 0) return total;
+  }
+
+  if (fallback !== null && fallback !== undefined && Number.isInteger(Number(fallback)) && Number(fallback) >= 0) {
+    return Number(fallback);
+  }
+
+  return Array.isArray(entryOrSegments) ? normalizeSegments(entryOrSegments).length : 0;
+}
+
+function buildCompletionMeta(segments, totalSegments, { includeMissing = true } = {}) {
+  const total = resolveTotalSegments(segments, totalSegments);
+  const normalizedSegments = normalizeSegments(segments, total || Number.POSITIVE_INFINITY);
+  const segmentMap = new Map(normalizedSegments.map((segment) => [segment.index, segment]));
+  const failedIndexes = [];
+
+  for (let index = 0; index < total; index += 1) {
+    const segment = segmentMap.get(index);
+    if (!segment) {
+      if (includeMissing) failedIndexes.push(index);
+      continue;
+    }
+    if (!hasPlayableAudio(segment)) {
+      failedIndexes.push(index);
+    }
+  }
+
+  const completedSegments = normalizedSegments.filter(hasPlayableAudio).length;
+  return {
+    totalSegments: total,
+    completedSegments,
+    failedIndexes,
+    isComplete: total > 0 && completedSegments === total && failedIndexes.length === 0,
+  };
+}
+
+function buildEntryCompletionPayload(entry) {
+  const totalSegments = resolveTotalSegments(entry);
+  const segments = normalizeSegments(entry?.segments, totalSegments || Number.POSITIVE_INFINITY);
+  return {
+    segments,
+    ...buildCompletionMeta(segments, totalSegments),
+  };
+}
+
+function buildTaskCompletionPayload(task) {
+  const totalSegments = resolveTotalSegments(task?.segments, task?.totalSegments);
+  const segments = normalizeSegments(task?.segments, totalSegments || Number.POSITIVE_INFINITY);
+  const meta = buildCompletionMeta(segments, totalSegments, {
+    includeMissing: task?.phase === "done" || task?.phase === "error",
+  });
+  const failedIndexes = Array.isArray(task?.failedIndexes) && task.phase !== "done" && task.phase !== "error"
+    ? normalizeSegmentIndexes(task.failedIndexes, totalSegments || Number.POSITIVE_INFINITY)
+    : meta.failedIndexes;
+
+  return {
+    segments,
+    ...meta,
+    failedIndexes,
+  };
+}
+
+function isCompleteCacheEntry(entry) {
+  return Boolean(entry && entry.phase === "done" && buildEntryCompletionPayload(entry).isComplete);
+}
+
+function buildAllSegmentsFailedError(totalSegments) {
+  return totalSegments > 0
+    ? "所有片段音频生成失败，请检查旁白/角色参考音频配置或 TTS 服务配置。"
+    : "未解析到可生成音频片段，请检查章节正文。";
+}
+
+function getFirstSegmentGenerationError(segments) {
+  return (
+    normalizeSegments(segments).find((segment) => !hasPlayableAudio(segment) && segment.generationError)
+      ?.generationError || null
+  );
 }
 
 function cloneData(data) {
@@ -402,6 +503,7 @@ function applyRoleUpdateToCachedChapter(projectName, chapterIndex, roleUpdate) {
     if (targetIndexSet.has(index)) {
       removeSegmentPreviewAudio(projectName, cachedSegment);
       nextSegment.audioUrl = null;
+      nextSegment.generationError = null;
     }
     return nextSegment;
   });
@@ -411,8 +513,7 @@ function applyRoleUpdateToCachedChapter(projectName, chapterIndex, roleUpdate) {
     parsedCards: nextParsedCards,
     segments: nextSegments,
     phase: "done",
-    totalSegments: nextParsedCards.length,
-    completedSegments: countCompletedSegments(nextSegments),
+    ...buildCompletionMeta(nextSegments, nextParsedCards.length),
     updatedAt: new Date().toISOString(),
   }));
 
@@ -423,17 +524,19 @@ async function regenerateSegmentIndexesForChapter(projectName, chapterIndex, ind
   const cacheEntry = readChapterCacheEntry(projectName, chapterIndex).entry;
   const parsedCards = Array.isArray(cacheEntry?.parsedCards) ? cacheEntry.parsedCards : [];
   if (!parsedCards.length) {
-    return { segments: [], completedSegments: 0, regeneratedIndexes: [], failedIndexes: indexes || [] };
+    return { segments: [], completedSegments: 0, totalSegments: 0, regeneratedIndexes: [], failedIndexes: indexes || [] };
   }
 
   const targetIndexes = normalizeSegmentIndexes(indexes, parsedCards.length);
   if (!targetIndexes.length) {
     const currentSegments = normalizeSegments(cacheEntry?.segments, parsedCards.length);
+    const meta = buildCompletionMeta(currentSegments, parsedCards.length);
     return {
       segments: currentSegments,
-      completedSegments: countCompletedSegments(currentSegments),
+      completedSegments: meta.completedSegments,
+      totalSegments: meta.totalSegments,
       regeneratedIndexes: [],
-      failedIndexes: [],
+      failedIndexes: meta.failedIndexes,
     };
   }
 
@@ -455,6 +558,10 @@ async function regenerateSegmentIndexesForChapter(projectName, chapterIndex, ind
         },
         { timeout: getListenBookTtsTimeout() },
       );
+      const nextAudioUrl = ttsResp.data?.audioUrl || null;
+      if (!nextAudioUrl) {
+        throw new Error("TTS 未返回 audioUrl");
+      }
 
       latestEntry = updateChapterCacheEntry(projectName, chapterIndex, (current) => {
         if (!current || !Array.isArray(current.parsedCards)) return current;
@@ -463,7 +570,8 @@ async function regenerateSegmentIndexesForChapter(projectName, chapterIndex, ind
         const nextSegments = current.parsedCards.map((item, index) => {
           const nextSegment = buildSegmentForCache(item, index, segmentMap.get(index));
           if (index === segmentIndex) {
-            nextSegment.audioUrl = ttsResp.data.audioUrl || null;
+            nextSegment.audioUrl = nextAudioUrl;
+            nextSegment.generationError = null;
           }
           return nextSegment;
         });
@@ -471,19 +579,21 @@ async function regenerateSegmentIndexesForChapter(projectName, chapterIndex, ind
         return {
           ...current,
           phase: "done",
+          error: null,
           segments: nextSegments,
           totalSegments: current.parsedCards.length,
-          completedSegments: countCompletedSegments(nextSegments),
+          ...buildCompletionMeta(nextSegments, current.parsedCards.length),
           updatedAt: new Date().toISOString(),
         };
       });
 
-      if (previousAudioUrl && previousAudioUrl !== ttsResp.data.audioUrl) {
+      if (previousAudioUrl && previousAudioUrl !== nextAudioUrl) {
         removePreviewAudioFile(projectName, previousAudioUrl);
       }
     } catch (error) {
       failedIndexes.push(segmentIndex);
-      console.warn(`[${logPrefix}] 章节 ${chapterIndex} 片段 ${segmentIndex} 重生成失败: ${error.message}`);
+      const message = getErrorMessage(error, "片段重生成失败");
+      console.warn(`[${logPrefix}] 章节 ${chapterIndex} 片段 ${segmentIndex} 重生成失败: ${message}`);
       latestEntry = updateChapterCacheEntry(projectName, chapterIndex, (current) => {
         if (!current || !Array.isArray(current.parsedCards)) return current;
         const existingSegments = normalizeSegments(current.segments, current.parsedCards.length);
@@ -492,15 +602,19 @@ async function regenerateSegmentIndexesForChapter(projectName, chapterIndex, ind
           const nextSegment = buildSegmentForCache(item, index, segmentMap.get(index));
           if (index === segmentIndex) {
             nextSegment.audioUrl = null;
+            nextSegment.generationError = message;
           }
           return nextSegment;
         });
+        const meta = buildCompletionMeta(nextSegments, current.parsedCards.length);
         return {
           ...current,
-          phase: "done",
+          phase: meta.completedSegments === 0 ? "error" : "done",
+          error: message,
           segments: nextSegments,
-          totalSegments: current.parsedCards.length,
-          completedSegments: countCompletedSegments(nextSegments),
+          totalSegments: meta.totalSegments,
+          completedSegments: meta.completedSegments,
+          failedIndexes: meta.failedIndexes,
           updatedAt: new Date().toISOString(),
         };
       });
@@ -508,11 +622,15 @@ async function regenerateSegmentIndexesForChapter(projectName, chapterIndex, ind
   }
 
   const finalSegments = normalizeSegments(latestEntry?.segments, parsedCards.length);
+  const finalSegmentMap = new Map(finalSegments.map((segment) => [segment.index, segment]));
+  const finalMeta = buildCompletionMeta(finalSegments, parsedCards.length);
   return {
     segments: finalSegments,
-    completedSegments: countCompletedSegments(finalSegments),
-    regeneratedIndexes: targetIndexes.filter((index) => !failedIndexes.includes(index)),
-    failedIndexes,
+    completedSegments: finalMeta.completedSegments,
+    totalSegments: finalMeta.totalSegments,
+    isComplete: finalMeta.isComplete,
+    regeneratedIndexes: targetIndexes.filter((index) => hasPlayableAudio(finalSegmentMap.get(index))),
+    failedIndexes: finalMeta.failedIndexes,
   };
 }
 
@@ -637,6 +755,9 @@ async function runPipeline(taskId, { projectName, chapterIndex, chapterTitle, ch
     task.phase = "tts";
     task.progress = 35;
     task.segments = normalizeSegments(task.segments || cacheEntry?.segments, cards.length);
+    task.totalSegments = cards.length;
+    task.completedSegments = countCompletedSegments(task.segments);
+    task.failedIndexes = buildCompletionMeta(task.segments, cards.length, { includeMissing: false }).failedIndexes;
     updateChapterCacheEntry(projectName, chapterIndex, (current) => ({
       ...(current || {}),
       ...cacheIdentity,
@@ -645,6 +766,8 @@ async function runPipeline(taskId, { projectName, chapterIndex, chapterTitle, ch
       parsedCards: cards,
       segments: normalizeSegments(task.segments, cards.length),
       totalSegments: cards.length,
+      completedSegments: task.completedSegments,
+      failedIndexes: task.failedIndexes,
       createdAt: current?.createdAt || new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     }));
@@ -653,7 +776,7 @@ async function runPipeline(taskId, { projectName, chapterIndex, chapterTitle, ch
     const segmentMap = new Map(task.segments.map((segment) => [segment.index, segment]));
     for (let i = 0; i < cards.length; i++) {
       checkCancelled(task, taskId, projectName, chapterIndex);
-      if (segmentMap.has(i)) {
+      if (hasPlayableAudio(segmentMap.get(i))) {
         task.progress = 35 + Math.round(((i + 1) / cards.length) * 60);
         task.ttsProgress = { current: i + 1, total: cards.length };
         continue;
@@ -671,20 +794,27 @@ async function runPipeline(taskId, { projectName, chapterIndex, chapterTitle, ch
           { timeout: ttsTimeout, signal },
         );
 
-        nextSegment = buildSegmentFromCard(card, i, ttsResp.data.audioUrl || null);
+        const nextAudioUrl = ttsResp.data?.audioUrl || null;
+        if (!nextAudioUrl) {
+          throw new Error("TTS 未返回 audioUrl");
+        }
+        nextSegment = buildSegmentFromCard(card, i, nextAudioUrl);
       } catch (e) {
-        if (e.cancelled) throw e;
+        if (isCancelledError(e)) throw createCancelledError();
+        const message = getErrorMessage(e, "TTS 生成失败");
         if (e.code === "ECONNABORTED") {
           console.warn(
-            `[listenBook][${taskId}] 第 ${i} 条 TTS 请求超时（timeout=${ttsTimeout}ms）: ${e.message}，跳过`,
+            `[listenBook][${taskId}] 第 ${i} 条 TTS 请求超时（timeout=${ttsTimeout}ms）: ${message}，跳过`,
           );
         } else {
-          console.warn(`[listenBook][${taskId}] 第 ${i} 条 TTS 失败: ${e.message}，跳过`);
+          console.warn(`[listenBook][${taskId}] 第 ${i} 条 TTS 失败: ${message}，跳过`);
         }
-        nextSegment = buildSegmentFromCard(card, i, null);
+        nextSegment = buildSegmentFromCard(card, i, null, message);
       }
       segmentMap.set(i, nextSegment);
       task.segments = normalizeSegments([...segmentMap.values()], cards.length);
+      task.completedSegments = countCompletedSegments(task.segments);
+      task.failedIndexes = buildCompletionMeta(task.segments, cards.length, { includeMissing: false }).failedIndexes;
       task.progress = 35 + Math.round(((i + 1) / cards.length) * 60);
       task.ttsProgress = { current: i + 1, total: cards.length };
       updateChapterCacheEntry(projectName, chapterIndex, (current) => ({
@@ -695,26 +825,41 @@ async function runPipeline(taskId, { projectName, chapterIndex, chapterTitle, ch
         parsedCards: cards,
         segments: task.segments,
         totalSegments: cards.length,
-        completedSegments: task.segments.length,
+        completedSegments: task.completedSegments,
+        failedIndexes: task.failedIndexes,
         createdAt: current?.createdAt || new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       }));
     }
 
     // ── 阶段 5: 完成 ──
-    task.phase = "done";
+    const finalSegments = normalizeSegments(task.segments, cards.length);
+    const finalMeta = buildCompletionMeta(finalSegments, cards.length);
+    const finalError =
+      finalMeta.completedSegments === 0
+        ? getFirstSegmentGenerationError(finalSegments) || buildAllSegmentsFailedError(finalMeta.totalSegments)
+        : null;
+
+    task.phase = finalError ? "error" : "done";
     task.progress = 100;
-    console.log(`[listenBook][${taskId}] 完成，成功生成 ${task.segments.filter((s) => s.audioUrl).length}/${cards.length} 条`);
+    task.segments = finalSegments;
+    task.totalSegments = finalMeta.totalSegments;
+    task.completedSegments = finalMeta.completedSegments;
+    task.failedIndexes = finalMeta.failedIndexes;
+    task.error = finalError;
+    console.log(`[listenBook][${taskId}] 完成，成功生成 ${finalMeta.completedSegments}/${cards.length} 条`);
 
     updateChapterCacheEntry(projectName, chapterIndex, (current) => ({
       ...(current || {}),
       ...cacheIdentity,
       taskId,
-      phase: "done",
+      phase: task.phase,
+      error: finalError,
       parsedCards: cards,
-      segments: normalizeSegments(task.segments, cards.length),
-      totalSegments: cards.length,
-      completedSegments: cards.length,
+      segments: finalSegments,
+      totalSegments: finalMeta.totalSegments,
+      completedSegments: finalMeta.completedSegments,
+      failedIndexes: finalMeta.failedIndexes,
       createdAt: current?.createdAt || new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     }));
@@ -727,6 +872,7 @@ async function runPipeline(taskId, { projectName, chapterIndex, chapterTitle, ch
         taskId,
         phase: "cancelled",
         segments: normalizeSegments(task.segments, current?.totalSegments || Number.POSITIVE_INFINITY),
+        ...buildCompletionMeta(task.segments, resolveTotalSegments(current, task.totalSegments), { includeMissing: false }),
         createdAt: current?.createdAt || new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       }));
@@ -742,10 +888,79 @@ async function runPipeline(taskId, { projectName, chapterIndex, chapterTitle, ch
       phase: "error",
       error: err.message,
       segments: normalizeSegments(task.segments, current?.totalSegments || Number.POSITIVE_INFINITY),
+      ...buildCompletionMeta(task.segments, resolveTotalSegments(current, task.totalSegments), { includeMissing: false }),
       createdAt: current?.createdAt || new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     }));
   }
+}
+
+async function ensureParsedCardsForChapter({ projectName, chapterIndex, chapterTitle = "", chapterText = "", contentHash = "" }) {
+  const normalizedText = normalizeChapterText(chapterText);
+  const requestContentHash = normalizedText ? createContentHash(normalizedText) : contentHash || "";
+  const currentEntry = readChapterCacheEntry(projectName, chapterIndex).entry || null;
+  const hasParsedCards = Array.isArray(currentEntry?.parsedCards) && currentEntry.parsedCards.length > 0;
+  const hashChanged = Boolean(requestContentHash && currentEntry && currentEntry.contentHash !== requestContentHash);
+
+  if (hasParsedCards && !hashChanged) {
+    return {
+      entry: currentEntry,
+      parsedCards: applyChapterOverrides(currentEntry.parsedCards, projectName, chapterIndex),
+      contentHash: currentEntry.contentHash || requestContentHash || "",
+    };
+  }
+
+  if (!normalizedText) {
+    throw createHttpError("当前章节缺少解析缓存，且客户端未提供章节正文，无法重建离线听书上下文。", 409);
+  }
+
+  const parseResp = await axios.post(
+    `${baseUrl()}/api/llm/parse`,
+    {
+      text: normalizedText,
+      projectName,
+      chapterIndex,
+    },
+    { timeout: getListenBookLlmParseTimeout() },
+  );
+
+  if (!parseResp.data?.success) {
+    throw createHttpError("LLM 解析失败，无法重建听书片段。", 500);
+  }
+
+  const parsedCards = applyChapterOverrides(parseResp.data.data || [], projectName, chapterIndex);
+  if (!parsedCards.length) {
+    throw createHttpError("LLM 未解析到可生成音频片段。", 422);
+  }
+
+  const carryPreviousAudio = currentEntry?.contentHash === requestContentHash;
+  const previousSegments = carryPreviousAudio ? normalizeSegments(currentEntry?.segments, parsedCards.length) : [];
+  const previousSegmentMap = new Map(previousSegments.map((segment) => [segment.index, segment]));
+  const nextSegments = parsedCards.map((card, index) => buildSegmentForCache(card, index, previousSegmentMap.get(index)));
+  const meta = buildCompletionMeta(nextSegments, parsedCards.length);
+
+  const updatedEntry = updateChapterCacheEntry(projectName, chapterIndex, (current) => ({
+    ...(current || {}),
+    projectName,
+    chapterIndex,
+    chapterTitle: chapterTitle || current?.chapterTitle || "",
+    contentHash: requestContentHash,
+    phase: "done",
+    error: null,
+    parsedCards,
+    segments: nextSegments,
+    totalSegments: meta.totalSegments,
+    completedSegments: meta.completedSegments,
+    failedIndexes: meta.failedIndexes,
+    createdAt: current?.createdAt || new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  }));
+
+  return {
+    entry: updatedEntry,
+    parsedCards,
+    contentHash: requestContentHash,
+  };
 }
 
 // ─────────────────────────────────────────────
@@ -785,19 +1000,46 @@ router.post("/check", (req, res) => {
   const entry = cache[key];
 
   if (contentHash && entry && entry.contentHash !== contentHash) {
-    return res.json({ exists: false, stale: true, resumable: false, phase: null, segments: [] });
+    return res.json({
+      exists: false,
+      stale: true,
+      resumable: false,
+      phase: null,
+      segments: [],
+      failedIndexes: [],
+      completedSegments: 0,
+      totalSegments: 0,
+    });
   }
 
-  // 已完成
-  if (entry && entry.phase === "done") {
-    return res.json({ exists: true, segments: entry.segments });
+  const entryPayload = buildEntryCompletionPayload(entry);
+
+  // 仅完整可播放缓存才算命中；部分失败的 done 缓存继续走可恢复生成。
+  if (isCompleteCacheEntry(entry)) {
+    return res.json({
+      exists: true,
+      segments: entryPayload.segments,
+      failedIndexes: [],
+      completedSegments: entryPayload.completedSegments,
+      totalSegments: entryPayload.totalSegments,
+    });
   }
 
   // 正在进行中
   if (entry && entry.taskId) {
     const t = tasks[entry.taskId];
     if (t && t.phase !== "error" && t.phase !== "done" && t.phase !== "cancelled") {
-      return res.json({ exists: false, taskId: entry.taskId, inProgress: true });
+      const taskPayload = buildTaskCompletionPayload(t);
+      return res.json({
+        exists: false,
+        taskId: entry.taskId,
+        inProgress: true,
+        phase: t.phase,
+        segments: taskPayload.segments,
+        failedIndexes: taskPayload.failedIndexes,
+        completedSegments: taskPayload.completedSegments,
+        totalSegments: taskPayload.totalSegments,
+      });
     }
   }
 
@@ -805,7 +1047,11 @@ router.post("/check", (req, res) => {
     exists: false,
     resumable: Boolean(entry?.parsedCards || entry?.segments?.length),
     phase: entry?.phase || null,
-    segments: normalizeSegments(entry?.segments),
+    segments: entryPayload.segments,
+    failedIndexes: entryPayload.failedIndexes,
+    completedSegments: entryPayload.completedSegments,
+    totalSegments: entryPayload.totalSegments,
+    error: entry?.error || null,
   });
 });
 
@@ -841,22 +1087,41 @@ router.post("/generate", (req, res) => {
     key = cacheKey(projectName, normalizedChapterIndex);
   }
 
-  // 已完成 → 直接返回
-  if (cache[key] && cache[key].phase === "done" && cache[key].contentHash === contentHash) {
-    return res.json({ taskId: cache[key].taskId, alreadyDone: true, segments: cache[key].segments });
+  // 已完成且全部可播放 → 直接返回；部分失败缓存会进入新任务重试缺失段。
+  if (cache[key] && cache[key].contentHash === contentHash && isCompleteCacheEntry(cache[key])) {
+    const entryPayload = buildEntryCompletionPayload(cache[key]);
+    return res.json({
+      taskId: cache[key].taskId,
+      alreadyDone: true,
+      segments: entryPayload.segments,
+      failedIndexes: [],
+      completedSegments: entryPayload.completedSegments,
+      totalSegments: entryPayload.totalSegments,
+    });
   }
 
   // 正在进行中 → 返回已有 taskId
   if (cache[key] && cache[key].taskId && cache[key].contentHash === contentHash) {
     const t = tasks[cache[key].taskId];
     if (t && t.phase !== "error" && t.phase !== "done" && t.phase !== "cancelled") {
-      return res.json({ taskId: cache[key].taskId, inProgress: true });
+      const taskPayload = buildTaskCompletionPayload(t);
+      return res.json({
+        taskId: cache[key].taskId,
+        inProgress: true,
+        segments: taskPayload.segments,
+        failedIndexes: taskPayload.failedIndexes,
+        completedSegments: taskPayload.completedSegments,
+        totalSegments: taskPayload.totalSegments,
+      });
     }
   }
 
   // 新建任务
   const taskId = crypto.randomUUID();
   const resumedSegments = normalizeSegments(cache[key]?.segments, cache[key]?.totalSegments || Number.POSITIVE_INFINITY);
+  const resumedMeta = buildCompletionMeta(resumedSegments, resolveTotalSegments(cache[key], resumedSegments.length), {
+    includeMissing: false,
+  });
   tasks[taskId] = {
     taskId,
     projectName,
@@ -864,6 +1129,9 @@ router.post("/generate", (req, res) => {
     phase: "waiting",
     progress: 0,
     segments: resumedSegments,
+    totalSegments: resumedMeta.totalSegments,
+    completedSegments: resumedMeta.completedSegments,
+    failedIndexes: resumedMeta.failedIndexes,
     error: null,
     cancelled: false,
     controller: new AbortController(),
@@ -877,6 +1145,9 @@ router.post("/generate", (req, res) => {
     chapterTitle,
     contentHash,
     segments: resumedSegments,
+    totalSegments: resumedMeta.totalSegments,
+    completedSegments: resumedMeta.completedSegments,
+    failedIndexes: resumedMeta.failedIndexes,
     createdAt: cache[key]?.createdAt || new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
@@ -894,7 +1165,13 @@ router.post("/generate", (req, res) => {
     console.error(`[listenBook] Pipeline uncaught error: ${e.message}`);
   });
 
-  res.json({ taskId });
+  res.json({
+    taskId,
+    segments: resumedSegments,
+    failedIndexes: resumedMeta.failedIndexes,
+    completedSegments: resumedMeta.completedSegments,
+    totalSegments: resumedMeta.totalSegments,
+  });
 });
 
 /**
@@ -909,30 +1186,34 @@ router.get("/status/:taskId", (req, res) => {
     // 服务重启后内存丢失，从 cache 恢复
     const found = findListenCacheByTaskId(taskId);
     if (found) {
-      const total =
-        Number(found.totalSegments) ||
-        (Array.isArray(found.parsedCards) ? found.parsedCards.length : 0) ||
-        normalizeSegments(found.segments).length;
-      const completed = normalizeSegments(found.segments, total || Number.POSITIVE_INFINITY).length;
+      const payload = buildEntryCompletionPayload(found);
+      const total = payload.totalSegments;
+      const completed = payload.completedSegments;
       const progress = found.phase === "done" ? 100 : total > 0 ? 35 + Math.round((completed / total) * 60) : 0;
       return res.json({
         phase: found.phase,
         progress,
         ttsProgress: total ? { current: completed, total } : null,
-        segments: normalizeSegments(found.segments, total || Number.POSITIVE_INFINITY),
+        segments: payload.segments,
+        failedIndexes: payload.failedIndexes,
+        completedSegments: payload.completedSegments,
+        totalSegments: payload.totalSegments,
         error: found.error || null,
       });
     }
     return res.status(404).json({ error: "任务不存在" });
   }
 
+  const payload = buildTaskCompletionPayload(task);
   res.json({
     taskId,
     phase: task.phase,
     progress: task.progress,
     ttsProgress: task.ttsProgress || null,
-    segments: task.segments,
-    failedIndexes: task.failedIndexes || [],
+    segments: payload.segments,
+    failedIndexes: payload.failedIndexes,
+    completedSegments: payload.completedSegments,
+    totalSegments: payload.totalSegments,
     error: task.error || null,
   });
 });
@@ -1052,17 +1333,20 @@ router.post("/chapter-edits", (req, res) => {
       const nextSegment = buildSegmentForCache(card, index, cachedSegment);
       if (invalidatedIndexSet.has(index)) {
         nextSegment.audioUrl = null;
+        nextSegment.generationError = null;
       }
       return nextSegment;
     });
+    const meta = buildCompletionMeta(nextSegments, parsedCards.length);
 
     return {
       ...current,
       phase: "done",
       parsedCards,
       segments: nextSegments,
-      totalSegments: parsedCards.length,
-      completedSegments: countCompletedSegments(nextSegments),
+      totalSegments: meta.totalSegments,
+      completedSegments: meta.completedSegments,
+      failedIndexes: meta.failedIndexes,
       updatedAt: new Date().toISOString(),
     };
   });
@@ -1126,13 +1410,17 @@ router.post("/auto-regenerate-after-edit", async (req, res) => {
     }
 
     // 初始化任务状态
+    const currentEntryPayload = buildEntryCompletionPayload(currentEntry);
     tasks[taskId] = {
       taskId,
       projectName,
       chapterIndex: normalizedChapterIndex,
       phase: "running",
       progress: 0,
-      segments: currentEntry.segments,
+      segments: currentEntryPayload.segments,
+      totalSegments: currentEntryPayload.totalSegments,
+      completedSegments: currentEntryPayload.completedSegments,
+      failedIndexes: currentEntryPayload.failedIndexes,
       error: null,
       cancelled: false,
       controller: new AbortController(),
@@ -1171,10 +1459,14 @@ router.post("/auto-regenerate-after-edit", async (req, res) => {
 
         const task = tasks[taskId];
         if (task) {
-          task.phase = "done";
+          task.phase =
+            currentResult.totalSegments > 0 && currentResult.completedSegments === 0 ? "error" : "done";
           task.progress = 100;
           task.segments = currentResult.segments;
+          task.completedSegments = currentResult.completedSegments;
+          task.totalSegments = currentResult.totalSegments;
           task.failedIndexes = currentResult.failedIndexes || [];
+          task.error = task.phase === "error" ? buildAllSegmentsFailedError(currentResult.totalSegments) : null;
         }
       } catch (error) {
         console.error("编辑后自动重生成后台任务失败:", error);
@@ -1192,7 +1484,7 @@ router.post("/auto-regenerate-after-edit", async (req, res) => {
 });
 
 router.post("/regenerate-segment", async (req, res) => {
-  const { projectName, chapterIndex, segmentIndex } = req.body || {};
+  const { projectName, chapterIndex, segmentIndex, chapterTitle = "", chapterText = "", contentHash = "" } = req.body || {};
   if (!projectName || chapterIndex === undefined || segmentIndex === undefined) {
     return res.status(400).json({ error: "缺少 projectName / chapterIndex / segmentIndex" });
   }
@@ -1206,10 +1498,29 @@ router.post("/regenerate-segment", async (req, res) => {
     return res.status(400).json({ error: "segmentIndex 非法" });
   }
 
-  const cacheEntry = readChapterCacheEntry(projectName, normalizedChapterIndex).entry;
-  const parsedCards = Array.isArray(cacheEntry?.parsedCards) ? cacheEntry.parsedCards : [];
-  if (!parsedCards.length) {
-    return res.status(409).json({ error: "当前章节尚未解析，请先生成听书" });
+  let cacheEntry = null;
+  let parsedCards = [];
+  try {
+    const ensured = await ensureParsedCardsForChapter({
+      projectName,
+      chapterIndex: normalizedChapterIndex,
+      chapterTitle,
+      chapterText,
+      contentHash,
+    });
+    cacheEntry = ensured.entry;
+    parsedCards = ensured.parsedCards;
+  } catch (error) {
+    const status = Number(error.status) || 500;
+    const latestEntry = readChapterCacheEntry(projectName, normalizedChapterIndex).entry;
+    const payload = buildEntryCompletionPayload(latestEntry);
+    return res.status(status).json({
+      error: getErrorMessage(error, "重建听书解析缓存失败"),
+      segments: payload.segments,
+      failedIndexes: payload.failedIndexes,
+      completedSegments: payload.completedSegments,
+      totalSegments: payload.totalSegments,
+    });
   }
 
   const card = parsedCards[normalizedSegmentIndex];
@@ -1229,6 +1540,10 @@ router.post("/regenerate-segment", async (req, res) => {
       },
       { timeout: getListenBookTtsTimeout() },
     );
+    const nextAudioUrl = ttsResp.data?.audioUrl || null;
+    if (!nextAudioUrl) {
+      throw new Error("TTS 未返回 audioUrl");
+    }
 
     const updatedEntry = updateChapterCacheEntry(projectName, normalizedChapterIndex, (current) => {
       if (!current || !Array.isArray(current.parsedCards)) return current;
@@ -1241,37 +1556,89 @@ router.post("/regenerate-segment", async (req, res) => {
       const nextSegments = nextParsedCards.map((item, index) => {
         const nextSegment = buildSegmentForCache(item, index, segmentMap.get(index));
         if (index === normalizedSegmentIndex) {
-          nextSegment.audioUrl = ttsResp.data.audioUrl || null;
+          nextSegment.audioUrl = nextAudioUrl;
+          nextSegment.generationError = null;
         }
         return nextSegment;
       });
+      const meta = buildCompletionMeta(nextSegments, nextParsedCards.length);
 
       return {
         ...current,
         phase: "done",
+        error: null,
         parsedCards: nextParsedCards,
         segments: nextSegments,
-        totalSegments: nextParsedCards.length,
-        completedSegments: countCompletedSegments(nextSegments),
+        totalSegments: meta.totalSegments,
+        completedSegments: meta.completedSegments,
+        failedIndexes: meta.failedIndexes,
         updatedAt: new Date().toISOString(),
       };
     });
 
-    if (previousAudioUrl && previousAudioUrl !== ttsResp.data.audioUrl) {
+    if (previousAudioUrl && previousAudioUrl !== nextAudioUrl) {
       removePreviewAudioFile(projectName, previousAudioUrl);
     }
 
     const nextSegments = normalizeSegments(updatedEntry?.segments, parsedCards.length);
+    const meta = buildCompletionMeta(nextSegments, parsedCards.length);
     return res.json({
       success: true,
       segment: nextSegments.find((segment) => segment.index === normalizedSegmentIndex) || null,
       segments: nextSegments,
-      completedSegments: countCompletedSegments(nextSegments),
+      completedSegments: meta.completedSegments,
+      totalSegments: meta.totalSegments,
+      failedIndexes: meta.failedIndexes,
     });
   } catch (error) {
-    console.error("单段音频重生成失败:", error.message);
-    return res.status(500).json({ error: error.message || "单段音频重生成失败" });
+    const message = getErrorMessage(error, "单段音频重生成失败");
+    console.error("单段音频重生成失败:", message);
+    const updatedEntry = updateChapterCacheEntry(projectName, normalizedChapterIndex, (current) => {
+      if (!current || !Array.isArray(current.parsedCards)) return current;
+      const nextParsedCards = current.parsedCards;
+      const currentSegments = normalizeSegments(current.segments, nextParsedCards.length);
+      const segmentMap = new Map(currentSegments.map((segment) => [segment.index, segment]));
+      const nextSegments = nextParsedCards.map((item, index) => {
+        const nextSegment = buildSegmentForCache(item, index, segmentMap.get(index));
+        if (index === normalizedSegmentIndex) {
+          nextSegment.audioUrl = null;
+          nextSegment.generationError = message;
+        }
+        return nextSegment;
+      });
+      const meta = buildCompletionMeta(nextSegments, nextParsedCards.length);
+      return {
+        ...current,
+        phase: meta.completedSegments === 0 ? "error" : "done",
+        error: message,
+        segments: nextSegments,
+        totalSegments: meta.totalSegments,
+        completedSegments: meta.completedSegments,
+        failedIndexes: meta.failedIndexes,
+        updatedAt: new Date().toISOString(),
+      };
+    });
+    const payload = buildEntryCompletionPayload(updatedEntry);
+    return res.status(500).json({
+      error: message,
+      segments: payload.segments,
+      failedIndexes: payload.failedIndexes,
+      completedSegments: payload.completedSegments,
+      totalSegments: payload.totalSegments,
+    });
   }
 });
+
+router.__test__ = {
+  buildCompletionMeta,
+  buildEntryCompletionPayload,
+  buildSegmentFromCard,
+  buildSegmentForCache,
+  createContentHash,
+  ensureParsedCardsForChapter,
+  getErrorMessage,
+  hasPlayableAudio,
+  isCompleteCacheEntry,
+};
 
 module.exports = router;

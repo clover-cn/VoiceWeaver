@@ -507,6 +507,15 @@ function buildVoicePool(records) {
   return { actorPool, narratorCandidates };
 }
 
+function selectNarratorAudioId(casting, narratorCandidates) {
+  if (casting?.narratorAudioId) {
+    return casting.narratorAudioId;
+  }
+
+  const candidate = (Array.isArray(narratorCandidates) ? narratorCandidates : []).find((item) => item?.id);
+  return candidate?.id || null;
+}
+
 function getPoolRank(roleClass, pool) {
   if (roleClass === "temporary") {
     return { bystander: 0, general: 1, protected: 3 }[pool] ?? 4;
@@ -659,6 +668,11 @@ function autoAssignReferenceAudios({ parsedCards, projectName, provider, chapter
   const readerSettings = loadProjectReaderSettings(projectName);
   const policy = getAllocationPolicy();
   const casting = loadProjectCasting(projectName);
+  const selectedNarratorAudioId = selectNarratorAudioId(casting, narratorCandidates);
+  const narratorAutoAssigned = !casting.narratorAudioId && Boolean(selectedNarratorAudioId);
+  if (selectedNarratorAudioId) {
+    casting.narratorAudioId = selectedNarratorAudioId;
+  }
   const normalizedChapterIndex = Number.isInteger(Number(chapterIndex)) ? Number(chapterIndex) : null;
 
   if (normalizedChapterIndex !== null) {
@@ -827,7 +841,11 @@ function autoAssignReferenceAudios({ parsedCards, projectName, provider, chapter
       warnings: [
         ...(sharedActors.length ? ["音频池不足，部分角色共享了同一声线"] : []),
         ...(voiceChanges.length ? ["部分临时角色因声线已回收而重新分配"] : []),
+        ...(!casting.narratorAudioId && (parsedCards || []).some((card) => card?.type === "narration" || card?.role === "旁白")
+          ? ["缺少旁白参考音频，请录制或导入“旁白/narration”候选音频"]
+          : []),
       ],
+      narratorAutoAssigned,
     },
   };
 }
@@ -844,4 +862,9 @@ module.exports = {
   parseAudioRecordName,
   loadProjectReaderSettings,
   saveProjectReaderSettings,
+  __test__: {
+    buildVoicePool,
+    selectNarratorAudioId,
+    attachAutoCastingToCards,
+  },
 };
