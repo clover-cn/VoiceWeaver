@@ -64,7 +64,7 @@ uploads/reference_audios/
 
 以上音频都属于 `刻晴`，前端按声线聚合显示，一次修改会同步该声线的全部情绪音频。
 
-### `PATCH /api/audio/voice-actor/:voiceActor/pool`
+### `POST /api/audio/voice-actor/:voiceActor/pool`
 
 请求：
 

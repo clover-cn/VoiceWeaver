@@ -266,7 +266,7 @@ const handlePoolSave = async (group) => {
   savingPoolKeys.value = nextSavingKeys;
 
   try {
-    const res = await axios.patch(`http://localhost:3000/api/audio/voice-actor/${encodeURIComponent(group.voiceActor)}/pool`, {
+    const res = await axios.post(`http://localhost:3000/api/audio/voice-actor/${encodeURIComponent(group.voiceActor)}/pool`, {
       voicePool: getGroupPool(group),
     });
     if (res.data.success) {
