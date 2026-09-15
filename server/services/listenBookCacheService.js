@@ -3,7 +3,6 @@ const path = require("path");
 
 const dataDir = path.join(__dirname, "../data");
 const projectsDir = path.join(dataDir, "projects");
-const legacyCachePath = path.join(dataDir, "listen_book_cache.json");
 const cacheFileName = "listen_book_cache.json";
 const previewRoutePrefix = "/api/tts/preview/";
 const cacheKeySeparator = "__";
@@ -135,47 +134,6 @@ function collectEntryAudioUrls(entry) {
   return entry.segments.map((segment) => segment?.audioUrl).filter(Boolean);
 }
 
-function readLegacyCache() {
-  return readJson(legacyCachePath, {});
-}
-
-function writeLegacyCache(cache) {
-  writeJson(legacyCachePath, cache);
-}
-
-function pickLegacyProjectCache(projectName) {
-  const output = {};
-  const cache = readLegacyCache();
-
-  Object.keys(cache).forEach((key) => {
-    const parsed = parseCacheKey(key);
-    if (!parsed || parsed.projectName !== projectName) return;
-    output[key] = cache[key];
-  });
-
-  return output;
-}
-
-function removeLegacyProjectCache(projectName) {
-  if (!fs.existsSync(legacyCachePath)) return false;
-
-  const cache = readLegacyCache();
-  let changed = false;
-
-  Object.keys(cache).forEach((key) => {
-    const parsed = parseCacheKey(key);
-    if (!parsed || parsed.projectName !== projectName) return;
-    delete cache[key];
-    changed = true;
-  });
-
-  if (changed) {
-    writeLegacyCache(cache);
-  }
-
-  return changed;
-}
-
 function readProjectListenCache(projectName) {
   const cachePath = getProjectListenCachePath(projectName);
   if (cachePath && fs.existsSync(cachePath)) {
@@ -186,13 +144,12 @@ function readProjectListenCache(projectName) {
     return cache;
   }
 
-  return sanitizeListenCache(pickLegacyProjectCache(projectName)).cache;
+  return {};
 }
 
 function writeProjectListenCache(projectName, cache) {
   const cachePath = getProjectListenCachePath(projectName, { ensureExists: true });
   writeJson(cachePath, sanitizeListenCache(cache).cache);
-  removeLegacyProjectCache(projectName);
 }
 
 function clearProjectListenCache(projectName, fromChapterIndex = 0) {
@@ -215,22 +172,12 @@ function clearProjectListenCache(projectName, fromChapterIndex = 0) {
 
   if (changed) {
     writeProjectListenCache(projectName, cache);
-  } else {
-    removeLegacyProjectCache(projectName);
   }
 
   return changed;
 }
 
 function findListenCacheByTaskId(taskId, { phase } = {}) {
-  const legacyCache = readLegacyCache();
-  const legacyMatch = Object.values(legacyCache).find((item) => {
-    if (item.taskId !== taskId) return false;
-    if (phase && item.phase !== phase) return false;
-    return true;
-  });
-  if (legacyMatch) return legacyMatch;
-
   if (!fs.existsSync(projectsDir)) return null;
 
   const projectDirs = fs.readdirSync(projectsDir, { withFileTypes: true }).filter((entry) => entry.isDirectory());
