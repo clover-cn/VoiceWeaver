@@ -6,6 +6,9 @@ const axios = require("axios");
 const { autoAssignReferenceAudios, normalizeGender, mergeProjectRoleActivity } = require("../services/autoCastingService");
 const { log } = require("console");
 
+const { PrescanResultCache } = require("../services/prescanResultCache");
+const prescanCache = new PrescanResultCache();
+
 const projectsDir = path.join(__dirname, "../data/projects");
 
 // 辅助函数
@@ -472,39 +475,48 @@ router.post("/prescan-characters", async (req, res) => {
     ]
   }
 `;
-    const response = await axios.post(
-      aiEndpoint,
-      {
-        model: prescanModel,
-        messages: [
-          { role: "system", content: prescanPrompt },
-          { role: "user", content: `小说章节窗口如下：\n\n${prescanInputText}` },
-        ],
-        temperature: 0.1,
-        response_format: { type: "json_object" },
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          "Content-Type": "application/json",
-        },
-        timeout: 120000,
+    // 缓存模型提取结果，角色档案与生命周期仍按当前状态合并，避免覆盖后续编辑。
+    const parsedData = await prescanCache.get(
+      { version: 1, projectName, prescanModel, aiEndpoint, chapters: normalizedChapters },
+      async () => {
+        const response = await axios.post(
+          aiEndpoint,
+          {
+            model: prescanModel,
+            messages: [
+              { role: "system", content: prescanPrompt },
+              { role: "user", content: `小说章节窗口如下：\n\n${prescanInputText}` },
+            ],
+            temperature: 0.1,
+            response_format: { type: "json_object" },
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${apiKey}`,
+              "Content-Type": "application/json",
+            },
+            timeout: 120000,
+          },
+        );
+
+        let prescanResult = response.data.choices[0].message.content;
+        prescanResult = prescanResult
+          .replace(/```json/g, "")
+          .replace(/```/g, "")
+          .trim();
+
+        let result;
+        try {
+          result = JSON.parse(prescanResult);
+          if (!result || !Array.isArray(result.characters)) throw new Error("缺少角色数组");
+        } catch (e) {
+          console.error("Failed to parse JSON:", prescanResult);
+          throw new Error("模型返回的数据不是有效的JSON格式");
+        }
+
+        return result;
       },
     );
-
-    let prescanResult = response.data.choices[0].message.content;
-    prescanResult = prescanResult
-      .replace(/```json/g, "")
-      .replace(/```/g, "")
-      .trim();
-
-    let parsedData;
-    try {
-      parsedData = JSON.parse(prescanResult);
-    } catch (e) {
-      console.error("Failed to parse JSON:", prescanResult);
-      throw new Error("模型返回的数据不是有效的JSON格式");
-    }
 
     const existingCharacters = getCharacters(projectName);
     let charsUpdated = false;

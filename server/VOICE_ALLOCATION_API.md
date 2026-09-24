@@ -310,10 +310,11 @@ uploads/reference_audios/
 
 ### `POST /api/listen-book/generate`
 
-原有请求仍兼容：
+请求格式（前后端需同时更新，旧客户端缺少 listenerId 将返回 400）：
 
 ```json
 {
+  "listenerId": "example_listener_001",
   "projectName": "我的郁金香小姐",
   "chapterIndex": 1,
   "chapterTitle": "商场",
@@ -342,7 +343,7 @@ uploads/reference_audios/
 
 已经生成的章节不会因为后续声线回收而自动改变。
 
-必填字段为 `projectName`、`chapterIndex`、`chapterText`；章节索引必须为非负整数，正文去除首尾空白后不能为空，否则返回 400。`chapterTitle` 默认空字符串，`prescanTexts` 默认空数组。
+必填字段为 `listenerId`、`projectName`、`chapterIndex`、`chapterText`；章节索引必须为非负整数，正文去除首尾空白后不能为空，否则返回 400。`chapterTitle` 默认空字符串，`prescanTexts` 默认空数组。
 
 该接口异步生成，成功响应分为三种情况，均包含 `taskId`、`segments`、`failedIndexes`、`completedSegments`、`totalSegments`：
 
@@ -539,10 +540,10 @@ VOICE_ALLOCATION_TEMPORARY_MAX_DIALOGUE_COUNT=3
 ### 12.2 `POST /api/listen-book/check`
 
 ```json
-{"projectName":"我的郁金香小姐","chapterIndex":1}
+{"projectName":"我的郁金香小姐","chapterIndex":1,"listenerId":"example_listener_001"}
 ```
 
-`projectName`、`chapterIndex` 必填；可选 `contentHash` 为章节正文 `trim()` 后按 UTF-8 计算的 SHA-256 十六进制字符串。非法章节索引或缺少必要参数返回 400。
+`listenerId`、`projectName`、`chapterIndex` 必填；可选 `contentHash` 为章节正文 `trim()` 后按 UTF-8 计算的 SHA-256 十六进制字符串。非法章节索引或缺少必要参数返回 400。
 
 完整缓存响应示例：
 
@@ -590,16 +591,16 @@ VOICE_ALLOCATION_TEMPORARY_MAX_DIALOGUE_COUNT=3
 ### 12.4 `POST /api/listen-book/cancel`
 
 ```json
-{"projectName":"我的郁金香小姐"}
+{"projectName":"我的郁金香小姐","listenerId":"example_listener_001"}
 ```
 
-必填 `projectName`，按项目取消尚未结束的任务。
+必填 `projectName` 和 `listenerId`，解除该会话在本书上的订阅，仅最后一个订阅离开才取消任务。
 
 ```json
 {"success":true,"cancelledTaskIds":["task-id"]}
 ```
 
-没有可取消任务时数组为空。取消请求发出中止信号，由任务流程在检查点处理中止；成功响应不表示所有后台工作已同步退出。缺少项目名返回 400。
+没有可取消任务时数组为空。取消请求发出中止信号，由任务流程在检查点处理中止；成功响应不表示所有后台工作已同步退出。缺少项目名或有效会话标识返回 400。
 
 ## 13. 章节编辑与重生成
 
@@ -667,6 +668,7 @@ VOICE_ALLOCATION_TEMPORARY_MAX_DIALOGUE_COUNT=3
 
 ```json
 {
+  "listenerId": "example_listener_001",
   "projectName": "我的郁金香小姐",
   "currentChapterIndex": 1,
   "invalidatedSegmentIndexes": [0],
@@ -679,7 +681,7 @@ VOICE_ALLOCATION_TEMPORARY_MAX_DIALOGUE_COUNT=3
 }
 ```
 
-必填 `projectName`、`currentChapterIndex`（非负整数）。`invalidatedSegmentIndexes` 默认空数组；`futureRoleUpdate` 默认 `null`，用于将角色声线更新应用于后续已缓存章节。
+必填 `listenerId`、`projectName`、`currentChapterIndex`（非负整数）。`invalidatedSegmentIndexes` 默认空数组；`futureRoleUpdate` 默认 `null`，用于将角色声线更新应用于后续已缓存章节。
 
 必须先保存章节编辑。服务端要求当前章节已有非空解析卡片，否则返回 409；不会在此接口根据正文重建解析。
 
@@ -702,3 +704,13 @@ VOICE_ALLOCATION_TEMPORARY_MAX_DIALOGUE_COUNT=3
 编辑角色音频时：按需要调用 `role-audio-override`（`skipCacheInvalidation: true`）及 `global-roles` 更新绑定 → `chapter-edits` 保存整章编辑及失效索引 → `auto-regenerate-after-edit` → 轮询任务。单段重试使用 `regenerate-segment`。
 
 服务端还存在当前客户端未直接调用的项目管理、单条 TTS、音频合并、备注修改、按任务取消、主动清理缓存，以及部分配置读取/写入接口；它们不属于本次按 RN 客户端补齐的范围。音频播放使用响应中的资源 URL。
+
+## 15. 多人共享听书会话与预扫描复用
+
+- 每个阅读页面生成独立随机 `listenerId`（16–128 位字母、数字、下划线或连字符）。`check`、`generate`、`auto-regenerate-after-edit` 和两个 `cancel` 接口均须携带此字段。不要在不同设备或标签页之间共享标识。
+- 相同项目、章节和正文的运行任务复用同一 taskId，并登记订阅。重复登记不增加计数；退出只解除自己的订阅，最后一个订阅退出才中止任务。
+- `POST /api/listen-book/cancel/:taskId` 的请求体为 `{"listenerId":"example_listener_001"}`，仅解除指定任务的订阅。按项目取消还会关闭旧会话；前端立即换新标识。旧会话一小时内的迟到请求返回 409。
+- 未能送达退出通知时，任务继续生成并缓存；当前没有心跳超时取消，避免误伤仍在听书的客户端。
+- 预扫描按项目、完整章节窗口（含正文）、模型和服务地址合并并发请求；成功解析的模型结果在内存保留一小时，最多 128 个窗口。命中后仍合并当前角色档案与生命周期。失败不缓存，正文或配置变化会重新扫描。不同窗口即使部分重叠，也独立扫描以保留上下文。
+- 订阅和预扫描复用均限单个 Node 进程，重启后清空；多个服务实例尚需共享任务存储和分布式锁。
+- 迁移：直接替换旧接口约定，前后端同时更新并刷新旧页面；已有音频缓存无需迁移。
