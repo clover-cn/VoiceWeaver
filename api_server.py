@@ -204,4 +204,6 @@ async def generate_tts_with_upload(
 if __name__ == "__main__":
     # uv pip install fastapi uvicorn pydantic python-multipart
     # uv run api_server.py
-    uvicorn.run(app, host="127.0.0.1", port=8000)
+    # 监听所有网卡，允许局域网内其他设备（手机、同事电脑、Node.js 服务）访问；
+    # 若只想本机使用可改回 "127.0.0.1"
+    uvicorn.run(app, host="0.0.0.0", port=8000)
