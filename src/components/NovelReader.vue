@@ -799,6 +799,12 @@ function normalizeListenCacheIdentityPart(value) {
     .replace(/\s+/g, " ");
 }
 
+// 每个页面会话独立订阅；退出后换新标识，避免迟到请求重新启动旧任务。
+function newListenerId() {
+  return Array.from(crypto.getRandomValues(new Uint8Array(24)), (value) => value.toString(16).padStart(2, "0")).join("");
+}
+let listenListenerId = newListenerId();
+
 // 项目名以“书名 + 作者”命名，避免同名不同作者命中同一缓存。
 const listenProjectName = computed(() => {
   const bookName = normalizeListenCacheIdentityPart(selectedBook.value?.name);
@@ -922,17 +928,20 @@ async function buildPrescanTexts(startIndex, count) {
 }
 
 async function buildListenGeneratePayload(chap, chapterIndex, { includePrescan = true } = {}) {
+  const listenerId = listenListenerId;
+  const projectName = listenProjectName.value;
   const chapterText = await fetchChapterText(chap, chapterIndex);
   const config = includePrescan ? await fetchListenConfig() : { prescanCount: 0 };
   const prescanTexts = includePrescan ? await buildPrescanTexts(chapterIndex, config.prescanCount) : [];
 
   return {
-    projectName: listenProjectName.value,
+    projectName,
     chapterIndex,
     chapterTitle: chap?.title || "",
     chapterText,
     contentHash: await createTextHash(chapterText),
     prescanTexts,
+    listenerId,
   };
 }
 
@@ -1321,6 +1330,7 @@ async function autoRegenerateAfterSegmentEdit(invalidatedIndexes, futureRoleUpda
     isPlaying.value = false;
 
     const res = await axios.post(`${API}/api/listen-book/auto-regenerate-after-edit`, {
+      listenerId: listenListenerId,
       projectName: listenProjectName.value,
       currentChapterIndex: currentChapterIndex.value,
       invalidatedSegmentIndexes: invalidatedIndexes,
@@ -1533,7 +1543,8 @@ async function cancelListenTasks({ useBeacon = false } = {}) {
   if (!projectName || projectName === "reader_unknown") return;
 
   const url = `${API}/api/listen-book/cancel`;
-  const payload = { projectName };
+  const payload = { projectName, listenerId: listenListenerId };
+  listenListenerId = newListenerId();
 
   if (useBeacon && typeof navigator !== "undefined" && typeof navigator.sendBeacon === "function") {
     try {
@@ -1559,13 +1570,19 @@ async function cancelListenTasks({ useBeacon = false } = {}) {
 
 // ── 检查缓存（进入阅读视图时自动调用）──
 async function checkListenCache() {
+  const listenerId = listenListenerId;
+  const projectName = listenProjectName.value;
+  const chapterIndex = currentChapterIndex.value;
   try {
     const chapterText = currentChapterText.value || (selectedChapter.value ? await fetchChapterText(selectedChapter.value, currentChapterIndex.value) : "");
+    if (listenerId !== listenListenerId) return;
     const res = await axios.post(`${API}/api/listen-book/check`, {
-      projectName: listenProjectName.value,
-      chapterIndex: currentChapterIndex.value,
+      listenerId,
+      projectName,
+      chapterIndex,
       contentHash: chapterText ? await createTextHash(chapterText) : undefined,
     });
+    if (listenerId !== listenListenerId || chapterIndex !== currentChapterIndex.value) return;
     if (res.data.exists) {
       segments.value = res.data.segments || [];
       isGenerationComplete.value = true;
@@ -1589,7 +1606,9 @@ async function startListening() {
 
   try {
     const payload = await buildListenGeneratePayload(selectedChapter.value, currentChapterIndex.value);
+    if (payload.listenerId !== listenListenerId) return;
     const res = await axios.post(`${API}/api/listen-book/generate`, payload);
+    if (payload.listenerId !== listenListenerId) return;
 
     if (res.data.alreadyDone) {
       listenTaskId.value = res.data.taskId || null;
@@ -1854,7 +1873,9 @@ function scrollToSeg(idx) {
 // ── 后台预生成后续章节（fire-and-forget）──
 async function triggerPrefetch() {
   try {
+    const listenerId = listenListenerId;
     const config = await fetchListenConfig();
+    if (listenerId !== listenListenerId) return;
     const prefetchCount = config.prefetchCount;
 
     for (let i = 1; i <= prefetchCount; i++) {
@@ -1864,8 +1885,12 @@ async function triggerPrefetch() {
       if (!nextChap || nextChap.isVolume) continue;
 
       buildListenGeneratePayload(nextChap, nextIdx, { includePrescan: false })
-        .then((payload) => axios.post(`${API}/api/listen-book/generate`, payload))
+        .then((payload) => {
+          if (listenerId !== listenListenerId || payload.listenerId !== listenerId) return null;
+          return axios.post(`${API}/api/listen-book/generate`, payload);
+        })
         .then((res) => {
+          if (!res || listenerId !== listenListenerId) return;
           const taskId = res.data?.taskId;
           if (taskId && !prefetchTaskIds.value.includes(taskId)) {
             prefetchTaskIds.value.push(taskId);

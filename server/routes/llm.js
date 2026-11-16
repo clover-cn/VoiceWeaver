@@ -6,6 +6,9 @@ const axios = require("axios");
 const { autoAssignReferenceAudios, normalizeGender, mergeProjectRoleActivity } = require("../services/autoCastingService");
 const { log } = require("console");
 
+const { PrescanResultCache } = require("../services/prescanResultCache");
+const prescanCache = new PrescanResultCache();
+
 const projectsDir = path.join(__dirname, "../data/projects");
 
 // 辅助函数
@@ -191,6 +194,18 @@ router.post("/parse", async (req, res) => {
       【重要规则：严格限定的视角转换】
       1. 禁止过度替换（非常重要）：在 text 内容中，除了"我"→主角名的替换外，**绝对不要**修改原文中的任何其他代词，包括但不限于"他"、"她"、"他们"、"她们"，也不要替换描述性称呼（如"丫头"、"那人"）。原文如果写的是"她带着一点儿小得意回道"，提取后必须原样保持为"她带着一点儿小得意回道"，切勿自作主张将其替换为具体名字或其它称呼！保持原文的原汁原味。
       2. 角色推断与情绪判断：请充分利用【已知角色及别名映射】中提供的角色描述信息（如果有），辅助判断该角色在当前对话中的语气、情绪以及可能的隐藏身份。
+
+      【TTS 语音合成标点与停顿优化规则 （IndexTTS 模型）】
+      为了确保合成的声音平滑、富有情感且断句自然，请在提取 text 时对标点符号进行适度规范：
+      1. **情感语气强化**：
+        - 如果对话带有强烈情绪（如 angry, surprised, fear），且原文末尾使用的是普通句号或省略号，请根据语境替换为叹号（！）或问号（？），以触发出更强的语气情感。
+      2. **长句停顿切分**：
+        - 无标点长句超过 15 个字时，请在语义停顿处补充逗号（，），避免 TTS 朗读时出现不自然的连读或喘息。
+      3. **消除连字与误读标点**：
+        - 移除原文本中无实际语音意义的连续标点（如 "......" 压缩为 "…"，"！！！" 简化为 "！"）。
+        - 删除任何破折号（——）、书名号、括号及内嵌的特殊字符，避免 TTS 模型读出异常杂音。
+      4. **语境平滑衔接**：
+        - 旁白如果以动作描写结尾且直接引出后续对话，请在语境末尾自动补全发音引导词与停顿标点（例如：'，开口问道：' 或 '，冷声道：'），以此实现听觉平滑。
 
       【输出格式要求】
       要求返回的格式为严格的 JSON 对象（不要包装在 Markdown 代码块里，只有 JSON 字符串）。
@@ -460,39 +475,48 @@ router.post("/prescan-characters", async (req, res) => {
     ]
   }
 `;
-    const response = await axios.post(
-      aiEndpoint,
-      {
-        model: prescanModel,
-        messages: [
-          { role: "system", content: prescanPrompt },
-          { role: "user", content: `小说章节窗口如下：\n\n${prescanInputText}` },
-        ],
-        temperature: 0.1,
-        response_format: { type: "json_object" },
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          "Content-Type": "application/json",
-        },
-        timeout: 120000,
+    // 缓存模型提取结果，角色档案与生命周期仍按当前状态合并，避免覆盖后续编辑。
+    const parsedData = await prescanCache.get(
+      { version: 1, projectName, prescanModel, aiEndpoint, chapters: normalizedChapters },
+      async () => {
+        const response = await axios.post(
+          aiEndpoint,
+          {
+            model: prescanModel,
+            messages: [
+              { role: "system", content: prescanPrompt },
+              { role: "user", content: `小说章节窗口如下：\n\n${prescanInputText}` },
+            ],
+            temperature: 0.1,
+            response_format: { type: "json_object" },
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${apiKey}`,
+              "Content-Type": "application/json",
+            },
+            timeout: 120000,
+          },
+        );
+
+        let prescanResult = response.data.choices[0].message.content;
+        prescanResult = prescanResult
+          .replace(/```json/g, "")
+          .replace(/```/g, "")
+          .trim();
+
+        let result;
+        try {
+          result = JSON.parse(prescanResult);
+          if (!result || !Array.isArray(result.characters)) throw new Error("缺少角色数组");
+        } catch (e) {
+          console.error("Failed to parse JSON:", prescanResult);
+          throw new Error("模型返回的数据不是有效的JSON格式");
+        }
+
+        return result;
       },
     );
-
-    let prescanResult = response.data.choices[0].message.content;
-    prescanResult = prescanResult
-      .replace(/```json/g, "")
-      .replace(/```/g, "")
-      .trim();
-
-    let parsedData;
-    try {
-      parsedData = JSON.parse(prescanResult);
-    } catch (e) {
-      console.error("Failed to parse JSON:", prescanResult);
-      throw new Error("模型返回的数据不是有效的JSON格式");
-    }
 
     const existingCharacters = getCharacters(projectName);
     let charsUpdated = false;

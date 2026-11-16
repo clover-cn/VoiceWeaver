@@ -23,6 +23,15 @@ const projectsDir = path.join(dataDir, "projects");
 // 内存任务表（服务重启后丢失，已完成的靠 cache 恢复）
 // ─────────────────────────────────────────────
 const tasks = {};
+const { ListenSubscriptions } = require("../services/listenSubscriptions");
+const subscriptions = new ListenSubscriptions();
+
+function requireListener(req, res, next) {
+  const id = req.body?.listenerId;
+  if (!subscriptions.valid(id)) return res.status(400).json({ error: "缺少有效的 listenerId，请刷新客户端" });
+  if (subscriptions.isClosed(id)) return res.status(409).json({ error: "听书会话已结束，请重新开始" });
+  next();
+}
 
 function createCancelledError(message = "CANCELLED") {
   const err = new Error(message);
@@ -866,7 +875,7 @@ async function runPipeline(taskId, { projectName, chapterIndex, chapterTitle, ch
   } catch (err) {
     if (isCancelledError(err)) {
       task.phase = "cancelled";
-      updateChapterCacheEntry(projectName, chapterIndex, (current) => ({
+      updateChapterCacheEntry(projectName, chapterIndex, (current) => current?.taskId !== taskId ? current : ({
         ...(current || {}),
         ...cacheIdentity,
         taskId,
@@ -984,7 +993,7 @@ router.get("/config", (req, res) => {
  * 检查章节是否已有完整 segments，防止重复生成
  * Body: { projectName, chapterIndex, contentHash? }
  */
-router.post("/check", (req, res) => {
+router.post("/check", requireListener, (req, res) => {
   const { projectName, chapterIndex, contentHash } = req.body;
   if (!projectName || chapterIndex === undefined) {
     return res.status(400).json({ error: "缺少 projectName 或 chapterIndex" });
@@ -1028,7 +1037,8 @@ router.post("/check", (req, res) => {
   // 正在进行中
   if (entry && entry.taskId) {
     const t = tasks[entry.taskId];
-    if (t && t.phase !== "error" && t.phase !== "done" && t.phase !== "cancelled") {
+    if (t && !t.cancelled && t.phase !== "error" && t.phase !== "done" && t.phase !== "cancelled") {
+      subscriptions.subscribe(t, req.body.listenerId);
       const taskPayload = buildTaskCompletionPayload(t);
       return res.json({
         exists: false,
@@ -1060,7 +1070,7 @@ router.post("/check", (req, res) => {
  * 启动后台 Pipeline，立即返回 taskId
  * Body: { projectName, chapterIndex, chapterTitle?, chapterText, prescanTexts? }
  */
-router.post("/generate", (req, res) => {
+router.post("/generate", requireListener, (req, res) => {
   const { projectName, chapterIndex, chapterTitle = "", prescanTexts = [] } = req.body || {};
   const chapterText = normalizeChapterText(req.body?.chapterText);
   if (!projectName || chapterIndex === undefined || !chapterText) {
@@ -1103,7 +1113,8 @@ router.post("/generate", (req, res) => {
   // 正在进行中 → 返回已有 taskId
   if (cache[key] && cache[key].taskId && cache[key].contentHash === contentHash) {
     const t = tasks[cache[key].taskId];
-    if (t && t.phase !== "error" && t.phase !== "done" && t.phase !== "cancelled") {
+    if (t && !t.cancelled && t.phase !== "error" && t.phase !== "done" && t.phase !== "cancelled") {
+      subscriptions.subscribe(t, req.body.listenerId);
       const taskPayload = buildTaskCompletionPayload(t);
       return res.json({
         taskId: cache[key].taskId,
@@ -1136,6 +1147,8 @@ router.post("/generate", (req, res) => {
     cancelled: false,
     controller: new AbortController(),
   };
+
+  subscriptions.subscribe(tasks[taskId], req.body.listenerId);
 
   // 写入 cache 标记进行中；正文只在本次任务内使用，不进入持久缓存。
   cache[key] = {
@@ -1225,7 +1238,9 @@ router.get("/status/:taskId", (req, res) => {
 router.post("/cancel/:taskId", (req, res) => {
   const { taskId } = req.params;
   const task = tasks[taskId];
-  if (cancelTask(task)) {
+  const { listenerId } = req.body || {};
+  if (!subscriptions.valid(listenerId)) return res.status(400).json({ error: "缺少有效的 listenerId" });
+  if (subscriptions.release(task, listenerId) && cancelTask(task)) {
     console.log(`[listenBook][${taskId}] 收到取消请求，将在下一检查点中止`);
   }
   res.json({ success: true });
@@ -1237,9 +1252,12 @@ router.post("/cancel", (req, res) => {
     return res.status(400).json({ error: "缺少 projectName" });
   }
 
+  const { listenerId } = req.body || {};
+  if (!subscriptions.valid(listenerId)) return res.status(400).json({ error: "缺少有效的 listenerId" });
+  subscriptions.close(listenerId);
   const cancelledTaskIds = [];
   Object.values(tasks).forEach((task) => {
-    if (task.projectName === projectName && cancelTask(task)) {
+    if (task.projectName === projectName && subscriptions.release(task, listenerId) && cancelTask(task)) {
       cancelledTaskIds.push(task.taskId);
       console.log(`[listenBook][${task.taskId}] 收到按项目取消请求，将在下一检查点中止`);
     }
@@ -1354,7 +1372,7 @@ router.post("/chapter-edits", (req, res) => {
   res.json({ success: true });
 });
 
-router.post("/auto-regenerate-after-edit", async (req, res) => {
+router.post("/auto-regenerate-after-edit", requireListener, async (req, res) => {
   const {
     projectName,
     currentChapterIndex,
@@ -1425,6 +1443,8 @@ router.post("/auto-regenerate-after-edit", async (req, res) => {
       cancelled: false,
       controller: new AbortController(),
     };
+
+    subscriptions.subscribe(tasks[taskId], req.body.listenerId);
 
     // 立即返回 taskId
     res.json({

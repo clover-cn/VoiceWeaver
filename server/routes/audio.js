@@ -144,7 +144,7 @@ router.get("/list", (req, res) => {
 });
 
 // 3. 按声线更新音频池（同一 voiceActor 的整套情绪音频一次性同步）
-router.patch("/voice-actor/:voiceActor/pool", (req, res) => {
+router.post("/voice-actor/:voiceActor/pool", (req, res) => {
   try {
     const voiceActor = String(req.params.voiceActor || "").trim();
     if (!voiceActor) {
